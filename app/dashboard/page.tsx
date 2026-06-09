@@ -14,16 +14,6 @@ import {
   Clock,
 } from 'lucide-react';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
-import {
-  WEEKLY_WORKOUTS,
   buildCalendar,
   type CalendarDay,
 } from '@/lib/dashboardMock';
@@ -70,7 +60,7 @@ export default function DashboardPage() {
           .reverse()
           .map(getAchievement)
           .filter(Boolean)
-      : ACHIEVEMENTS.slice(0, 2);
+      : [];
 
   return (
     <div className="min-h-screen bg-app">
@@ -282,47 +272,25 @@ export default function DashboardPage() {
         {/* Charts */}
         <div className="grid lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 surface rounded-2xl p-5 sm:p-6">
-            <h2 className="text-base font-semibold text-app mb-1">
-              Weekly activity
-            </h2>
+            <h2 className="text-base font-semibold text-app mb-1">Weekly activity</h2>
             <p className="text-xs text-subtle mb-5">Reps per day across all exercises.</p>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={WEEKLY_WORKOUTS}>
-                  <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    stroke="var(--text-subtle)"
-                    style={{ fontSize: '11px' }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="var(--text-subtle)"
-                    style={{ fontSize: '11px' }}
-                    tickLine={false}
-                    axisLine={false}
-                    width={24}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--tooltip-bg)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      color: 'var(--text)',
-                    }}
-                    cursor={{ fill: 'var(--chart-grid)' }}
-                  />
-                  <Bar
-                    dataKey="reps"
-                    fill="var(--accent)"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={32}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {progress.totalReps === 0 ? (
+              <div className="h-52 flex items-center justify-center">
+                <div className="text-center">
+                  <Dumbbell className="w-8 h-8 text-subtle mx-auto mb-3" />
+                  <p className="text-sm text-subtle">No workouts completed yet.</p>
+                  <Link href="/exercise" className="text-sm accent-text hover:underline mt-2 inline-block">
+                    Start your first workout →
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="h-52">
+                <p className="text-xs text-subtle text-center pt-20">
+                  Per-day chart available after completing sessions.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="surface rounded-2xl p-5 sm:p-6">

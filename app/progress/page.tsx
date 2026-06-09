@@ -16,6 +16,7 @@ import {
   loadProgress,
   resetProgress,
   levelProgress,
+  subscribeToProgress,
   type Progress,
 } from '@/lib/progress';
 import { ACHIEVEMENTS } from '@/lib/achievements';
@@ -25,11 +26,8 @@ export default function ProgressPage() {
 
   useEffect(() => {
     setProgress(loadProgress());
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'letsfit:progress:v1') setProgress(loadProgress());
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    const unsub = subscribeToProgress(() => setProgress(loadProgress()));
+    return unsub;
   }, []);
 
   const handleReset = () => {

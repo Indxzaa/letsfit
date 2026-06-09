@@ -39,12 +39,19 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const navItems = [
+  const authedNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Exercise', href: '/exercise' },
     { name: 'Shop', href: '/shop' },
     { name: 'Progress', href: '/progress' },
   ];
+
+  const publicNavItems = [
+    { name: 'Features', href: '/#features' },
+    { name: 'How it works', href: '/#progress' },
+  ];
+
+  const navItems = user ? authedNavItems : publicNavItems;
 
   return (
     <motion.nav

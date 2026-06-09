@@ -96,28 +96,19 @@ export default function Hero() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="surface rounded-lg p-4">
-                  <div className="text-xs text-subtle mb-2">Today</div>
-                  <div className="text-2xl font-semibold text-app mb-1">12 min</div>
-                  <div className="text-xs text-muted">Active session</div>
+                  <div className="text-xs text-subtle mb-2">AI Posture Analysis</div>
+                  <div className="text-sm font-medium text-app mb-1">Real-time feedback</div>
+                  <div className="text-xs text-muted">Guides your form during exercises</div>
                 </div>
                 <div className="surface rounded-lg p-4">
-                  <div className="text-xs text-subtle mb-2">Posture score</div>
-                  <div className="text-2xl font-semibold text-app mb-1">Good</div>
-                  <div className="flex gap-1 mt-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full ${
-                          i <= 4 ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  <div className="text-xs text-subtle mb-2">Progress Tracking</div>
+                  <div className="text-sm font-medium text-app mb-1">XP & Achievements</div>
+                  <div className="text-xs text-muted">Earn rewards for consistency</div>
                 </div>
                 <div className="surface rounded-lg p-4">
-                  <div className="text-xs text-subtle mb-2">This week</div>
-                  <div className="text-2xl font-semibold text-app mb-1">4 / 5</div>
-                  <div className="text-xs text-muted">Sessions completed</div>
+                  <div className="text-xs text-subtle mb-2">Habit Building</div>
+                  <div className="text-sm font-medium text-app mb-1">Daily streaks</div>
+                  <div className="text-xs text-muted">Build sustainable routines</div>
                 </div>
               </div>
             </div>
