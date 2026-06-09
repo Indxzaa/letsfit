@@ -15,7 +15,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [progress, setProgress] = useState<Progress | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -44,6 +44,7 @@ export default function Navbar() {
     { name: 'Exercise', href: '/exercise' },
     { name: 'Shop', href: '/shop' },
     { name: 'Progress', href: '/progress' },
+    ...(isAdmin ? [{ name: 'Admin', href: '/admin' }] : []),
   ];
 
   const publicNavItems = [
