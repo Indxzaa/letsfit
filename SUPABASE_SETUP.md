@@ -1,123 +1,71 @@
 # Supabase Setup for LetsFit
 
-LetsFit uses Supabase for authentication and (optionally) cloud-syncing your
-progress. This guide walks through getting it running locally in about 5 minutes.
-
----
-
 ## 1. Create a Supabase project
 
-1. Go to [supabase.com](https://supabase.com) and sign in (free tier is fine).
-2. Click **New project**.
-3. Fill in:
-   - **Name**: `letsfit` (anything)
-   - **Database Password**: pick a strong password (you won't need it for the app)
-   - **Region**: closest to you
-4. Click **Create new project** and wait ~1 minute for provisioning.
+1. Go to [supabase.com](https://supabase.com) and sign in
+2. Click **New project**, fill in a name and password, pick a region
+3. Wait ~1 minute for the project to provision
 
-## 2. Copy your API keys
+## 2. Add your API keys
 
-In your project dashboard:
-
-1. Click **Project Settings** (gear icon, bottom-left)
-2. Click **API** in the sidebar
-3. You'll see two values you need:
-   - **Project URL** — looks like `https://xxxxxxxxxxxx.supabase.co`
-   - **anon / public key** — a long `eyJ...` JWT string
-
-## 3. Add the keys to `.env.local`
-
-In the project root (`c:\mywebsite\letsfit`):
-
-1. Copy `.env.local.example` to `.env.local`
-2. Paste your two values:
+1. In your project: **Project Settings → API**
+2. Copy **Project URL** and **anon / public key**
+3. In `c:\mywebsite\letsfit`, copy `.env.local.example` → `.env.local` and fill in the values:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi....your-long-key....
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi....
 ```
 
-3. Restart your dev server (`Ctrl+C`, then `npm run dev`).
+4. Restart the dev server
 
-The "Authentication is not configured" warning should now be gone.
+## 3. Disable email confirmation (dev only)
 
-## 4. Configure auth settings
+In Supabase: **Authentication → Settings → Email auth**
+- Turn off **Confirm email** so signups work instantly during development
 
-In your Supabase dashboard:
+## 4. Run the database setup SQL
 
-1. Go to **Authentication → Providers**
-2. **Email** is enabled by default — keep it on.
-3. Go to **Authentication → URL Configuration**:
-   - **Site URL**: `http://localhost:3000` (for dev)
-   - **Redirect URLs**: add `http://localhost:3000/**`
-4. Go to **Authentication → Settings**:
-   - For local dev, you can disable **Confirm email** so signups work without
-     receiving a confirmation email. (For production, leave it on.)
+Open **SQL Editor** in your Supabase dashboard. For each file below, click
+**New query**, paste the entire file contents, and click **Run**.
 
-## 5. (Optional) Create the `profiles` table
+**Run in this exact order:**
 
-LetsFit can cloud-sync your XP, FitCoins, streaks, achievements, and equipped
-cosmetics across devices. To enable this, create a `profiles` table.
+| Step | File | What it creates |
+|------|------|-----------------|
+| 1 | `SETUP_01_profiles.sql` | `is_admin()` helper function |
+| 2 | `SETUP_02_roles.sql` | `user_roles` table + signup trigger |
+| 3 | `SETUP_03_profiles.sql` | `profiles` table + signup trigger |
+| 4 | `SETUP_04_admin_view.sql` | `admin_users_view` |
+| 5 | Sign up in the app first, then run `SETUP_05_promote_admin.sql` | Grants admin to `indyy8262@gmail.com` |
 
-In your Supabase dashboard go to **SQL Editor → New query**, paste this, and run:
+Each file is in `c:\mywebsite\letsfit\`. After step 4, sign up at
+`http://localhost:3000` with `indyy8262@gmail.com` before running step 5.
 
-```sql
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  username text,
-  data jsonb not null default '{}'::jsonb,
-  updated_at timestamptz not null default now()
-);
+After step 5 succeeds you should see a result row:
 
-alter table public.profiles enable row level security;
+| email | role |
+|---|---|
+| indyy8262@gmail.com | admin |
 
-create policy "users can read their own profile"
-  on public.profiles for select
-  using (auth.uid() = id);
+## 5. Verify the admin panel
 
-create policy "users can insert their own profile"
-  on public.profiles for insert
-  with check (auth.uid() = id);
-
-create policy "users can update their own profile"
-  on public.profiles for update
-  using (auth.uid() = id);
-
--- Auto-create a row when a user signs up
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles (id, username)
-  values (new.id, coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)));
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-```
-
-That's it. Sign up in the app — your XP and FitCoins will now persist to
-the cloud and follow you to other devices. If you skip this step, the app
-falls back to localStorage.
+1. Sign in with `indyy8262@gmail.com`
+2. The navbar shows an **Admin** link
+3. `/admin` lists all users with FitCoin controls, role management, and progress reset
 
 ---
 
 ## Troubleshooting
 
-**"Invalid login credentials"** — wrong email or password, or the user hasn't
-confirmed their email. Either disable email confirmation (step 4) or check your
-inbox for the confirmation link.
+**"function public.is_admin does not exist"** — You skipped `SETUP_01`. Run it first.
 
-**"Email rate limit exceeded"** — Supabase free tier rate-limits signup emails.
-Disable email confirmation for dev or wait an hour.
+**"relation public.user_roles does not exist"** — Run `SETUP_01` then `SETUP_02`.
 
-**Sessions don't persist after refresh** — make sure you're not running in an
-incognito window with localStorage blocked.
+**"relation public.profiles does not exist"** — Run files 01–03 in order.
 
-**Profiles table not syncing** — check the SQL ran without errors and that RLS
-policies are active. Look in **Authentication → Users** to confirm a row exists,
-then in **Table Editor → profiles**.
-  
+**`SETUP_05` returns 0 rows** — You haven't signed up yet. Sign up in the app first.
+
+**"Invalid login credentials"** — Wrong password, or email confirmation is still on (disable it in Auth → Settings).
+
+**Sessions don't persist after refresh** — Don't use incognito mode; localStorage must be available.

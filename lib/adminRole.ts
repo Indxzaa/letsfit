@@ -51,15 +51,10 @@ export async function grantCoins(userId: string, amount: number): Promise<string
     .eq('id', userId)
     .maybeSingle();
   if (fetchErr || !profile) return fetchErr?.message ?? 'User not found';
-
   const current = (profile.data as Record<string, unknown>) ?? {};
-  const updatedData = {
-    ...current,
-    fitCoins: ((current.fitCoins as number) ?? 0) + amount,
-  };
   const { error } = await supabase
     .from('profiles')
-    .update({ data: updatedData })
+    .update({ data: { ...current, fitCoins: ((current.fitCoins as number) ?? 0) + amount } })
     .eq('id', userId);
   return error?.message ?? null;
 }
@@ -71,19 +66,13 @@ export async function setUserRole(userId: string, role: UserRole): Promise<strin
     .from('user_roles')
     .upsert({ user_id: userId, role }, { onConflict: 'user_id' });
   if (re) return re.message;
-  const { error: pe } = await supabase
-    .from('profiles')
-    .update({ role })
-    .eq('id', userId);
+  const { error: pe } = await supabase.from('profiles').update({ role }).eq('id', userId);
   return pe?.message ?? null;
 }
 
 export async function resetUserProgress(userId: string): Promise<string | null> {
   const supabase = getSupabase();
   if (!supabase) return 'Not configured';
-  const { error } = await supabase
-    .from('profiles')
-    .update({ data: {} })
-    .eq('id', userId);
+  const { error } = await supabase.from('profiles').update({ data: {} }).eq('id', userId);
   return error?.message ?? null;
 }
