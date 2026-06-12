@@ -13,9 +13,10 @@ export type ShopItem = {
   id: string;
   name: string;
   description: string;
-  type: 'theme' | 'avatar' | 'border' | 'badge';
+  type: 'theme' | 'avatar' | 'border' | 'badge' | 'title' | 'aura';
   cost: number;
   value: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 };
 
 export type Progress = {

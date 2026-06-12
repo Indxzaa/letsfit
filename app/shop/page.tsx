@@ -11,19 +11,24 @@ import {
   subscribeToProgress,
   type Progress,
 } from '@/lib/progress';
-import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED } from '@/lib/shop';
+import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG } from '@/lib/shop';
+import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
 
-const TABS: { id: 'theme' | 'avatar' | 'border' | 'badge'; label: string }[] = [
-  { id: 'theme', label: 'Themes' },
+type TabType = 'theme' | 'avatar' | 'border' | 'badge' | 'title' | 'aura';
+
+const TABS: { id: TabType; label: string }[] = [
+  { id: 'theme',  label: 'Themes' },
   { id: 'avatar', label: 'Avatars' },
   { id: 'border', label: 'Borders' },
-  { id: 'badge', label: 'Badges' },
+  { id: 'badge',  label: 'Badges' },
+  { id: 'title',  label: 'Titles' },
+  { id: 'aura',   label: 'Auras' },
 ];
 
 export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [tab, setTab] = useState<'theme' | 'avatar' | 'border' | 'badge'>('theme');
+  const [tab, setTab] = useState<TabType>('theme');
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
 
   useEffect(() => {
@@ -116,7 +121,6 @@ export default function ShopPage() {
           </motion.div>
         )}
 
-        {/* Tabs */}
         <div className="flex gap-1 p-1.5 clay-sm rounded-2xl mb-6 w-full overflow-x-auto">
           {TABS.map((t) => (
             <button
@@ -137,7 +141,8 @@ export default function ShopPage() {
           {items.map((item, i) => {
             const isUnlocked = allUnlocked.has(item.id);
             const isEquipped = equipped[item.type] === item.id;
-            const canAfford = progress.fitCoins >= item.cost;
+            const canAfford  = progress.fitCoins >= item.cost;
+            const rarity     = RARITY_CONFIG[item.rarity];
 
             return (
               <motion.div
@@ -156,7 +161,15 @@ export default function ShopPage() {
                 <div className="mt-4">
                   <div className="flex items-start justify-between gap-2 mb-4">
                     <div className="min-w-0">
-                      <div className="font-display text-xl font-bold text-app truncate">{item.name}</div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="font-display text-xl font-bold text-app truncate">{item.name}</div>
+                        <span
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{ color: rarity.color, background: `${rarity.color}22` }}
+                        >
+                          {rarity.label}
+                        </span>
+                      </div>
                       <div className="text-xs text-subtle">{item.description}</div>
                     </div>
                     {isEquipped && (
@@ -212,7 +225,15 @@ export default function ShopPage() {
   );
 }
 
-function ItemPreview({ item }: { item: { type: string; value: string; name: string } }) {
+function borderPreviewWrap(value: string): string {
+  if (value === 'prismatic' || value === 'gradient') return 'p-[3px] rounded-full ba-prismatic';
+  if (value === 'cosmic')                            return 'p-[3px] rounded-full ba-cosmic';
+  if (value === 'gold'    || value === 'strong')     return 'p-[3px] rounded-full ba-gold';
+  if (value === 'silver'  || value === 'soft')       return 'p-[3px] rounded-full ba-silver';
+  return '';
+}
+
+function ItemPreview({ item }: { item: ShopItem }) {
   if (item.type === 'theme') {
     const colors: Record<string, string> = {
       emerald: '#22c55e', mint: '#34d399', forest: '#15803d',
@@ -243,27 +264,80 @@ function ItemPreview({ item }: { item: { type: string; value: string; name: stri
   }
 
   if (item.type === 'border') {
-    const isGradient = item.value === 'gradient';
-    const ringClass = item.value === 'soft' ? 'ring-2 ring-[var(--accent)]/30' : item.value === 'strong' ? 'ring-4 ring-[var(--accent)]/60' : '';
+    const wrap = borderPreviewWrap(item.value);
     return (
       <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
-        <div
-          className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl bg-[var(--accent)]/15 ${ringClass}`}
-          style={isGradient ? { boxShadow: '0 0 0 4px var(--accent), 0 0 0 8px var(--accent-soft)' } : undefined}
-        >
-          🙂
-        </div>
+        {wrap ? (
+          <div className={wrap}>
+            <div className="w-20 h-20 rounded-full bg-[var(--surface-solid)] flex items-center justify-center text-3xl">🙂</div>
+          </div>
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-3xl">🙂</div>
+        )}
       </div>
     );
   }
 
-  return (
-    <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
-      {item.value ? (
-        <div className="px-4 py-1.5 rounded-full text-sm font-bold text-white accent-bg">{item.value}</div>
-      ) : (
-        <div className="text-xs text-subtle">No badge</div>
-      )}
-    </div>
-  );
+  if (item.type === 'badge') {
+    const rColor = RARITY_CONFIG[item.rarity].color;
+    return (
+      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
+        {item.value ? (
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl">🙂</div>
+            <div
+              className="px-3 py-1 rounded-full text-sm font-bold"
+              style={{ color: rColor, background: `${rColor}22`, border: `1px solid ${rColor}44` }}
+            >
+              {item.value}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-subtle">No badge</div>
+        )}
+      </div>
+    );
+  }
+
+  if (item.type === 'title') {
+    const rColor = RARITY_CONFIG[item.rarity].color;
+    return (
+      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
+        {item.value ? (
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="text-xs font-bold px-2.5 py-1 rounded-full"
+              style={{ color: rColor, background: `${rColor}22`, border: `1px solid ${rColor}44` }}
+            >
+              {item.value}
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl">🙂</div>
+            <div className="text-xs text-subtle font-medium">username</div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl">🙂</div>
+            <div className="text-xs text-subtle font-medium">username</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (item.type === 'aura') {
+    return (
+      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)] overflow-hidden">
+        {item.value ? (
+          <div className="relative flex items-center justify-center">
+            <div className={`absolute w-28 h-28 rounded-full aura-${item.value}`} />
+            <div className="w-14 h-14 rounded-full bg-[var(--surface-solid)] flex items-center justify-center text-3xl relative z-10">🙂</div>
+          </div>
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-3xl">🙂</div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }

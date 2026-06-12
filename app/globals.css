@@ -289,3 +289,45 @@ input::placeholder,
 textarea::placeholder {
   color: var(--text-subtle);
 }
+
+/* ── Animated border system ── */
+@property --ba {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes bspin {
+  to { --ba: 360deg; }
+}
+
+@keyframes bgold-pulse {
+  0%, 100% { box-shadow: 0 0 8px 3px rgba(245, 158, 11, 0.5); }
+  50%       { box-shadow: 0 0 22px 8px rgba(245, 158, 11, 0.9); }
+}
+
+@keyframes aura-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%       { opacity: 0.8;  transform: scale(1.14); }
+}
+
+.ba-prismatic {
+  background: conic-gradient(from var(--ba), #ff0080, #ff8c00, #ffed00, #00ff80, #00cfff, #cc00ff, #ff0080);
+  animation: bspin 2.5s linear infinite;
+}
+.ba-cosmic {
+  background: conic-gradient(from var(--ba), #0d001a, #6b21a8, #312e81, #0d001a);
+  animation: bspin 5s linear infinite;
+}
+.ba-gold {
+  background: #f59e0b;
+  animation: bgold-pulse 2s ease-in-out infinite;
+}
+.ba-silver {
+  background: linear-gradient(135deg, #94a3b8, #e2e8f0, #94a3b8);
+}
+
+.aura-ember   { background: radial-gradient(circle, rgba(251,146,60,.55) 0%, transparent 70%); animation: aura-pulse 2s   ease-in-out infinite; }
+.aura-storm   { background: radial-gradient(circle, rgba(99,102,241,.6)  0%, transparent 70%); animation: aura-pulse 1.8s ease-in-out infinite; }
+.aura-divine  { background: radial-gradient(circle, rgba(245,158,11,.65) 0%, transparent 70%); animation: aura-pulse 2.2s ease-in-out infinite; }
+.aura-eclipse { background: radial-gradient(circle, rgba(236,72,153,.6) 0%, rgba(109,40,217,.45) 45%, transparent 70%); animation: aura-pulse 1.5s ease-in-out infinite; }
