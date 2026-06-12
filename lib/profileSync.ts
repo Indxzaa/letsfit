@@ -1,7 +1,9 @@
 'use client';
 
 import { getSupabase } from './supabase';
-import { loadProgress, saveProgress, subscribeToProgress, type Progress } from './progress';
+import { loadProgress, saveProgress, clearLocalProgress, subscribeToProgress, type Progress } from './progress';
+
+const OWNER_KEY = 'letsfit:progress-owner';
 
 /**
  * Cloud sync for the user's progress (XP, FitCoins, streaks, achievements,
@@ -108,6 +110,16 @@ export async function startSync(userId: string): Promise<void> {
   if (activeUserId === userId) return;
   activeUserId = userId;
 
+  // Guard: if localStorage was written by a different user, wipe it before
+  // loading this user's data. Without this, User B inherits User A's coins,
+  // XP, achievements, etc. and that data gets pushed to User B's Supabase row.
+  const storedOwner = typeof window !== 'undefined' ? localStorage.getItem(OWNER_KEY) : null;
+  if (storedOwner !== userId) {
+    clearLocalProgress();
+    currentUsername = null;
+    if (typeof window !== 'undefined') localStorage.setItem(OWNER_KEY, userId);
+  }
+
   const remote = await fetchRemote(userId);
   const local = loadProgress();
 
@@ -137,6 +149,7 @@ export async function startSync(userId: string): Promise<void> {
 
 export function stopSync(): void {
   activeUserId = null;
+  currentUsername = null;
   if (unsubProgress) {
     unsubProgress();
     unsubProgress = null;

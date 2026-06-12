@@ -176,6 +176,12 @@ export function saveProgress(p: Progress): void {
   emitChange();
 }
 
+export function clearLocalProgress(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STORAGE_KEY);
+  emitChange();
+}
+
 export function resetProgress(): Progress {
   const fresh = { ...DEFAULT_PROGRESS };
   saveProgress(fresh);
