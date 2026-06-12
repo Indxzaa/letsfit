@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root,
@@ -135,6 +136,70 @@ body {
 ::selection {
   background: var(--accent-bg-strong);
   color: var(--text);
+}
+
+/* Display font for athletic headings */
+.font-display {
+  font-family: 'Barlow Condensed', var(--font-geist-sans), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Claymorphism card */
+.clay-card {
+  border-radius: 24px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.clay-sm {
+  border-radius: 16px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 1px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Floating navbar */
+.navbar-float {
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--surface-solid) 90%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Accent gradient pill */
+.accent-pill {
+  background: var(--accent-bg);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent);
+}
+
+/* Bento feature grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 input,
