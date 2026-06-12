@@ -1,24 +1,44 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Menu, X, LogOut, Coins } from 'lucide-react';
+import { Activity, Menu, X, LogOut, Coins, Pencil, Check } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
-import { loadProgress, subscribeToProgress, type Progress } from '@/lib/progress';
+import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
+import { getUsername, setUsername } from '@/lib/profileSync';
+
+const USERNAME_CHANGE_BASE_COST = 100;
+
+function usernameCost(changeCount: number): number {
+  return USERNAME_CHANGE_BASE_COST * (changeCount + 1);
+}
+
+function isValidUsername(u: string): boolean {
+  return u.trim().length >= 2 && u.trim().length <= 30 && /^[a-zA-Z0-9_.-]+$/.test(u.trim());
+}
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [username, setUsernameState] = useState<string | null>(null);
+  const [showUsernameForm, setShowUsernameForm] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [usernameSuccess, setUsernameSuccess] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
 
   useEffect(() => {
     setProgress(loadProgress());
-    const unsub = subscribeToProgress(() => setProgress(loadProgress()));
+    setUsernameState(getUsername());
+    const unsub = subscribeToProgress(() => {
+      setProgress(loadProgress());
+      setUsernameState(getUsername());
+    });
     return unsub;
   }, []);
 
@@ -26,11 +46,44 @@ export default function Navbar() {
     const onClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
+        setShowUsernameForm(false);
       }
     };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
+
+  const displayName = username ?? user?.email?.split('@')[0] ?? '';
+
+  const handleUsernameChange = async () => {
+    const trimmed = newUsername.trim();
+    if (!isValidUsername(trimmed)) {
+      setUsernameError('2–30 chars, letters/numbers/._- only');
+      return;
+    }
+    const current = loadProgress();
+    const cost = usernameCost(current.usernameChangeCount);
+    if (current.fitCoins < cost) {
+      setUsernameError(`Need ${cost} FitCoins (you have ${current.fitCoins})`);
+      return;
+    }
+    const updated: Progress = {
+      ...current,
+      fitCoins: current.fitCoins - cost,
+      usernameChangeCount: current.usernameChangeCount + 1,
+    };
+    saveProgress(updated);
+    setProgress(updated);
+    if (user) await setUsername(user.id, trimmed);
+    setUsernameState(trimmed);
+    setUsernameSuccess(true);
+    setShowUsernameForm(false);
+    setNewUsername('');
+    setUsernameError('');
+    setTimeout(() => setUsernameSuccess(false), 2500);
+  };
+
+  const cost = progress ? usernameCost(progress.usernameChangeCount) : USERNAME_CHANGE_BASE_COST;
 
   const authedNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
@@ -83,14 +136,12 @@ export default function Navbar() {
             ) : user ? (
               <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => setMenuOpen((o) => !o)}
+                  onClick={() => { setMenuOpen((o) => !o); setShowUsernameForm(false); }}
                   className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl surface surface-hover text-sm text-app cursor-pointer"
                   aria-label="User menu"
                 >
                   <UserAvatar progress={progress} size="sm" />
-                  <span className="max-w-[120px] truncate pr-1">
-                    {user.email?.split('@')[0]}
-                  </span>
+                  <span className="max-w-[120px] truncate pr-1">{displayName}</span>
                 </button>
                 <AnimatePresence>
                   {menuOpen && (
@@ -99,14 +150,18 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.97 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-64 clay-card overflow-hidden"
+                      className="absolute right-0 mt-2 w-72 clay-card overflow-hidden"
                     >
                       <div className="px-3 py-3 border-b border-app flex items-center gap-3">
                         <UserAvatar progress={progress} size="md" />
                         <div className="min-w-0">
                           <div className="text-xs text-subtle">Signed in as</div>
-                          <div className="text-sm text-app truncate font-medium">{user.email}</div>
+                          <div className="text-sm text-app truncate font-medium">{displayName}</div>
+                          <div className="text-xs text-subtle truncate">{user.email}</div>
                         </div>
+                        {usernameSuccess && (
+                          <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
+                        )}
                       </div>
                       {progress && (
                         <div className="px-3 py-2.5 border-b border-app flex items-center gap-2 text-xs text-subtle">
@@ -115,6 +170,51 @@ export default function Navbar() {
                           <span>FitCoins</span>
                         </div>
                       )}
+
+                      {/* Change username */}
+                      <div className="border-b border-app">
+                        {!showUsernameForm ? (
+                          <button
+                            onClick={() => { setShowUsernameForm(true); setNewUsername(username ?? ''); setUsernameError(''); }}
+                            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-app hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Pencil className="w-4 h-4 accent-text" />
+                              Change Username
+                            </span>
+                            <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{cost} coins</span>
+                          </button>
+                        ) : (
+                          <div className="p-3 space-y-2">
+                            <div className="text-xs text-subtle mb-1">Cost: <span className="font-bold text-app">{cost} FitCoins</span></div>
+                            <input
+                              autoFocus
+                              value={newUsername}
+                              onChange={(e) => { setNewUsername(e.target.value); setUsernameError(''); }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleUsernameChange(); if (e.key === 'Escape') { setShowUsernameForm(false); setUsernameError(''); } }}
+                              placeholder="New username"
+                              className="w-full px-3 py-2 text-sm rounded-xl surface border border-app text-app outline-none focus:border-[var(--accent)] transition-colors"
+                            />
+                            {usernameError && <div className="text-xs text-red-500">{usernameError}</div>}
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleUsernameChange}
+                                className="flex-1 px-3 py-1.5 text-xs font-bold text-white rounded-xl cursor-pointer"
+                                style={{ background: 'var(--accent)' }}
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => { setShowUsernameForm(false); setUsernameError(''); }}
+                                className="flex-1 px-3 py-1.5 text-xs text-app surface rounded-xl cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <Link
                         href="/shop"
                         onClick={() => setMenuOpen(false)}
@@ -182,7 +282,7 @@ export default function Navbar() {
               <div className="pt-3 mt-3 border-t border-app space-y-2">
                 {user ? (
                   <>
-                    <div className="px-3 py-2 text-xs text-subtle">Signed in as {user.email}</div>
+                    <div className="px-3 py-2 text-xs text-subtle">Signed in as {displayName}</div>
                     <button
                       onClick={async () => { setIsOpen(false); await signOut(); }}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-app surface rounded-xl cursor-pointer"

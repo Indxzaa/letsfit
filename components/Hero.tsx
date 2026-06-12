@@ -99,114 +99,31 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right — floating gamification preview cards */}
-          <div className="hidden lg:block relative h-[500px]">
-            {/* XP Progress card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="absolute top-0 left-0 right-12 p-6"
-              style={{
-                borderRadius: 24,
-                background: 'var(--surface-solid)',
-                border: '1px solid var(--border)',
-                boxShadow: '0 12px 40px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.07)',
-              }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: 'var(--accent)' }}>
-                    <Zap className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-subtle uppercase tracking-wider">Current Level</div>
-                    <div className="font-display text-2xl font-bold text-app">Level 12</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-display text-3xl font-bold" style={{ color: 'var(--accent)' }}>68%</div>
-                  <div className="text-xs text-subtle">to Level 13</div>
-                </div>
-              </div>
-              <div className="xp-track">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '68%' }}
-                  transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
-                  className="xp-fill"
-                />
-              </div>
-            </motion.div>
-
-            {/* Streak card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.35 }}
-              className="absolute top-36 right-0 w-52 p-5"
-              style={{
-                borderRadius: 24,
-                background: 'var(--accent)',
-                boxShadow: '0 12px 40px color-mix(in srgb, var(--accent) 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)',
-              }}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <Flame className="w-8 h-8 text-white" />
-                <div>
-                  <div className="font-display text-4xl font-bold text-white leading-none">14</div>
-                  <div className="text-white/70 text-xs">day streak</div>
-                </div>
-              </div>
-              <div className="flex gap-1">
-                {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="flex-1 h-2 rounded-full"
-                    style={{ background: i < 5 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.25)' }} />
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Achievement card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="absolute bottom-20 left-8 w-56 p-4"
-              style={{
-                borderRadius: 20,
-                background: 'var(--surface-solid)',
-                border: '1px solid var(--border)',
-                boxShadow: '0 8px 32px color-mix(in srgb, var(--accent) 25%, transparent)',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
-                  style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))' }}>
-                  🏆
+          {/* Right — feature highlights (no fake stats) */}
+          <div className="hidden lg:flex flex-col gap-4">
+            {[
+              { icon: Zap, title: 'XP & Leveling', desc: 'Every rep earns XP. Level up from 1 to 100.' },
+              { icon: Flame, title: 'Streak System', desc: 'Train daily to build momentum and unlock milestones.' },
+              { icon: Trophy, title: 'Achievements', desc: 'Earn badges across 4 rarity tiers: Common to Legendary.' },
+              { icon: Star, title: 'Daily Quests', desc: 'New challenges every day with FitCoin rewards.' },
+            ].map((f) => (
+              <div key={f.title} className="flex items-center gap-4 p-5"
+                style={{
+                  borderRadius: 20,
+                  background: 'var(--surface-solid)',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                }}>
+                <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
+                  style={{ background: 'var(--accent)', boxShadow: '0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent)' }}>
+                  <f.icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-app">First Week Done!</div>
-                  <div className="text-xs" style={{ color: 'var(--accent)' }}>+500 XP · +200 coins</div>
+                  <div className="text-sm font-bold text-app">{f.title}</div>
+                  <div className="text-xs text-muted mt-0.5">{f.desc}</div>
                 </div>
               </div>
-            </motion.div>
-
-            {/* Quest complete badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.65 }}
-              className="absolute bottom-8 right-4 px-4 py-2.5 rounded-full text-sm font-bold"
-              style={{
-                background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
-                border: '2px solid color-mix(in srgb, var(--accent) 40%, transparent)',
-                color: 'var(--accent)',
-              }}
-            >
-              <Trophy className="w-4 h-4 inline mr-1.5" />
-              3/3 quests done!
-            </motion.div>
+            ))}
           </div>
         </div>
       </div>

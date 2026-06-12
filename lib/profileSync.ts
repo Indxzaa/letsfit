@@ -22,6 +22,7 @@ const TABLE = 'profiles';
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let activeUserId: string | null = null;
 let unsubProgress: (() => void) | null = null;
+let currentUsername: string | null = null;
 
 type ProfileRow = {
   id: string;
@@ -29,6 +30,21 @@ type ProfileRow = {
   data: Progress | null;
   updated_at: string | null;
 };
+
+export function getUsername(): string | null {
+  return currentUsername;
+}
+
+export async function setUsername(userId: string, username: string): Promise<void> {
+  currentUsername = username;
+  const supabase = getSupabase();
+  if (!supabase) return;
+  try {
+    await supabase.from(TABLE).upsert({ id: userId, username, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+  } catch (err) {
+    console.warn('[profileSync] setUsername threw:', err);
+  }
+}
 
 async function fetchRemote(userId: string): Promise<ProfileRow | null> {
   const supabase = getSupabase();
@@ -94,6 +110,8 @@ export async function startSync(userId: string): Promise<void> {
 
   const remote = await fetchRemote(userId);
   const local = loadProgress();
+
+  if (remote?.username) currentUsername = remote.username;
 
   if (remote?.data) {
     // If we have remote data and local is empty (fresh device), prefer remote.

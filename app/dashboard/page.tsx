@@ -9,6 +9,7 @@ import {
 import { buildCalendar, type CalendarDay } from '@/lib/dashboardMock';
 import { loadProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress } from '@/lib/achievements';
+import { getUsername } from '@/lib/profileSync';
 import Navbar from '@/components/Navbar';
 import UserAvatar from '@/components/UserAvatar';
 
@@ -51,7 +52,7 @@ export default function DashboardPage() {
                 Mission Control
               </div>
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-app leading-tight">
-                {greeting()}, champion.
+                {greeting()}, {getUsername() ?? 'champion'}.
               </h1>
             </div>
           </div>

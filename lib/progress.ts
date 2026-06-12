@@ -35,6 +35,7 @@ export type Progress = {
   todaySessions: number;
   todayDate: string;
   rewardedStreakMilestones: number[];
+  usernameChangeCount: number;
 };
 
 const DEFAULT_PROGRESS: Progress = {
@@ -54,6 +55,7 @@ const DEFAULT_PROGRESS: Progress = {
   todaySessions: 0,
   todayDate: '',
   rewardedStreakMilestones: [],
+  usernameChangeCount: 0,
 };
 
 // ---- Reward economy (rebalanced) ----
@@ -63,6 +65,8 @@ export const XP_PER_REP = 5;
 export const XP_PER_SESSION = 15;
 export const COINS_BASE_PER_SESSION = 5;
 export const COINS_PER_4_REPS = 1;
+export const MAX_FIT_COINS = 10000;
+export const MAX_LEVEL = 100;
 
 // Quest rewards (moderate)
 export const QUEST_REWARD_XP = 30;
@@ -87,20 +91,24 @@ export const CALORIES_PER_REP: Record<string, number> = {
 export const PLANK_CAL_PER_SEC = 0.08;
 
 export function levelFromXp(xp: number): number {
-  return Math.floor(Math.sqrt(xp / 50)) + 1;
+  return Math.min(MAX_LEVEL, Math.floor(Math.sqrt(xp / 50)) + 1);
 }
 
 export function xpForLevel(level: number): number {
-  const l = Math.max(1, level) - 1;
+  const l = Math.max(1, Math.min(level, MAX_LEVEL)) - 1;
   return l * l * 50;
 }
 
 export function levelProgress(xp: number) {
   const level = levelFromXp(xp);
+  if (level >= MAX_LEVEL) {
+    const maxXp = xpForLevel(MAX_LEVEL);
+    return { level: MAX_LEVEL, currentLevelXp: maxXp, nextLevelXp: maxXp, intoLevel: 0, span: 1, pct: 1 };
+  }
   const currentLevelXp = xpForLevel(level);
   const nextLevelXp = xpForLevel(level + 1);
   const span = nextLevelXp - currentLevelXp;
-  const into = xp - currentLevelXp;
+  const into = Math.max(0, xp - currentLevelXp);
   return {
     level,
     currentLevelXp,
@@ -276,7 +284,7 @@ export function recordSession(
   const after: Progress = {
     ...current,
     xp: current.xp + xpGained,
-    fitCoins: current.fitCoins + coinsGained,
+    fitCoins: Math.min(MAX_FIT_COINS, current.fitCoins + coinsGained),
     totalReps: current.totalReps + repsCounted,
     totalSessions: current.totalSessions + (effectiveReps > 0 ? 1 : 0),
     currentStreak: nextStreak,
@@ -295,7 +303,7 @@ export function recordSession(
     const candidate = streakBonusFor(current.currentStreak, nextStreak);
     if (candidate && !current.rewardedStreakMilestones.includes(candidate.day)) {
       streakBonus = candidate;
-      after.fitCoins += candidate.coins;
+      after.fitCoins = Math.min(MAX_FIT_COINS, after.fitCoins + candidate.coins);
       after.xp += candidate.xp;
       after.rewardedStreakMilestones = [
         ...current.rewardedStreakMilestones,
@@ -315,7 +323,7 @@ export function recordSession(
     (id) => !current.missions.completed.includes(id)
   );
   if (newlyCompletedQuests.length > 0) {
-    after.fitCoins += newlyCompletedQuests.length * QUEST_REWARD_COINS;
+    after.fitCoins = Math.min(MAX_FIT_COINS, after.fitCoins + newlyCompletedQuests.length * QUEST_REWARD_COINS);
     after.xp += newlyCompletedQuests.length * QUEST_REWARD_XP;
     after.missions = {
       ...after.missions,
