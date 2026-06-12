@@ -7,42 +7,42 @@ const features = [
   {
     icon: Camera,
     title: 'AI Posture Feedback',
-    description: 'On-screen guidance helps you check your form during squats, planks, and stretches in real time.',
+    description: 'Real-time on-screen guidance corrects your form during squats, planks, and push-ups.',
     accent: true,
-    span: 'lg:col-span-2',
+    span: 'sm:col-span-2 lg:col-span-2',
   },
   {
     icon: Calendar,
     title: 'Daily Routines',
-    description: '10–20 minute sessions you can do between classes or in your dorm. No equipment required.',
+    description: '10–20 min sessions you can do between classes. No equipment.',
     accent: false,
     span: '',
   },
   {
     icon: Target,
     title: 'Habit Streaks',
-    description: 'Track consistency week by week. Gentle reminders keep you on track without being overwhelming.',
+    description: 'Track consistency every week. Stay on track without feeling overwhelmed.',
     accent: false,
     span: '',
   },
   {
     icon: TrendingUp,
     title: 'Progress Over Time',
-    description: 'See how your sessions, posture, and active minutes evolve.',
+    description: 'Watch your sessions, posture, and active minutes grow.',
     accent: false,
     span: '',
   },
   {
     icon: BookOpen,
     title: 'Learn As You Go',
-    description: 'Each exercise includes a short explanation of why it matters and what to focus on.',
+    description: 'Every exercise explains the why and what to focus on.',
     accent: false,
     span: '',
   },
   {
     icon: Heart,
     title: 'Built for Beginners',
-    description: 'No fitness background needed. The app meets you where you are and adapts to your pace.',
+    description: 'No fitness background needed. The app adapts to your pace.',
     accent: false,
     span: '',
   },
@@ -50,7 +50,7 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-24 sm:py-32 relative">
+    <section id="features" className="py-24 sm:py-32">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -59,45 +59,56 @@ export default function Features() {
           transition={{ duration: 0.5 }}
           className="max-w-2xl mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full accent-pill text-xs font-medium mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-            What you get
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-5"
+            style={{
+              background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
+              border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
+              color: 'var(--accent)',
+            }}>
+            Everything you need
           </div>
-          <h2 className="font-display text-4xl sm:text-5xl font-bold text-app mb-4 leading-tight">
-            Everything you need<br />to stay consistent.
+          <h2 className="font-display text-5xl sm:text-6xl font-bold text-app mb-4 leading-tight">
+            Your fitness,<br />gamified.
           </h2>
-          <p className="text-lg text-muted leading-relaxed">
-            LetsFit focuses on what actually matters for students — posture, consistency,
-            and short routines that fit into a busy day.
+          <p className="text-xl text-muted leading-relaxed">
+            Short workouts, real rewards. LetsFit turns daily movement into a game you actually want to play.
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {features.map((feature, index) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map((f, i) => (
             <motion.div
-              key={feature.title}
+              key={f.title}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-              className={`clay-sm p-6 hover:scale-[1.01] transition-transform duration-200 cursor-default ${feature.span} ${
-                feature.accent
-                  ? 'bg-[var(--accent)]/6 border-[var(--accent)]/20'
-                  : ''
-              }`}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className={`p-7 hover:scale-[1.02] transition-transform duration-200 cursor-default ${f.span}`}
+              style={f.accent ? {
+                borderRadius: 24,
+                background: 'var(--accent)',
+                boxShadow: '0 12px 40px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.2)',
+              } : {
+                borderRadius: 20,
+                background: 'var(--surface-solid)',
+                border: '1px solid var(--border)',
+                boxShadow: '0 6px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.06)',
+              }}
             >
-              <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-5 ${
-                  feature.accent ? 'accent-bg' : 'bg-[var(--accent)]/12'
-                }`}
-              >
-                <feature.icon
-                  className={`w-5 h-5 ${feature.accent ? 'text-white' : 'accent-text'}`}
-                  strokeWidth={2}
-                />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                style={{
+                  background: f.accent ? 'rgba(255,255,255,0.2)' : 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
+                }}>
+                <f.icon className="w-6 h-6" style={{ color: f.accent ? '#fff' : 'var(--accent)' }} strokeWidth={2} />
               </div>
-              <h3 className="font-display text-xl font-bold text-app mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted leading-relaxed">{feature.description}</p>
+              <h3 className="font-display text-2xl font-bold mb-2"
+                style={{ color: f.accent ? '#fff' : 'var(--text)' }}>
+                {f.title}
+              </h3>
+              <p className="text-sm leading-relaxed"
+                style={{ color: f.accent ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)' }}>
+                {f.description}
+              </p>
             </motion.div>
           ))}
         </div>

@@ -3,14 +3,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Flame, Trophy, Activity, Target, RotateCcw, Zap } from 'lucide-react';
-import {
-  loadProgress,
-  resetProgress,
-  levelProgress,
-  subscribeToProgress,
-  type Progress,
-} from '@/lib/progress';
+import { ArrowLeft, Flame, Trophy, Activity, Target, RotateCcw, Zap, Lock } from 'lucide-react';
+import { loadProgress, resetProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 
 export default function ProgressPage() {
@@ -31,7 +25,7 @@ export default function ProgressPage() {
   if (!progress) {
     return (
       <div className="min-h-screen bg-app flex items-center justify-center">
-        <div className="w-8 h-8 rounded-xl accent-bg animate-pulse" />
+        <div className="w-10 h-10 rounded-2xl animate-pulse" style={{ background: 'var(--accent)' }} />
       </div>
     );
   }
@@ -43,82 +37,92 @@ export default function ProgressPage() {
     <div className="min-h-screen bg-app">
       <div className="max-w-6xl mx-auto px-6 lg:px-8 py-10">
         <div className="mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-6 cursor-pointer"
-          >
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-6 cursor-pointer">
             <ArrowLeft className="w-4 h-4" />
             Back home
           </Link>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full accent-pill text-xs font-medium mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                Your progress
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
+                style={{
+                  background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
+                  border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
+                  color: 'var(--accent)',
+                }}>
+                Your journey
               </div>
-              <h1 className="font-display text-4xl sm:text-5xl font-bold text-app mb-3 leading-tight">
+              <h1 className="font-display text-5xl sm:text-6xl font-bold text-app mb-3 leading-tight">
                 Keep showing up.
               </h1>
-              <p className="text-muted max-w-xl">
-                Earn XP for each rep, build streaks, and unlock achievements as you stay consistent.
+              <p className="text-xl text-muted max-w-xl">
+                Every rep counts. Every session builds momentum. Keep going.
               </p>
             </div>
-            <button
-              onClick={handleReset}
-              className="px-3 py-2 rounded-xl surface surface-hover text-xs text-muted hover:text-app flex items-center gap-2 cursor-pointer"
-            >
+            <button onClick={handleReset}
+              className="px-4 py-2.5 rounded-xl surface surface-hover text-xs text-muted hover:text-app flex items-center gap-2 cursor-pointer">
               <RotateCcw className="w-3.5 h-3.5" />
               Reset progress
             </button>
           </div>
         </div>
 
-        {/* Level card */}
+        {/* Level hero card */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="clay-card p-6 sm:p-8 mb-6"
+          className="p-8 mb-6 overflow-hidden relative"
+          style={{
+            borderRadius: 28,
+            background: 'var(--accent)',
+            boxShadow: '0 16px 48px color-mix(in srgb, var(--accent) 50%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)',
+          }}
         >
-          <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl accent-bg flex items-center justify-center"
-                style={{ boxShadow: '0 4px 20px color-mix(in srgb, var(--accent) 35%, transparent)' }}>
-                <Zap className="w-8 h-8 text-white" />
+          {/* Decorative circles */}
+          <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full opacity-20"
+            style={{ background: 'rgba(255,255,255,0.3)' }} />
+          <div className="absolute -bottom-12 -left-4 w-40 h-40 rounded-full opacity-10"
+            style={{ background: 'rgba(255,255,255,0.4)' }} />
+
+          <div className="relative flex items-start justify-between gap-4 flex-wrap mb-6">
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}>
+                <Zap className="w-10 h-10 text-white" />
               </div>
               <div>
-                <div className="text-xs text-subtle mb-1 uppercase tracking-wider">Current Level</div>
-                <div className="font-display text-6xl font-bold text-app tabular-nums leading-none">
-                  {lp.level}
-                </div>
-                <div className="text-sm text-muted mt-1">{progress.xp.toLocaleString()} XP total</div>
+                <div className="text-white/70 text-sm font-semibold uppercase tracking-wider mb-1">Current Level</div>
+                <div className="font-display text-7xl font-bold text-white leading-none">{lp.level}</div>
+                <div className="text-white/70 text-sm mt-1">{progress.xp.toLocaleString()} XP total</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-subtle mb-1 uppercase tracking-wider">Next level in</div>
-              <div className="font-display text-3xl font-bold text-app tabular-nums">
-                {(lp.nextLevelXp - progress.xp).toLocaleString()} XP
+              <div className="text-white/70 text-sm font-semibold uppercase tracking-wider mb-1">Next level</div>
+              <div className="font-display text-4xl font-bold text-white">
+                {(lp.nextLevelXp - progress.xp).toLocaleString()}
+                <span className="text-xl font-semibold text-white/70 ml-1">XP</span>
               </div>
             </div>
           </div>
 
-          <div className="h-3 rounded-full bg-[var(--border)] overflow-hidden mb-2">
+          <div className="relative h-4 rounded-full overflow-hidden"
+            style={{ background: 'rgba(255,255,255,0.2)' }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${lp.pct * 100}%` }}
-              transition={{ duration: 0.9, ease: 'easeOut' }}
+              transition={{ duration: 1.0, ease: 'easeOut' }}
               className="h-full rounded-full"
-              style={{ background: 'var(--accent)' }}
+              style={{ background: 'rgba(255,255,255,0.9)', boxShadow: '0 0 12px rgba(255,255,255,0.6)' }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs text-subtle">
+          <div className="flex justify-between text-white/60 text-xs mt-2">
             <span>Level {lp.level}</span>
-            <span>{lp.intoLevel} / {lp.span} XP</span>
+            <span>{lp.intoLevel.toLocaleString()} / {lp.span.toLocaleString()} XP</span>
             <span>Level {lp.level + 1}</span>
           </div>
         </motion.div>
 
-        {/* Stats */}
+        {/* Stats row */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {[
             { icon: Flame, label: 'Current streak', value: `${progress.currentStreak}d`, sub: `Longest: ${progress.longestStreak}d`, delay: 0 },
@@ -131,11 +135,18 @@ export default function ProgressPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: s.delay }}
-              className="clay-sm p-5"
+              className="p-5"
+              style={{
+                borderRadius: 20, background: 'var(--surface-solid)', border: '1px solid var(--border)',
+                boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
+              }}
             >
-              <div className="flex items-center gap-2 text-xs text-subtle mb-3">
-                <s.icon className="w-3.5 h-3.5" />
-                {s.label}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))' }}>
+                  <s.icon className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                </div>
+                <span className="text-xs text-subtle">{s.label}</span>
               </div>
               <div className="font-display text-3xl font-bold text-app tabular-nums">{s.value}</div>
               <div className="text-xs text-subtle mt-1">{s.sub}</div>
@@ -143,16 +154,29 @@ export default function ProgressPage() {
           ))}
         </div>
 
-        {/* Achievements grid */}
+        {/* Trophy wall */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="clay-sm p-6 sm:p-8"
+          className="p-6 sm:p-8"
+          style={{
+            borderRadius: 28, background: 'var(--surface-solid)', border: '1px solid var(--border)',
+            boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
+          }}
         >
-          <div className="mb-6">
-            <h2 className="font-display text-3xl font-bold text-app mb-1">Achievements</h2>
-            <p className="text-sm text-subtle">{unlocked.size} of {ACHIEVEMENTS.length} unlocked</p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="font-display text-3xl font-bold text-app">Achievement Wall</h2>
+              <p className="text-sm text-subtle mt-1">{unlocked.size} of {ACHIEVEMENTS.length} unlocked</p>
+            </div>
+            <div className="px-4 py-2 rounded-full text-sm font-bold"
+              style={{
+                background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
+                color: 'var(--accent)',
+              }}>
+              {Math.round((unlocked.size / ACHIEVEMENTS.length) * 100)}% complete
+            </div>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -163,24 +187,31 @@ export default function ProgressPage() {
                   key={a.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.25 + i * 0.03 }}
-                  className={`rounded-2xl p-4 border transition-all ${
-                    isUnlocked
-                      ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30'
-                      : 'bg-[var(--surface)] border-app opacity-50'
-                  }`}
+                  transition={{ duration: 0.3, delay: 0.25 + i * 0.025 }}
+                  className="p-4 relative overflow-hidden"
+                  style={isUnlocked ? {
+                    borderRadius: 20,
+                    background: 'color-mix(in srgb, var(--accent) 12%, var(--surface-solid))',
+                    border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
+                    boxShadow: '0 6px 24px color-mix(in srgb, var(--accent) 25%, transparent)',
+                  } : {
+                    borderRadius: 20,
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    opacity: 0.5,
+                  }}
                 >
-                  <div
-                    className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl mb-3 ${
-                      isUnlocked ? 'accent-bg' : 'bg-[var(--border)] grayscale'
-                    }`}
-                  >
-                    {a.icon}
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-3"
+                    style={{
+                      background: isUnlocked ? 'var(--accent)' : 'var(--border)',
+                      boxShadow: isUnlocked ? '0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent)' : 'none',
+                    }}>
+                    {isUnlocked ? a.icon : <Lock className="w-5 h-5 text-subtle" />}
                   </div>
                   <div className="text-sm font-bold text-app mb-1">{a.name}</div>
                   <div className="text-xs text-muted leading-relaxed">{a.description}</div>
                   {isUnlocked && (
-                    <div className="text-xs accent-text mt-2 font-semibold">Unlocked</div>
+                    <div className="text-xs font-bold mt-2" style={{ color: 'var(--accent)' }}>✓ Unlocked</div>
                   )}
                 </motion.div>
               );

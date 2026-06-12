@@ -150,19 +150,96 @@ body {
   background: var(--surface-solid);
   border: 1px solid var(--border);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.14),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 12px 40px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .clay-sm {
-  border-radius: 16px;
+  border-radius: 20px;
   background: var(--surface-solid);
   border: 1px solid var(--border);
   box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    0 1px 4px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 6px 24px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Vibrant accent card — full accent background, white text, glow */
+.card-vibrant {
+  border-radius: 24px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  box-shadow:
+    0 12px 40px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Soft tinted card — accent at ~15% opacity bg */
+.card-tinted {
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface-solid));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.1),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Glow for unlocked achievements */
+.achievement-glow {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 8px 32px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Chunky XP progress bar */
+.xp-track {
+  height: 16px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface-solid));
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.xp-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.xp-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Quest card */
+.quest-card {
+  border-radius: 16px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.quest-card-done {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-solid));
+  border-left-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* Floating navbar */
