@@ -37,6 +37,7 @@ export type Progress = {
   todayDate: string;
   rewardedStreakMilestones: number[];
   usernameChangeCount: number;
+  bossesDefeated: string[];
 };
 
 const DEFAULT_PROGRESS: Progress = {
@@ -57,6 +58,7 @@ const DEFAULT_PROGRESS: Progress = {
   todayDate: '',
   rewardedStreakMilestones: [],
   usernameChangeCount: 0,
+  bossesDefeated: [],
 };
 
 // ---- Reward economy (rebalanced) ----
@@ -356,5 +358,44 @@ export function recordSession(
     newAchievements: newlyUnlocked,
     completedQuests: newlyCompletedQuests,
     streakBonus,
+  };
+}
+
+export type BossResult = {
+  before: Progress;
+  after: Progress;
+  xpGained: number;
+  coinsGained: number;
+  newAchievements: string[];
+  leveledUp: boolean;
+};
+
+export function recordBossDefeat(
+  current: Progress,
+  bossId: string,
+  xp: number,
+  coins: number,
+  achievementChecker: (p: Progress) => string[]
+): BossResult {
+  const before = { ...current };
+  if (current.bossesDefeated.includes(bossId)) {
+    return { before, after: current, xpGained: 0, coinsGained: 0, newAchievements: [], leveledUp: false };
+  }
+  const after: Progress = {
+    ...current,
+    xp: current.xp + xp,
+    fitCoins: Math.min(MAX_FIT_COINS, current.fitCoins + coins),
+    bossesDefeated: [...current.bossesDefeated, bossId],
+  };
+  const newlyUnlocked = achievementChecker(after).filter((id) => !current.unlockedAchievements.includes(id));
+  after.unlockedAchievements = [...current.unlockedAchievements, ...newlyUnlocked];
+  saveProgress(after);
+  return {
+    before,
+    after,
+    xpGained: xp,
+    coinsGained: coins,
+    newAchievements: newlyUnlocked,
+    leveledUp: levelFromXp(after.xp) > levelFromXp(before.xp),
   };
 }

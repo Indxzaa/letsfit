@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
-  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock,
+  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight,
 } from 'lucide-react';
+import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
 import { buildCalendar, type CalendarDay } from '@/lib/dashboardMock';
 import { loadProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress } from '@/lib/achievements';
@@ -279,6 +280,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Boss challenge card */}
+        <BossChallenge progress={progress} />
+
         {/* Lifetime stats + Achievements */}
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 p-6" style={{
@@ -402,6 +406,62 @@ function intensityColor(level: number): string {
   if (level === 0) return 'var(--border)';
   const pcts: Record<number, string> = { 1: '20%', 2: '42%', 3: '65%', 4: '100%' };
   return `color-mix(in srgb, var(--accent) ${pcts[level]}, transparent)`;
+}
+
+function BossChallenge({ progress }: { progress: Progress }) {
+  const lp = levelProgress(progress.xp);
+  const next = BOSSES.find((b) => !(progress.bossesDefeated?.includes(b.id)));
+  if (!next) return null;
+  const tier = TIER_CONFIG[next.tier];
+  const unlocked = next.isUnlocked(progress);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.18 }}
+      className="mb-4"
+    >
+      <Link
+        href={unlocked ? `/boss/${next.id}` : '#'}
+        className="flex items-center justify-between gap-4 p-5 transition-transform hover:scale-[1.01] duration-200"
+        style={{
+          borderRadius: 24,
+          background: tier.bg,
+          border: `1px solid ${tier.color}44`,
+          boxShadow: `0 8px 32px ${tier.color}22`,
+          pointerEvents: unlocked ? 'auto' : 'none',
+          opacity: unlocked ? 1 : 0.6,
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: `${tier.color}22`, border: `1px solid ${tier.color}44` }}>
+            <Swords className="w-7 h-7" style={{ color: tier.color }} />
+          </div>
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: tier.color }}>
+              {tier.label} Boss Challenge · World {next.world}
+            </div>
+            <div className="font-display text-2xl font-bold text-app">{next.name}</div>
+            <div className="text-sm text-muted">{next.flavour}</div>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="text-xs text-muted mb-1">Reward</div>
+          <div className="font-display text-xl font-bold" style={{ color: tier.color }}>
+            +{next.rewards.xp}XP
+          </div>
+          {unlocked ? (
+            <div className="flex items-center gap-1 text-sm font-bold mt-1" style={{ color: tier.color }}>
+              Fight now <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          ) : (
+            <div className="text-xs text-muted mt-1">{next.unlockLabel}</div>
+          )}
+        </div>
+      </Link>
+    </motion.div>
+  );
 }
 
 function CalendarGrid({ days }: { days: CalendarDay[] }) {
