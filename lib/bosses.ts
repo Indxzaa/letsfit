@@ -26,7 +26,7 @@ export type Boss = {
 export const BOSSES: Boss[] = [
   {
     id: 'boss-warm-up-king',
-    name: 'The Warm-Up King',
+    name: 'Forest Queen',
     flavour: 'A classic test of your foundations. Three rounds. Four minutes.',
     tier: 'easy',
     world: 1,
@@ -42,7 +42,7 @@ export const BOSSES: Boss[] = [
   },
   {
     id: 'boss-the-grinder',
-    name: 'The Grinder',
+    name: 'Arctic Queen',
     flavour: 'Consistent effort across four rounds. No shortcuts.',
     tier: 'medium',
     world: 2,
@@ -59,7 +59,7 @@ export const BOSSES: Boss[] = [
   },
   {
     id: 'boss-iron-wall',
-    name: 'The Iron Wall',
+    name: 'The Witch',
     flavour: 'Five rounds of real effort. Power, core, and endurance.',
     tier: 'hard',
     world: 3,
@@ -77,7 +77,7 @@ export const BOSSES: Boss[] = [
   },
   {
     id: 'boss-apex',
-    name: 'APEX',
+    name: 'Elf Beast',
     flavour: 'Six rounds. Ten minutes. The ultimate test. No excuses.',
     tier: 'legendary',
     world: 4,
