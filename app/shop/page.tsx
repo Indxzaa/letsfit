@@ -11,9 +11,12 @@ import {
   subscribeToProgress,
   type Progress,
 } from '@/lib/progress';
-import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG } from '@/lib/shop';
+import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, ACCENT_THEMES } from '@/lib/shop';
 import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/components/AuthProvider';
+
+const DEV_EMAIL = 'indyy8262@gmail.com';
 
 type TabType = 'theme' | 'avatar' | 'border' | 'aura';
 
@@ -28,6 +31,8 @@ export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [tab, setTab] = useState<TabType>('theme');
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
+  const { user } = useAuth();
+  const isDev = user?.email === DEV_EMAIL;
 
   useEffect(() => {
     setProgress(loadProgress());
@@ -48,7 +53,14 @@ export default function ShopPage() {
     );
   }
 
-  const allUnlocked = new Set([...FREE_DEFAULTS, ...progress.unlockedItems]);
+  const allUnlocked = new Set([
+    ...FREE_DEFAULTS,
+    ...progress.unlockedItems,
+    // world-completion themes unlocked by boss defeats (or dev)
+    ...SHOP_ITEMS
+      .filter(i => i.rarity === 'world' && i.requirement && (isDev || progress.bossesDefeated.includes(i.requirement)))
+      .map(i => i.id),
+  ]);
   const equipped = { ...DEFAULT_EQUIPPED, ...progress.equippedItems };
 
   const handlePurchase = (id: string, cost: number) => {
@@ -194,6 +206,14 @@ export default function ShopPage() {
                         Equip
                       </button>
                     )
+                  ) : item.rarity === 'world' ? (
+                    <button
+                      disabled
+                      className="w-full py-2.5 rounded-xl surface text-xs text-subtle font-semibold flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      Clear a world to unlock
+                    </button>
                   ) : (
                     <button
                       onClick={() => handlePurchase(item.id, item.cost)}
@@ -203,12 +223,12 @@ export default function ShopPage() {
                       {canAfford ? (
                         <>
                           <Coins className="w-3.5 h-3.5 accent-text" />
-                          <span>{item.cost}</span>
+                          <span>{item.cost.toLocaleString()}</span>
                         </>
                       ) : (
                         <>
                           <Lock className="w-3.5 h-3.5" />
-                          <span>Need {item.cost}</span>
+                          <span>Need {item.cost.toLocaleString()}</span>
                         </>
                       )}
                     </button>
@@ -233,32 +253,42 @@ function borderPreviewWrap(value: string): string {
 
 function ItemPreview({ item }: { item: ShopItem }) {
   if (item.type === 'theme') {
-    const palette: Record<string, string | [string, string]> = {
-      emerald: '#22c55e', mint: '#34d399', forest: '#15803d',
-      sky: '#3b82f6', amber: '#f59e0b', rose: '#f43f5e',
-      'florida-keys': ['#14b8a6', '#0891b2'],
-      ballerina:      ['#ec4899', '#a855f7'],
-    };
-    const entry = palette[item.value] ?? '#22c55e';
-    const isMulti = Array.isArray(entry);
-    const primary   = isMulti ? entry[0] : entry;
-    const secondary = isMulti ? entry[1] : entry;
-    const btnBg = isMulti ? `linear-gradient(135deg, ${primary}, ${secondary})` : primary;
-    const barBg = isMulti ? `linear-gradient(90deg, ${primary}, ${secondary})` : primary;
+    const palette = ACCENT_THEMES[item.value];
+    const p = palette?.dark ?? '#5ec97a';
+    const s = palette?.secondary ?? palette?.soft ?? p;
+    const t = palette?.tertiary ?? p;
+    const soft = palette?.soft ?? p;
     return (
-      <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-app flex flex-col">
-        <div className="flex-1 p-4" style={{ background: 'var(--surface-solid)' }}>
-          <div className="flex gap-1 mb-2">
-            <div className="h-2 w-8 rounded-full" style={{ background: primary }} />
-            {isMulti && <div className="h-2 w-5 rounded-full" style={{ background: secondary }} />}
+      <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-app flex flex-col" style={{ background: 'var(--surface-solid)' }}>
+        <div className="flex-1 p-4 flex flex-col justify-between">
+          {/* Palette swatches */}
+          <div className="flex gap-1.5 mb-3">
+            <div className="h-5 flex-1 rounded-lg" style={{ background: p }} />
+            <div className="h-5 flex-1 rounded-lg" style={{ background: s }} />
+            <div className="h-5 flex-1 rounded-lg" style={{ background: soft }} />
+            <div className="h-5 flex-1 rounded-lg" style={{ background: t }} />
           </div>
-          <div className="h-1.5 w-16 rounded-full bg-[var(--border)]" />
-          <div className="h-1.5 w-12 rounded-full bg-[var(--border)] mt-1.5" />
-          <div className="mt-3 h-7 w-14 rounded-xl flex items-center justify-center text-xs font-bold text-white" style={{ background: btnBg }}>
-            {item.name}
+          {/* Mock UI elements */}
+          <div>
+            <div className="h-1.5 w-16 rounded-full mb-1.5" style={{ background: 'var(--border)' }} />
+            <div className="h-1.5 w-11 rounded-full mb-3" style={{ background: 'var(--border)' }} />
+            {/* Button + progress bar row */}
+            <div className="flex items-center gap-2">
+              <div className="h-6 px-3 rounded-lg flex items-center text-[10px] font-bold text-white" style={{ background: p, minWidth: 48 }}>
+                {item.name.split(' ')[0]}
+              </div>
+              <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
+                <div className="h-full w-3/5 rounded-full" style={{ background: `linear-gradient(90deg, ${p}, ${s})` }} />
+              </div>
+            </div>
           </div>
         </div>
-        <div className="h-2" style={{ background: barBg }} />
+        {/* Bottom accent stripe with secondary + tertiary */}
+        <div className="h-2 flex">
+          <div className="flex-1" style={{ background: p }} />
+          <div className="flex-1" style={{ background: s }} />
+          <div className="flex-1" style={{ background: t }} />
+        </div>
       </div>
     );
   }

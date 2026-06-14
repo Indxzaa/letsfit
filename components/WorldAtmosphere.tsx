@@ -46,25 +46,25 @@ function ForestAtmo() {
   return (
     <>
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 30% 0%, rgba(134,239,172,0.14) 0%, transparent 55%), radial-gradient(ellipse at 72% 5%, rgba(74,222,128,0.07) 0%, transparent 40%)',
+        background: 'radial-gradient(ellipse at 30% 0%, rgba(126,207,138,0.15) 0%, transparent 55%), radial-gradient(ellipse at 72% 5%, rgba(200,184,100,0.09) 0%, transparent 40%), radial-gradient(ellipse at 12% 40%, rgba(100,180,120,0.07) 0%, transparent 35%)',
       }} />
-      <Silhouette d={F_FAR} fill="#122a12" />
-      <Silhouette d={F_NEAR} fill="#071408" />
-      <div className="absolute bottom-0 w-full h-32" style={{
-        background: 'linear-gradient(to top, rgba(180,255,190,0.07) 0%, transparent 100%)',
+      <Silhouette d={F_FAR} fill="#0f2410" />
+      <Silhouette d={F_NEAR} fill="#061008" />
+      <div className="absolute bottom-0 w-full h-36" style={{
+        background: 'linear-gradient(to top, rgba(200,184,100,0.07) 0%, rgba(160,220,170,0.05) 50%, transparent 100%)',
         animation: 'wfa-fog 16s ease-in-out infinite alternate',
       }} />
       {FIREFLIES.map(([l, t, d], i) => (
         <div key={i} className="absolute rounded-full" style={{
           left: `${l}%`, top: `${t}%`, width: 3, height: 3,
-          background: '#fef9c3',
-          boxShadow: '0 0 8px 4px rgba(254,240,138,0.8)',
+          background: i % 3 === 2 ? '#b8e898' : '#fef3c7',
+          boxShadow: i % 3 === 2 ? '0 0 8px 4px rgba(184,232,152,0.7)' : '0 0 8px 4px rgba(254,243,199,0.8)',
           animation: `wfa-firefly ${3.5 + (i % 4) * 0.6}s ease-in-out infinite`,
           animationDelay: `${d}s`,
         }} />
       ))}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(4,12,4,0.55) 100%)',
+        background: 'radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(4,10,4,0.55) 100%)',
       }} />
     </>
   );
@@ -74,23 +74,34 @@ function WinterAtmo() {
   return (
     <>
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 50% 0%, rgba(186,230,253,0.1) 0%, transparent 50%), radial-gradient(ellipse at 20% 20%, rgba(147,197,253,0.06) 0%, transparent 35%)',
+        background: 'radial-gradient(ellipse at 50% 0%, rgba(186,230,253,0.1) 0%, transparent 50%), radial-gradient(ellipse at 20% 20%, rgba(168,136,216,0.08) 0%, transparent 35%), radial-gradient(ellipse at 80% 15%, rgba(104,212,192,0.07) 0%, transparent 30%)',
       }} />
-      <Silhouette d={M_FAR} fill="#1a2c44" />
-      <Silhouette d={M_NEAR} fill="#0e1e30" />
+      {/* Aurora ribbons */}
+      {(['rgba(168,136,216,0.12)', 'rgba(104,212,192,0.09)', 'rgba(124,196,232,0.08)'] as const).map((color, i) => (
+        <div key={i} className="absolute" style={{
+          left: 0, right: 0, top: `${6 + i * 10}%`, height: 70,
+          background: `linear-gradient(90deg, transparent, ${color} 35%, ${color} 65%, transparent)`,
+          filter: 'blur(18px)',
+          animation: `wfa-fog ${15 + i * 4}s ease-in-out infinite alternate`,
+          animationDelay: `${i * 2.5}s`,
+        }} />
+      ))}
+      <Silhouette d={M_FAR} fill="#172638" />
+      <Silhouette d={M_NEAR} fill="#0c1a28" />
       <div className="absolute bottom-0 w-full h-28" style={{
-        background: 'linear-gradient(to top, rgba(219,234,254,0.09) 0%, transparent 100%)',
+        background: 'linear-gradient(to top, rgba(124,196,232,0.08) 0%, rgba(168,136,216,0.04) 50%, transparent 100%)',
         animation: 'wfa-fog 20s ease-in-out infinite alternate',
       }} />
       {SNOWFLAKES.map(([l, d, size], i) => (
-        <div key={i} className="absolute rounded-full bg-white" style={{
-          left: `${l}%`, top: -10, width: size * 3, height: size * 3, opacity: 0.7,
+        <div key={i} className="absolute rounded-full" style={{
+          left: `${l}%`, top: -10, width: size * 3, height: size * 3,
+          background: i % 4 === 3 ? 'rgba(168,136,216,0.8)' : 'rgba(255,255,255,0.75)',
           animation: `wfa-snow ${6 + (i % 5) * 1.2}s linear infinite`,
           animationDelay: `${d}s`,
         }} />
       ))}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 50% 50%, transparent 25%, rgba(4,12,26,0.55) 100%)',
+        background: 'radial-gradient(ellipse at 50% 50%, transparent 25%, rgba(4,10,22,0.55) 100%)',
       }} />
     </>
   );
@@ -106,13 +117,14 @@ function WitchAtmo() {
         boxShadow: '0 0 60px 30px rgba(192,132,252,0.3), 0 0 120px 60px rgba(168,85,247,0.14)',
       }} />
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 88% 8%, rgba(192,132,252,0.1) 0%, transparent 50%)',
+        background: 'radial-gradient(ellipse at 88% 8%, rgba(192,132,252,0.1) 0%, transparent 50%), radial-gradient(ellipse at 15% 20%, rgba(88,212,192,0.08) 0%, transparent 40%), radial-gradient(ellipse at 50% 60%, rgba(232,144,184,0.05) 0%, transparent 40%)',
       }} />
       <Silhouette d={W_BASE} fill="#0a0018" />
       <div className="absolute bottom-0 w-full h-40" style={{
-        background: 'linear-gradient(to top, rgba(88,28,135,0.18) 0%, rgba(107,33,168,0.05) 60%, transparent 100%)',
+        background: 'linear-gradient(to top, rgba(88,28,135,0.18) 0%, rgba(56,188,176,0.06) 50%, transparent 100%)',
         animation: 'wfa-fog 14s ease-in-out infinite alternate',
       }} />
+      {/* Purple wisps */}
       {WISPS.map(([l, t, d, color], i) => (
         <div key={i} className="absolute rounded-full" style={{
           left: `${l}%`, top: `${t}%`,
@@ -123,12 +135,23 @@ function WitchAtmo() {
           animationDelay: `${d as number}s`,
         }} />
       ))}
+      {/* Teal arcane wisps */}
+      {([[25,58,0.6,'#58d4c0'],[62,44,1.8,'#40c8b0'],[78,62,0.3,'#50dccc']] as [number,number,number,string][]).map(([l,t,d,color], i) => (
+        <div key={i} className="absolute rounded-full" style={{
+          left: `${l}%`, top: `${t}%`,
+          width: 6 + (i % 2) * 4, height: 6 + (i % 2) * 4,
+          background: color, filter: 'blur(5px)',
+          boxShadow: `0 0 16px 8px ${color}55`,
+          animation: `wfa-wisp ${4.5 + i * 0.9}s ease-in-out infinite`,
+          animationDelay: `${d}s`,
+        }} />
+      ))}
       {RUNES.map((rune, i) => (
         <div key={i} className="absolute select-none font-bold" style={{
           left: `${RUNE_POS[i][0]}%`, top: `${RUNE_POS[i][1]}%`,
           fontSize: 20 + (i % 3) * 6,
-          color: 'rgba(192,132,252,0.16)',
-          textShadow: '0 0 14px rgba(168,85,247,0.45)',
+          color: i % 2 === 0 ? 'rgba(192,132,252,0.16)' : 'rgba(88,212,192,0.14)',
+          textShadow: i % 2 === 0 ? '0 0 14px rgba(168,85,247,0.45)' : '0 0 14px rgba(88,212,192,0.4)',
           animation: `wfa-fog ${9 + i * 1.3}s ease-in-out infinite alternate`,
           animationDelay: `${i * 0.8}s`,
         }}>{rune}</div>
@@ -144,13 +167,15 @@ function ElvenAtmo() {
   return (
     <>
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.12) 0%, transparent 50%), radial-gradient(ellipse at 18% 5%, rgba(253,224,71,0.07) 0%, transparent 35%)',
+        background: 'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.12) 0%, transparent 50%), radial-gradient(ellipse at 18% 5%, rgba(253,224,71,0.07) 0%, transparent 35%), radial-gradient(ellipse at 82% 10%, rgba(120,216,144,0.07) 0%, transparent 30%)',
       }} />
       {/* Light rays */}
       {[15, 30, 50, 68, 84].map((l, i) => (
         <div key={i} className="absolute top-0" style={{
           left: `${l}%`, width: 70, height: '75%',
-          background: 'linear-gradient(to bottom, rgba(253,224,71,0.10), transparent)',
+          background: i % 2 === 0
+            ? 'linear-gradient(to bottom, rgba(253,224,71,0.10), transparent)'
+            : 'linear-gradient(to bottom, rgba(120,216,144,0.07), transparent)',
           transform: `rotate(${-8 + i * 4}deg) translateX(-50%)`,
           transformOrigin: 'top center',
           filter: 'blur(20px)',
@@ -167,26 +192,32 @@ function ElvenAtmo() {
           borderRadius: '60% 60% 0 0 / 3% 3% 0 0',
         }} />
       ))}
-      {/* Crystal ground glows */}
-      {[20, 50, 78].map((l, i) => (
+      {/* Ground glows — gold + emerald alternating */}
+      {[15, 35, 55, 75].map((l, i) => (
         <div key={i} className="absolute bottom-0" style={{
-          left: `${l}%`, width: 130, height: 90,
-          background: `radial-gradient(ellipse at 50% 100%, rgba(245,158,11,${i === 1 ? 0.15 : 0.1}) 0%, transparent 70%)`,
+          left: `${l}%`, width: 140, height: 100,
+          background: i % 2 === 0
+            ? `radial-gradient(ellipse at 50% 100%, rgba(232,192,80,0.15) 0%, transparent 70%)`
+            : `radial-gradient(ellipse at 50% 100%, rgba(120,216,144,0.12) 0%, transparent 70%)`,
           transform: 'translateX(-50%)',
         }} />
       ))}
-      {/* Gold motes */}
+      {/* Dawn horizon glow */}
+      <div className="absolute bottom-0 w-full h-16" style={{
+        background: 'linear-gradient(to top, rgba(232,168,112,0.07) 0%, transparent 100%)',
+      }} />
+      {/* Gold + green motes */}
       {MOTES.map(([l, t, d], i) => (
         <div key={i} className="absolute rounded-full" style={{
           left: `${l}%`, top: `${t}%`, width: 3, height: 3,
-          background: '#fde68a',
-          boxShadow: '0 0 6px 3px rgba(253,224,71,0.75)',
+          background: i % 3 === 2 ? '#90e8b0' : '#fde68a',
+          boxShadow: i % 3 === 2 ? '0 0 6px 3px rgba(120,216,144,0.7)' : '0 0 6px 3px rgba(253,224,71,0.75)',
           animation: `wfa-mote ${5 + (i % 4) * 0.8}s ease-in-out infinite`,
           animationDelay: `${d}s`,
         }} />
       ))}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(18,10,0,0.6) 100%)',
+        background: 'radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(14,8,0,0.6) 100%)',
       }} />
     </>
   );

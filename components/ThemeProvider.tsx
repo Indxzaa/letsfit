@@ -42,22 +42,23 @@ function applyAccentFromProgress(mode: Mode) {
     root.style.setProperty('--accent', palette.dark);
     root.style.setProperty('--accent-hover', palette.light);
     root.style.setProperty('--accent-soft', palette.soft);
-    // accent-bg variations rebuild from accent
+    root.style.setProperty('--accent-2', palette.secondary);
+    root.style.setProperty('--accent-3', palette.tertiary);
     const rgb = hexToRgb(palette.dark);
     if (rgb) {
       root.style.setProperty('--accent-bg', `rgba(${rgb}, 0.12)`);
       root.style.setProperty('--accent-bg-strong', `rgba(${rgb}, 0.2)`);
-      root.style.setProperty('--accent-2', palette.secondary ?? palette.soft);
     }
   } else {
     root.style.setProperty('--accent', palette.light);
     root.style.setProperty('--accent-hover', palette.light);
     root.style.setProperty('--accent-soft', palette.lightSoft);
+    root.style.setProperty('--accent-2', palette.lightSecondary);
+    root.style.setProperty('--accent-3', palette.lightTertiary);
     const rgb = hexToRgb(palette.light);
     if (rgb) {
       root.style.setProperty('--accent-bg', `rgba(${rgb}, 0.1)`);
       root.style.setProperty('--accent-bg-strong', `rgba(${rgb}, 0.18)`);
-      root.style.setProperty('--accent-2', palette.secondaryLight ?? palette.lightSoft);
     }
   }
 }

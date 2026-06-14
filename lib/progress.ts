@@ -16,7 +16,8 @@ export type ShopItem = {
   type: 'theme' | 'avatar' | 'border' | 'badge' | 'title' | 'aura';
   cost: number;
   value: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world';
+  requirement?: string; // boss ID that must be defeated to unlock
 };
 
 export type Progress = {

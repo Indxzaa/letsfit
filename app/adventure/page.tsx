@@ -16,10 +16,10 @@ const DEV_EMAIL = 'indyy8262@gmail.com';
 const POSITIONS = [[18, 10], [60, 32], [14, 56], [58, 78]] as const;
 
 const PLANET_GRADIENTS = [
-  'radial-gradient(circle at 33% 28%, #86efac 0%, #16a34a 42%, #052e16 100%)',
-  'radial-gradient(circle at 33% 28%, #bfdbfe 0%, #3b82f6 42%, #1e3a8a 100%)',
-  'radial-gradient(circle at 33% 28%, #e9d5ff 0%, #a855f7 42%, #3b0764 100%)',
-  'radial-gradient(circle at 33% 28%, #fde68a 0%, #f59e0b 42%, #78350f 100%)',
+  'radial-gradient(circle at 33% 28%, #c0e8c8 0%, #7ecf8a 35%, #2e8044 65%, #0c1e0c 100%)',
+  'radial-gradient(circle at 33% 28%, #e8f6ff 0%, #7cc4e8 35%, #3868a8 65%, #080e20 100%)',
+  'radial-gradient(circle at 33% 28%, #f0d8ff 0%, #b870dc 35%, #58389a 65%, #160430 100%)',
+  'radial-gradient(circle at 33% 28%, #fff0b0 0%, #e8c050 35%, #8a6828 65%, #140e02 100%)',
 ];
 
 // Fixed star positions — avoid hydration mismatch
