@@ -35,7 +35,7 @@ export const BOSSES: Boss[] = [
       { slug: 'squat',        label: 'Squats',        reps: 10 },
       { slug: 'pushup',       label: 'Push-Ups',      reps: 8 },
     ],
-    timeLimitSeconds: 240,
+    timeLimitSeconds: 180,
     rewards: { xp: 150, coins: 60 },
     unlockLabel: 'Always available',
     isUnlocked: () => true,
@@ -52,7 +52,7 @@ export const BOSSES: Boss[] = [
       { slug: 'jumping-jack', label: 'Jumping Jacks', reps: 25 },
       { slug: 'plank',        label: 'Plank Hold',    reps: 30, isTimed: true },
     ],
-    timeLimitSeconds: 360,
+    timeLimitSeconds: 210,
     rewards: { xp: 300, coins: 120 },
     unlockLabel: 'Complete 50 total reps',
     isUnlocked: (p) => p.totalReps >= 50,
@@ -70,7 +70,7 @@ export const BOSSES: Boss[] = [
       { slug: 'mountain-climber', label: 'Mountain Climbers', reps: 20 },
       { slug: 'plank',            label: 'Plank Hold',        reps: 45, isTimed: true },
     ],
-    timeLimitSeconds: 540,
+    timeLimitSeconds: 270,
     rewards: { xp: 600, coins: 250 },
     unlockLabel: 'Reach level 5',
     isUnlocked: (p) => levelFromXp(p.xp) >= 5,
@@ -89,7 +89,7 @@ export const BOSSES: Boss[] = [
       { slug: 'high-knees',       label: 'High Knees',        reps: 40 },
       { slug: 'wall-sit',         label: 'Wall Sit',          reps: 60, isTimed: true },
     ],
-    timeLimitSeconds: 600,
+    timeLimitSeconds: 360,
     rewards: { xp: 1200, coins: 500 },
     unlockLabel: 'Reach level 10',
     isUnlocked: (p) => levelFromXp(p.xp) >= 10,
@@ -106,3 +106,67 @@ export const TIER_CONFIG: Record<BossTier, { label: string; color: string; bg: s
 export function getBoss(id: string): Boss | undefined {
   return BOSSES.find((b) => b.id === id);
 }
+
+export type BossGameConfig = {
+  image: string;
+  displayH: number;
+  moveEveryMs: number;
+  moveDurationS: number;
+  attackEveryMs: [number, number];
+  attackWarningMs: number;
+  attackActiveMs: number;
+  penaltyReps: number;
+  penaltyImmunityMs: number;
+  attackColor: string;
+};
+
+export const BOSS_GAME_CONFIGS: Record<string, BossGameConfig> = {
+  'boss-warm-up-king': {
+    image: '/Boss 1.png',
+    displayH: 200,
+    moveEveryMs: 7000,
+    moveDurationS: 2.0,
+    attackEveryMs: [16000, 24000],
+    attackWarningMs: 1600,
+    attackActiveMs: 1000,
+    penaltyReps: 1,
+    penaltyImmunityMs: 8000,
+    attackColor: '#4ade80',
+  },
+  'boss-the-grinder': {
+    image: '/Boss 2.png',
+    displayH: 210,
+    moveEveryMs: 3500,
+    moveDurationS: 1.0,
+    attackEveryMs: [7000, 10000],
+    attackWarningMs: 1100,
+    attackActiveMs: 1000,
+    penaltyReps: 2,
+    penaltyImmunityMs: 4500,
+    attackColor: '#60a5fa',
+  },
+  'boss-iron-wall': {
+    image: '/Boss 3.png',
+    displayH: 220,
+    moveEveryMs: 1800,
+    moveDurationS: 0.65,
+    attackEveryMs: [3500, 5500],
+    attackWarningMs: 800,
+    attackActiveMs: 1200,
+    penaltyReps: 3,
+    penaltyImmunityMs: 2800,
+    attackColor: '#c084fc',
+  },
+  'boss-apex': {
+    image: '/Boss 4.png',
+    displayH: 230,
+    moveEveryMs: 900,
+    moveDurationS: 0.35,
+    attackEveryMs: [2000, 3200],
+    attackWarningMs: 550,
+    attackActiveMs: 1500,
+    penaltyReps: 4,
+    penaltyImmunityMs: 1800,
+    attackColor: '#fbbf24',
+  },
+};

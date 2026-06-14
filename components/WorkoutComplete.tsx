@@ -19,6 +19,7 @@ type Props = {
   durationSeconds: number;
   exerciseName: string;
   onRestart: () => void;
+  backHref?: string;
 };
 
 export default function WorkoutComplete({
@@ -27,6 +28,7 @@ export default function WorkoutComplete({
   durationSeconds,
   exerciseName,
   onRestart,
+  backHref = '/dashboard',
 }: Props) {
   const minutes = Math.floor(durationSeconds / 60);
   const seconds = durationSeconds % 60;
@@ -145,10 +147,10 @@ export default function WorkoutComplete({
           Do another
         </button>
         <Link
-          href="/dashboard"
+          href={backHref}
           className="px-5 py-2.5 rounded-lg accent-bg text-white text-sm font-medium flex items-center justify-center gap-2"
         >
-          Go to dashboard
+          {backHref === '/adventure' ? 'Back to adventure' : 'Go to dashboard'}
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>

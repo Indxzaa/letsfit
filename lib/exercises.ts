@@ -19,10 +19,10 @@ export type Exercise = {
 };
 
 export const WORLD_CONFIG: Record<number, { name: string; tagline: string; unlockLabel: string; isUnlocked: (totalReps: number, level: number) => boolean }> = {
-  1: { name: 'Foundation',  tagline: 'Build the base',         unlockLabel: 'Always available',   isUnlocked: () => true },
-  2: { name: 'Core',        tagline: 'Stability & endurance',  unlockLabel: 'Complete 50 reps',   isUnlocked: (r) => r >= 50 },
-  3: { name: 'Strength',    tagline: 'Power & resilience',     unlockLabel: 'Reach level 5',      isUnlocked: (_, l) => l >= 5 },
-  4: { name: 'Endurance',   tagline: 'Push further',           unlockLabel: 'Reach level 10',     isUnlocked: (_, l) => l >= 10 },
+  1: { name: 'Forest Realm',    tagline: 'The Beginning of the Journey',  unlockLabel: 'Always available',   isUnlocked: () => true },
+  2: { name: 'Winter Kingdom',  tagline: 'Where Only the Strong Endure',  unlockLabel: 'Complete 50 reps',   isUnlocked: (r) => r >= 50 },
+  3: { name: 'Witch Coven',     tagline: 'Realm of Ancient Magic',         unlockLabel: 'Reach level 5',      isUnlocked: (_, l) => l >= 5 },
+  4: { name: 'Elven Sanctuary', tagline: 'The Final Sacred Challenge',     unlockLabel: 'Reach level 10',     isUnlocked: (_, l) => l >= 10 },
 };
 
 export const EXERCISES: Exercise[] = [

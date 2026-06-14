@@ -15,7 +15,9 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'theme-forest',  name: 'Forest',   description: 'Deep, grounded green.',   type: 'theme', cost: 80,  value: 'forest',  rarity: 'common' },
   { id: 'theme-sky',     name: 'Sky',      description: 'Calm blue accent.',        type: 'theme', cost: 120, value: 'sky',     rarity: 'rare' },
   { id: 'theme-amber',   name: 'Amber',    description: 'Warm, energetic accent.',  type: 'theme', cost: 120, value: 'amber',   rarity: 'rare' },
-  { id: 'theme-rose',    name: 'Rose',     description: 'Soft pink accent.',        type: 'theme', cost: 150, value: 'rose',    rarity: 'rare' },
+  { id: 'theme-rose',         name: 'Rose',        description: 'Soft pink accent.',        type: 'theme', cost: 150, value: 'rose',         rarity: 'rare' },
+  { id: 'theme-florida-keys', name: 'Florida Keys', description: 'Tropical teal vibes.',     type: 'theme', cost: 200, value: 'florida-keys', rarity: 'epic' },
+  { id: 'theme-ballerina',    name: 'Ballerina',    description: 'Elegant hot-pink accent.', type: 'theme', cost: 200, value: 'ballerina',    rarity: 'epic' },
 
   // Avatars
   { id: 'avatar-default', name: 'Default', description: 'Standard avatar.',       type: 'avatar', cost: 0,   value: '🙂', rarity: 'common' },
@@ -28,47 +30,35 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'avatar-diamond', name: 'Diamond', description: 'The hardest grind.',      type: 'avatar', cost: 1200, value: '💎', rarity: 'mythic' },
 
   // Borders
-  { id: 'border-none',      name: 'No Border',    description: 'Clean look.',                   type: 'border', cost: 0,    value: 'none',      rarity: 'common' },
-  { id: 'border-soft',      name: 'Soft Glow',    description: 'Subtle accent ring.',           type: 'border', cost: 90,   value: 'soft',      rarity: 'common' },
-  { id: 'border-silver',    name: 'Silver Ring',  description: 'Polished silver border.',       type: 'border', cost: 150,  value: 'silver',    rarity: 'rare' },
-  { id: 'border-strong',    name: 'Strong Glow',  description: 'Bold accent ring.',             type: 'border', cost: 180,  value: 'strong',    rarity: 'rare' },
-  { id: 'border-gold',      name: 'Gold Ring',    description: 'Pulsing gold aura.',            type: 'border', cost: 450,  value: 'gold',      rarity: 'epic' },
-  { id: 'border-gradient',  name: 'Gradient',     description: 'Multi-stop accent ring.',       type: 'border', cost: 250,  value: 'gradient',  rarity: 'epic' },
-  { id: 'border-prismatic', name: 'Prismatic',    description: 'Animated rainbow border.',      type: 'border', cost: 900,  value: 'prismatic', rarity: 'legendary' },
-  { id: 'border-cosmic',    name: 'Cosmic',       description: 'Dark cosmic energy border.',    type: 'border', cost: 2000, value: 'cosmic',    rarity: 'mythic' },
-
-  // Badges
-  { id: 'badge-none',      name: 'No Badge',  description: 'Just you.',              type: 'badge', cost: 0,    value: '',          rarity: 'common' },
-  { id: 'badge-newcomer',  name: 'Newcomer',  description: 'Welcome to LetsFit.',    type: 'badge', cost: 50,   value: 'Newcomer',  rarity: 'common' },
-  { id: 'badge-grinder',   name: 'Grinder',   description: 'Always showing up.',     type: 'badge', cost: 150,  value: 'Grinder',   rarity: 'rare' },
-  { id: 'badge-elite',     name: 'Elite',     description: 'A cut above.',           type: 'badge', cost: 350,  value: 'Elite',     rarity: 'epic' },
-  { id: 'badge-legend',    name: 'Legend',    description: 'Few reach this.',        type: 'badge', cost: 900,  value: 'Legend',    rarity: 'legendary' },
-  { id: 'badge-apex',      name: 'APEX',      description: 'The absolute pinnacle.', type: 'badge', cost: 2000, value: 'APEX',      rarity: 'mythic' },
-
-  // Titles
-  { id: 'title-none',      name: 'No Title',    description: 'No title shown.',           type: 'title', cost: 0,    value: '',            rarity: 'common' },
-  { id: 'title-rookie',    name: 'Rookie',      description: 'Just getting started.',     type: 'title', cost: 60,   value: 'Rookie',      rarity: 'common' },
-  { id: 'title-grinder',   name: 'The Grinder', description: 'Consistent effort.',        type: 'title', cost: 200,  value: 'The Grinder', rarity: 'rare' },
-  { id: 'title-elite',     name: 'Elite',       description: 'Top-tier performer.',       type: 'title', cost: 500,  value: 'Elite',       rarity: 'epic' },
-  { id: 'title-immortal',  name: 'Immortal',    description: 'Beyond limits.',            type: 'title', cost: 1100, value: 'Immortal',    rarity: 'legendary' },
-  { id: 'title-void',      name: 'Void Walker', description: 'Exists beyond the game.',   type: 'title', cost: 2500, value: 'Void Walker', rarity: 'mythic' },
+  { id: 'border-none',     name: 'No Border',   description: 'Clean look.',                  type: 'border', cost: 0,    value: 'none',    rarity: 'common' },
+  { id: 'border-neon',     name: 'Neon Pulse',  description: 'Flickering cyan neon ring.',   type: 'border', cost: 90,   value: 'neon',    rarity: 'common' },
+  { id: 'border-crystal',  name: 'Crystal Edge', description: 'Crystal-clear icy shimmer.',   type: 'border', cost: 150,  value: 'crystal', rarity: 'rare' },
+  { id: 'border-royal',    name: 'Royal Gold',  description: 'Pulsing golden ring.',         type: 'border', cost: 200,  value: 'royal',   rarity: 'rare' },
+  { id: 'border-flame',    name: 'Shadow Flame',description: 'Dark fire conic spin.',        type: 'border', cost: 350,  value: 'flame',   rarity: 'epic' },
+  { id: 'border-galaxy',   name: 'Galaxy Ring', description: 'Deep space conic gradient.',  type: 'border', cost: 500,  value: 'galaxy',  rarity: 'epic' },
+  { id: 'border-electric', name: 'Electric',    description: 'Blue and gold lightning.',     type: 'border', cost: 900,  value: 'electric',rarity: 'legendary' },
+  { id: 'border-floral',   name: 'Floral Bloom',description: 'Soft pink and green petals.',  type: 'border', cost: 2000, value: 'floral',  rarity: 'mythic' },
 
   // Auras
-  { id: 'aura-none',    name: 'No Aura',  description: 'No aura effect.',       type: 'aura', cost: 0,    value: '',       rarity: 'common' },
-  { id: 'aura-ember',   name: 'Ember',    description: 'Warm orange pulse.',    type: 'aura', cost: 200,  value: 'ember',  rarity: 'rare' },
-  { id: 'aura-storm',   name: 'Storm',    description: 'Electric indigo glow.', type: 'aura', cost: 550,  value: 'storm',  rarity: 'epic' },
-  { id: 'aura-divine',  name: 'Divine',   description: 'Golden radiance.',      type: 'aura', cost: 1200, value: 'divine', rarity: 'legendary' },
-  { id: 'aura-eclipse', name: 'Eclipse',  description: 'Dark matter energy.',   type: 'aura', cost: 2800, value: 'eclipse', rarity: 'mythic' },
+  { id: 'aura-none',      name: 'No Aura',    description: 'No aura effect.',              type: 'aura', cost: 0,    value: '',          rarity: 'common' },
+  { id: 'aura-emerald',   name: 'Emerald',    description: 'Green growth pulse.',           type: 'aura', cost: 150,  value: 'emerald',   rarity: 'common' },
+  { id: 'aura-sakura',    name: 'Sakura',     description: 'Soft pink petal bloom.',        type: 'aura', cost: 200,  value: 'sakura',    rarity: 'rare' },
+  { id: 'aura-ocean',     name: 'Ocean',      description: 'Deep blue tidal swell.',        type: 'aura', cost: 300,  value: 'ocean',     rarity: 'rare' },
+  { id: 'aura-flame',     name: 'Flame',      description: 'Flickering fire aura.',         type: 'aura', cost: 400,  value: 'flame',     rarity: 'rare' },
+  { id: 'aura-crystal',   name: 'Crystal',    description: 'Rotating icy shimmer ring.',    type: 'aura', cost: 600,  value: 'crystal',   rarity: 'epic' },
+  { id: 'aura-lightning', name: 'Lightning',  description: 'Electric strobe field.',        type: 'aura', cost: 800,  value: 'lightning', rarity: 'epic' },
+  { id: 'aura-galaxy',    name: 'Galaxy',     description: 'Deep-space conic spin.',        type: 'aura', cost: 1000, value: 'galaxy',    rarity: 'legendary' },
+  { id: 'aura-aurora',    name: 'Aurora',     description: 'Aurora borealis color shift.',  type: 'aura', cost: 1500, value: 'aurora',    rarity: 'legendary' },
+  { id: 'aura-shadow',    name: 'Shadow',     description: 'Void absorption field.',        type: 'aura', cost: 2200, value: 'shadow',    rarity: 'mythic' },
+  { id: 'aura-solar',     name: 'Solar',      description: 'Golden solar flare burst.',     type: 'aura', cost: 3500, value: 'solar',     rarity: 'mythic' },
 ];
 
-export const FREE_DEFAULTS = ['theme-emerald', 'avatar-default', 'border-none', 'badge-none', 'title-none', 'aura-none'];
+export const FREE_DEFAULTS = ['theme-emerald', 'avatar-default', 'border-none', 'aura-none'];
 
 export const DEFAULT_EQUIPPED: Record<string, string> = {
   theme:  'theme-emerald',
   avatar: 'avatar-default',
   border: 'border-none',
-  badge:  'badge-none',
-  title:  'title-none',
   aura:   'aura-none',
 };
 
@@ -76,11 +66,13 @@ export function getShopItem(id: string): ShopItem | undefined {
   return SHOP_ITEMS.find((i) => i.id === id);
 }
 
-export const ACCENT_THEMES: Record<string, { dark: string; soft: string; light: string; lightSoft: string }> = {
+export const ACCENT_THEMES: Record<string, { dark: string; soft: string; light: string; lightSoft: string; secondary?: string; secondaryLight?: string }> = {
   emerald: { dark: '#22c55e', soft: '#4ade80', light: '#16a34a', lightSoft: '#22c55e' },
   mint:    { dark: '#34d399', soft: '#6ee7b7', light: '#10b981', lightSoft: '#34d399' },
   forest:  { dark: '#15803d', soft: '#22c55e', light: '#14532d', lightSoft: '#15803d' },
   sky:     { dark: '#3b82f6', soft: '#60a5fa', light: '#2563eb', lightSoft: '#3b82f6' },
   amber:   { dark: '#f59e0b', soft: '#fbbf24', light: '#d97706', lightSoft: '#f59e0b' },
-  rose:    { dark: '#f43f5e', soft: '#fb7185', light: '#e11d48', lightSoft: '#f43f5e' },
+  rose:          { dark: '#f43f5e', soft: '#fb7185', light: '#e11d48', lightSoft: '#f43f5e' },
+  'florida-keys':{ dark: '#14b8a6', soft: '#2dd4bf', light: '#0d9488', lightSoft: '#14b8a6', secondary: '#0891b2', secondaryLight: '#0e7490' },
+  ballerina:     { dark: '#ec4899', soft: '#f472b6', light: '#db2777', lightSoft: '#ec4899', secondary: '#a855f7', secondaryLight: '#9333ea' },
 };

@@ -47,6 +47,7 @@ function applyAccentFromProgress(mode: Mode) {
     if (rgb) {
       root.style.setProperty('--accent-bg', `rgba(${rgb}, 0.12)`);
       root.style.setProperty('--accent-bg-strong', `rgba(${rgb}, 0.2)`);
+      root.style.setProperty('--accent-2', palette.secondary ?? palette.soft);
     }
   } else {
     root.style.setProperty('--accent', palette.light);
@@ -56,6 +57,7 @@ function applyAccentFromProgress(mode: Mode) {
     if (rgb) {
       root.style.setProperty('--accent-bg', `rgba(${rgb}, 0.1)`);
       root.style.setProperty('--accent-bg-strong', `rgba(${rgb}, 0.18)`);
+      root.style.setProperty('--accent-2', palette.secondaryLight ?? palette.lightSoft);
     }
   }
 }

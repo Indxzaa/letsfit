@@ -1,5 +1,5 @@
+import { Suspense } from 'react';
 import AIWorkoutSession from '@/components/AIWorkoutSession';
-
 export default function SquatPage() {
-  return <AIWorkoutSession slug="squat" />;
+  return <Suspense><AIWorkoutSession slug="squat" /></Suspense>;
 }

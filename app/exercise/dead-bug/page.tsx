@@ -1,2 +1,5 @@
-import ManualWorkoutSession from '@/components/ManualWorkoutSession';
-export default function Page() { return <ManualWorkoutSession slug="dead-bug" />; }
+import { Suspense } from 'react';
+import AIWorkoutSession from '@/components/AIWorkoutSession';
+export default function DeadBugPage() {
+  return <Suspense><AIWorkoutSession slug="dead-bug" /></Suspense>;
+}

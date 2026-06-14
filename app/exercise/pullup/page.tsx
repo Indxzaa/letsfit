@@ -1,5 +1,5 @@
+import { Suspense } from 'react';
 import AIWorkoutSession from '@/components/AIWorkoutSession';
-
 export default function PullupPage() {
-  return <AIWorkoutSession slug="pullup" />;
+  return <Suspense><AIWorkoutSession slug="pullup" /></Suspense>;
 }

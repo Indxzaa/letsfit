@@ -1,2 +1,5 @@
-import ManualWorkoutSession from '@/components/ManualWorkoutSession';
-export default function Page() { return <ManualWorkoutSession slug="wall-sit" />; }
+import { Suspense } from 'react';
+import AIWorkoutSession from '@/components/AIWorkoutSession';
+export default function WallSitPage() {
+  return <Suspense><AIWorkoutSession slug="wall-sit" /></Suspense>;
+}

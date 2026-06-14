@@ -3,10 +3,13 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Flame, Trophy, Activity, Target, Zap, Lock, Swords } from 'lucide-react';
-import { loadProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
+import { ArrowLeft, Flame, Trophy, Activity, Target, Zap, Lock, Swords, Crown } from 'lucide-react';
+import { loadProgress, levelProgress, equipItem, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
+import { getWorldTheme } from '@/lib/worlds';
+import { EARNED_TITLES } from '@/lib/titles';
+import { RARITY_CONFIG } from '@/lib/shop';
 import Navbar from '@/components/Navbar';
 
 export default function ProgressPage() {
@@ -170,7 +173,7 @@ export default function ProgressPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-bold uppercase tracking-wider" style={{ color: tier.color }}>
-                      {tier.label} · World {boss.world}
+                      {tier.label} · {getWorldTheme(boss.world).name}
                     </div>
                     <div className="font-semibold text-app text-sm truncate">{boss.name}</div>
                     <div className="text-xs text-muted truncate">{boss.flavour}</div>
@@ -179,6 +182,97 @@ export default function ProgressPage() {
                     {defeated ? '✓ Done' : unlockable ? 'Fight' : '🔒'}
                   </div>
                 </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Titles */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.18 }}
+          className="p-6 sm:p-8 mb-6"
+          style={{ borderRadius: 28, background: 'var(--surface-solid)', border: '1px solid var(--border)', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-display text-3xl font-bold text-app">Titles</h2>
+              <p className="text-sm text-subtle mt-1">
+                {EARNED_TITLES.filter((t) => t.check(progress)).length} of {EARNED_TITLES.length} earned
+              </p>
+            </div>
+            <Crown className="w-5 h-5 text-subtle" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {EARNED_TITLES.map((t) => {
+              const earned = t.check(progress);
+              const prog = t.getProgress?.(progress);
+              const pct = prog ? Math.min(100, (prog.current / prog.max) * 100) : 0;
+              const rc = RARITY_CONFIG[t.rarity];
+              const isEquipped = progress.equippedItems?.title === t.id;
+              return (
+                <div
+                  key={t.id}
+                  className="p-4 rounded-2xl"
+                  style={earned ? {
+                    background: `${rc.color}12`,
+                    border: `1px solid ${rc.color}44`,
+                  } : {
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    opacity: 0.6,
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span
+                      className="text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{ color: rc.color, background: `${rc.color}22` }}
+                    >
+                      {t.value}
+                    </span>
+                    {isEquipped && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: rc.color, background: `${rc.color}22` }}>
+                        Active
+                      </span>
+                    )}
+                    {!earned && <Lock className="w-3.5 h-3.5 text-subtle shrink-0" />}
+                  </div>
+                  <div className="text-xs text-muted mb-3">{t.description}</div>
+                  {prog && !earned && (
+                    <div className="mb-3">
+                      <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ background: 'var(--border)' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6 }}
+                          className="h-full rounded-full"
+                          style={{ background: rc.color }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-subtle tabular-nums">{prog.current} / {prog.max}</div>
+                    </div>
+                  )}
+                  {earned && (
+                    <button
+                      onClick={() => {
+                        const updated = equipItem(progress, 'title', isEquipped ? '' : t.id);
+                        setProgress(updated);
+                      }}
+                      className="w-full py-1.5 rounded-xl text-xs font-semibold transition-opacity hover:opacity-80 cursor-pointer"
+                      style={isEquipped ? {
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-muted)',
+                      } : {
+                        background: rc.color,
+                        color: '#fff',
+                      }}
+                    >
+                      {isEquipped ? 'Unequip' : 'Equip'}
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>

@@ -7,6 +7,7 @@ import {
   Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight,
 } from 'lucide-react';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
+import { getWorldTheme } from '@/lib/worlds';
 import { buildCalendar, type CalendarDay } from '@/lib/dashboardMock';
 import { loadProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress } from '@/lib/achievements';
@@ -440,7 +441,7 @@ function BossChallenge({ progress }: { progress: Progress }) {
           </div>
           <div>
             <div className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: tier.color }}>
-              {tier.label} Boss Challenge · World {next.world}
+              {tier.label} Boss Challenge · {getWorldTheme(next.world).name}
             </div>
             <div className="font-display text-2xl font-bold text-app">{next.name}</div>
             <div className="text-sm text-muted">{next.flavour}</div>

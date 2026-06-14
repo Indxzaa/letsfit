@@ -15,14 +15,12 @@ import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG } from '@/li
 import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
 
-type TabType = 'theme' | 'avatar' | 'border' | 'badge' | 'title' | 'aura';
+type TabType = 'theme' | 'avatar' | 'border' | 'aura';
 
 const TABS: { id: TabType; label: string }[] = [
   { id: 'theme',  label: 'Themes' },
   { id: 'avatar', label: 'Avatars' },
   { id: 'border', label: 'Borders' },
-  { id: 'badge',  label: 'Badges' },
-  { id: 'title',  label: 'Titles' },
   { id: 'aura',   label: 'Auras' },
 ];
 
@@ -226,31 +224,41 @@ export default function ShopPage() {
 }
 
 function borderPreviewWrap(value: string): string {
-  if (value === 'prismatic' || value === 'gradient') return 'p-[3px] rounded-full ba-prismatic';
-  if (value === 'cosmic')                            return 'p-[3px] rounded-full ba-cosmic';
-  if (value === 'gold'    || value === 'strong')     return 'p-[3px] rounded-full ba-gold';
-  if (value === 'silver'  || value === 'soft')       return 'p-[3px] rounded-full ba-silver';
-  return '';
+  const map: Record<string, string> = {
+    neon: 'ba-neon', crystal: 'ba-crystal', royal: 'ba-royal',
+    flame: 'ba-flame', galaxy: 'ba-galaxy', electric: 'ba-electric', floral: 'ba-floral',
+  };
+  return map[value] ? `p-[3px] rounded-full ${map[value]}` : '';
 }
 
 function ItemPreview({ item }: { item: ShopItem }) {
   if (item.type === 'theme') {
-    const colors: Record<string, string> = {
+    const palette: Record<string, string | [string, string]> = {
       emerald: '#22c55e', mint: '#34d399', forest: '#15803d',
       sky: '#3b82f6', amber: '#f59e0b', rose: '#f43f5e',
+      'florida-keys': ['#14b8a6', '#0891b2'],
+      ballerina:      ['#ec4899', '#a855f7'],
     };
-    const color = colors[item.value] ?? '#22c55e';
+    const entry = palette[item.value] ?? '#22c55e';
+    const isMulti = Array.isArray(entry);
+    const primary   = isMulti ? entry[0] : entry;
+    const secondary = isMulti ? entry[1] : entry;
+    const btnBg = isMulti ? `linear-gradient(135deg, ${primary}, ${secondary})` : primary;
+    const barBg = isMulti ? `linear-gradient(90deg, ${primary}, ${secondary})` : primary;
     return (
       <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-app flex flex-col">
         <div className="flex-1 p-4" style={{ background: 'var(--surface-solid)' }}>
-          <div className="h-2 w-10 rounded-full mb-2" style={{ background: color }} />
+          <div className="flex gap-1 mb-2">
+            <div className="h-2 w-8 rounded-full" style={{ background: primary }} />
+            {isMulti && <div className="h-2 w-5 rounded-full" style={{ background: secondary }} />}
+          </div>
           <div className="h-1.5 w-16 rounded-full bg-[var(--border)]" />
           <div className="h-1.5 w-12 rounded-full bg-[var(--border)] mt-1.5" />
-          <div className="mt-3 h-7 w-14 rounded-xl flex items-center justify-center text-xs font-bold text-white" style={{ background: color }}>
+          <div className="mt-3 h-7 w-14 rounded-xl flex items-center justify-center text-xs font-bold text-white" style={{ background: btnBg }}>
             {item.name}
           </div>
         </div>
-        <div className="h-2" style={{ background: color }} />
+        <div className="h-2" style={{ background: barBg }} />
       </div>
     );
   }

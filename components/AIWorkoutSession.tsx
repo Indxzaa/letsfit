@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   PoseLandmarker,
@@ -11,6 +12,7 @@ import { Camera, Pause, Play, Square, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import {
   loadProgress,
+  saveProgress,
   recordSession,
   type SessionResult,
 } from '@/lib/progress';
@@ -31,6 +33,10 @@ type Phase = 'pick' | 'loading' | 'active' | 'paused' | 'complete';
 
 export default function AIWorkoutSession({ slug }: { slug: string }) {
   const exercise = getExercise(slug);
+  const searchParams = useSearchParams();
+  const stageId = searchParams.get('stageId');
+  const presetStr = searchParams.get('preset');
+  const preset = presetStr !== null ? Number(presetStr) : null;
 
   // Refs that survive re-renders without triggering them
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -148,6 +154,12 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
       setSessionResult(result);
       if (result.newAchievements.length > 0) {
         setAchievementToasts((prev) => [...prev, ...result.newAchievements]);
+      }
+      if (stageId) {
+        const fresh = loadProgress();
+        if (!fresh.stagesCompleted.includes(stageId)) {
+          saveProgress({ ...fresh, stagesCompleted: [...fresh.stagesCompleted, stageId] });
+        }
       }
     }
   }, [exercise, stopAnimation, stopTick, stopCamera, setPhaseBoth]);
@@ -338,6 +350,16 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
     };
   }, [stopAnimation, stopTick, stopCamera]);
 
+  // Auto-start when preset target is provided (Adventure mode)
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (preset !== null && !autoStarted.current) {
+      autoStarted.current = true;
+      void startWorkout(preset);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!exercise) {
     return (
       <div className="min-h-screen bg-app flex items-center justify-center">
@@ -357,11 +379,11 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <Link
-          href="/exercise"
+          href={stageId ? '/adventure' : '/exercise'}
           className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          All exercises
+          {stageId ? 'Back to adventure' : 'All exercises'}
         </Link>
 
         <div className="flex items-center gap-3 mb-6">
@@ -379,7 +401,13 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
           </div>
         </div>
 
-        {phase === 'pick' && (
+        {phase === 'pick' && preset !== null && (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-2 border-[var(--accent-soft)] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
+        {phase === 'pick' && preset === null && (
           <div className="grid lg:grid-cols-2 gap-6">
             <TargetPicker exercise={exercise} onStart={startWorkout} />
             <div className="surface rounded-2xl p-6 sm:p-8">
@@ -550,6 +578,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
             durationSeconds={elapsed}
             exerciseName={exercise.name}
             onRestart={restart}
+            backHref={stageId ? '/adventure' : '/dashboard'}
           />
         )}
 

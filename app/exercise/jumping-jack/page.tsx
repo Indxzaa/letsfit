@@ -1,5 +1,5 @@
+import { Suspense } from 'react';
 import AIWorkoutSession from '@/components/AIWorkoutSession';
-
 export default function JumpingJackPage() {
-  return <AIWorkoutSession slug="jumping-jack" />;
+  return <Suspense><AIWorkoutSession slug="jumping-jack" /></Suspense>;
 }

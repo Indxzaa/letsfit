@@ -88,6 +88,7 @@ export default function Navbar() {
   const authedNavItems = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Exercise', href: '/exercise' },
+    { name: 'Adventure', href: '/adventure' },
     { name: 'Shop', href: '/shop' },
     { name: 'Progress', href: '/progress' },
   ];
@@ -117,7 +118,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-0.5">
+          <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.name}
