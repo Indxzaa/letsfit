@@ -605,7 +605,7 @@ export default function BossPage() {
   return (
     <div className="min-h-screen" style={{ background: worldTheme.introBg }}>
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
         <Link href="/adventure" className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-8 cursor-pointer">
           <ArrowLeft className="w-4 h-4" /> Back to adventure
         </Link>
@@ -614,13 +614,13 @@ export default function BossPage() {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             <div className="p-8 rounded-3xl mb-6" style={{ background: 'rgba(0,0,0,0.55)', border: `1px solid ${tier.color}44`, backdropFilter: 'blur(12px)' }}>
               {/* World title banner */}
-              <div className="flex items-center gap-2 mb-5 pb-4" style={{ borderBottom: `1px solid ${worldTheme.primary}22` }}>
+              <div className="flex items-center gap-2 mb-6 pb-4" style={{ borderBottom: `1px solid ${worldTheme.primary}22` }}>
                 <span className="text-xs font-bold uppercase tracking-[0.25em] px-3 py-1.5 rounded-full"
                   style={{ background: `${worldTheme.primary}20`, color: worldTheme.primary, border: `1px solid ${worldTheme.primary}40` }}>
                   {worldTheme.name} — {worldTheme.subtitle}
                 </span>
               </div>
-              <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full mb-3 inline-block"
                     style={{ background: `${tier.color}22`, color: tier.color }}>
@@ -644,23 +644,23 @@ export default function BossPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
                 {[
                   { label: 'Rounds', value: boss.rounds.length },
                   { label: 'Time limit', value: formatTime(boss.timeLimitSeconds) },
                   { label: 'Rewards', value: `+${boss.rewards.xp}XP · +${boss.rewards.coins}🪙` },
                 ].map(s => (
-                  <div key={s.label} className={`p-3 rounded-2xl ${s.label === 'Rewards' ? 'sm:col-span-1 col-span-2' : ''}`}
+                  <div key={s.label} className={`p-4 rounded-2xl ${s.label === 'Rewards' ? 'sm:col-span-1 col-span-2' : ''}`}
                     style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                    <div className="text-xs text-subtle mb-1">{s.label}</div>
+                    <div className="text-xs text-subtle mb-2">{s.label}</div>
                     <div className="font-display text-2xl font-bold text-app">{s.value}</div>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-2 mb-6">
+              <div className="space-y-4 mb-6">
                 {boss.rounds.map((r, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl"
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-xl"
                     style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
                     <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                       style={{ background: tier.color }}>{i + 1}</span>
@@ -673,16 +673,15 @@ export default function BossPage() {
               </div>
 
               {wasDefeated && (
-                <div className="text-xs font-bold mb-4 px-3 py-2 rounded-xl"
-                  style={{ background: `${tier.color}15`, color: tier.color }}>
+                <div className="text-xs font-bold mb-4 px-3 py-2 rounded-xl"                  style={{ background: `${tier.color}15`, color: tier.color }}>
                   ✓ Already defeated — rewards won&apos;t stack, but you can still practice.
                 </div>
               )}
 
               {/* Relic picker */}
               {isUnlocked && !wasDefeated && (
-                <div className="mb-5">
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: tier.color }}>
+                <div className="mb-6">
+                  <div className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: tier.color }}>
                     Choose your Relic
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -694,15 +693,15 @@ export default function BossPage() {
                           border: `1px solid ${selectedRelic?.id === relic.id ? tier.color : 'var(--border)'}`,
                           boxShadow: selectedRelic?.id === relic.id ? `0 0 12px ${tier.color}44` : 'none',
                         }}>
-                        <div className="mb-1.5" style={{ color: selectedRelic?.id === relic.id ? tier.color : 'var(--text-muted)' }}>
+                        <div className="mb-2" style={{ color: selectedRelic?.id === relic.id ? tier.color : 'var(--text-muted)' }}>
                           {relic.icon}
                         </div>
                         <div className="text-xs font-bold text-app leading-tight">{relic.name}</div>
-                        <div className="text-xs text-muted mt-0.5 leading-tight">{relic.desc}</div>
+                        <div className="text-xs text-muted mt-2 leading-tight">{relic.desc}</div>
                       </button>
                     ))}
                   </div>
-                  {!selectedRelic && <p className="text-xs text-subtle mt-2">Select a relic to get a pre-battle bonus.</p>}
+                  {!selectedRelic && <p className="text-xs text-subtle mt-4">Select a relic to get a pre-battle bonus.</p>}
                 </div>
               )}
 
@@ -740,10 +739,10 @@ export default function BossPage() {
                 ? <Dumbbell className="w-20 h-20" style={{ color: tier.color }} />
                 : <Trophy className="w-20 h-20 text-yellow-400" />}
             </div>
-            <h2 className="font-display text-5xl font-bold text-app mb-2">
+            <h2 className="font-display text-5xl font-bold text-app mb-4">
               {alreadyDefeated ? 'Still a champ.' : worldComplete ? `${worldTheme.name} Cleared!` : 'Boss defeated!'}
             </h2>
-            <p className="text-muted mb-4">{alreadyDefeated ? 'Great practice run.' : boss.flavour}</p>
+            <p className="text-muted mb-6">{alreadyDefeated ? 'Great practice run.' : boss.flavour}</p>
 
             {worldComplete && !alreadyDefeated && (
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
@@ -760,18 +759,18 @@ export default function BossPage() {
               </div>
             )}
             {bossResult && !alreadyDefeated && (
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <div className="p-4 rounded-2xl" style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                  <div className="text-xs text-subtle mb-1">XP Earned</div>
+              <div className="flex items-center justify-center gap-6 mb-10">
+                <div className="p-6 rounded-2xl" style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
+                  <div className="text-xs text-subtle mb-2">XP Earned</div>
                   <div className="font-display text-3xl font-bold" style={{ color: tier.color }}>+{bossResult.xp}</div>
                 </div>
-                <div className="p-4 rounded-2xl" style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                  <div className="text-xs text-subtle mb-1">FitCoins</div>
+                <div className="p-6 rounded-2xl" style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
+                  <div className="text-xs text-subtle mb-2">FitCoins</div>
                   <div className="font-display text-3xl font-bold" style={{ color: tier.color }}>+{bossResult.coins}</div>
                 </div>
                 {bossResult.leveledUp && (
-                  <div className="p-4 rounded-2xl" style={{ background: tier.bg, border: `1px solid ${tier.color}44` }}>
-                    <div className="text-xs font-bold mb-1" style={{ color: tier.color }}>LEVEL UP!</div>
+                  <div className="p-6 rounded-2xl" style={{ background: tier.bg, border: `1px solid ${tier.color}44` }}>
+                    <div className="text-xs font-bold mb-2" style={{ color: tier.color }}>LEVEL UP!</div>
                     <div className="font-display text-3xl font-bold flex items-center justify-center" style={{ color: tier.color }}><ArrowUp className="w-8 h-8" /></div>
                   </div>
                 )}
@@ -797,7 +796,7 @@ export default function BossPage() {
               <Clock className="w-20 h-20 text-red-400" />
             </div>
             <h2 className="font-display text-5xl font-bold text-app mb-2">Time&apos;s up.</h2>
-            <p className="text-muted mb-8">You completed {roundIndex}/{boss.rounds.length} rounds. Train more and try again.</p>
+            <p className="text-muted mb-10">You completed {roundIndex}/{boss.rounds.length} rounds. Train more and try again.</p>
             <div className="flex gap-3 justify-center">
               <button onClick={() => { stopTimers(); setPhase('intro'); setRoundIndex(0); setReps(0); setRoundSeconds(0); setTimeLeft(0); }}
                 className="px-6 py-3 rounded-2xl font-semibold text-white cursor-pointer" style={{ background: tier.color }}>

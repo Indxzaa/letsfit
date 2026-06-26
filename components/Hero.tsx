@@ -42,7 +42,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
-              className="font-display text-6xl sm:text-7xl lg:text-8xl font-bold text-app mb-6 leading-[0.9]"
+              className="font-display text-6xl sm:text-7xl lg:text-8xl font-bold text-app mb-8 leading-[0.9]"
             >
               Get fit.<br />
               <span style={{ color: 'var(--accent)' }}>Level up.</span><br />
@@ -53,7 +53,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.1 }}
-              className="text-xl text-muted mb-10 max-w-md leading-relaxed"
+              className="text-xl text-muted mb-12 max-w-md leading-relaxed"
             >
               Real-time AI posture feedback, daily quests, XP rewards, and achievement streaks.
               10 minutes a day, no equipment needed.
@@ -63,24 +63,21 @@ export default function Hero() {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.15 }}
-              className="flex flex-col sm:flex-row items-start gap-3 mb-8"
+              className="flex flex-col sm:flex-row items-start gap-4 mb-10"
             >
               <Link
                 href={user ? '/dashboard' : '/signup'}
-                className="px-8 py-4 rounded-2xl font-display text-xl font-bold text-white flex items-center gap-2 cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  background: 'var(--accent)',
-                  boxShadow: '0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent)',
-                }}
+                className="btn-primary px-8 py-4 rounded-2xl font-display text-xl font-bold flex items-center gap-2 cursor-pointer"
               >
                 {user ? 'Go to dashboard' : 'Start for free'}
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <a
                 href="#features"
-                className="px-8 py-4 rounded-2xl font-semibold text-app flex items-center gap-2 cursor-pointer transition-colors surface surface-hover"
+                className="px-8 py-4 rounded-2xl font-semibold text-app flex items-center gap-2 cursor-pointer transition-all surface surface-hover group"
               >
                 See how it works
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </a>
             </motion.div>
 
@@ -107,7 +104,7 @@ export default function Hero() {
               { icon: Trophy, title: 'Achievements', desc: 'Earn badges across 4 rarity tiers: Common to Legendary.' },
               { icon: Star, title: 'Daily Quests', desc: 'New challenges every day with FitCoin rewards.' },
             ].map((f) => (
-              <div key={f.title} className="flex items-center gap-4 p-5"
+              <div key={f.title} className="flex items-center gap-4 p-6"
                 style={{
                   borderRadius: 20,
                   background: 'var(--surface-solid)',
@@ -120,7 +117,7 @@ export default function Hero() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-app">{f.title}</div>
-                  <div className="text-xs text-muted mt-0.5">{f.desc}</div>
+                  <div className="text-xs text-muted mt-2">{f.desc}</div>
                 </div>
               </div>
             ))}

@@ -37,8 +37,11 @@ export const BOSSES: Boss[] = [
     ],
     timeLimitSeconds: 180,
     rewards: { xp: 150, coins: 60 },
-    unlockLabel: 'Always available',
-    isUnlocked: () => true,
+    unlockLabel: 'Complete an Adventure Mode stage to unlock',
+    isUnlocked: (p) =>
+      (p.stagesCompleted?.length ?? 0) >= 1 ||
+      p.totalReps >= 50 ||
+      (p.bossesDefeated?.length ?? 0) > 0,
   },
   {
     id: 'boss-the-grinder',

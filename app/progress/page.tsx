@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Flame, Trophy, Activity, Target, Zap, Lock, Swords, Crown } from 'lucide-react';
+import { ArrowLeft, Flame, Trophy, Activity, Target, Zap, Lock, Swords, Crown, ArrowRight } from 'lucide-react';
 import { loadProgress, levelProgress, equipItem, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
 import { getWorldTheme } from '@/lib/worlds';
 import { EARNED_TITLES } from '@/lib/titles';
 import { RARITY_CONFIG } from '@/lib/shop';
+import { ProgressSkeleton } from '@/components/Skeleton';
 import Navbar from '@/components/Navbar';
 
 export default function ProgressPage() {
@@ -21,35 +22,31 @@ export default function ProgressPage() {
     return unsub;
   }, []);
 
-  if (!progress) {
-    return (
-      <div className="min-h-screen bg-app flex items-center justify-center">
-        <div className="w-10 h-10 rounded-2xl animate-pulse" style={{ background: 'var(--accent)' }} />
-      </div>
-    );
-  }
+  if (!progress) return <ProgressSkeleton />;
 
   const lp = levelProgress(progress.xp);
   const unlocked = new Set(progress.unlockedAchievements);
 
   return (
-    <div className="min-h-screen bg-app">
+    <div className="min-h-screen page-bg">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-6 lg:px-8 pt-28 pb-16">
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-6 cursor-pointer">
-            <ArrowLeft className="w-4 h-4" />
-            Back home
-          </Link>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4"
-            style={{
-              background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
-              border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
-              color: 'var(--accent)',
-            }}>
-            Your journey
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 pt-28 pb-20">
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-6">
+            <Link href="/" className="link-back cursor-pointer">
+              <ArrowLeft className="w-4 h-4" />
+              Back home
+            </Link>
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium"
+              style={{
+                background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
+                border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
+                color: 'var(--accent)',
+              }}>
+              Your journey
+            </div>
           </div>
-          <h1 className="font-display text-5xl sm:text-6xl font-bold text-app mb-3 leading-tight">Keep showing up.</h1>
+          <h1 className="font-display text-5xl sm:text-6xl font-bold text-app mb-4 leading-tight">Keep showing up.</h1>
           <p className="text-xl text-muted max-w-xl">Every rep counts. Every session builds momentum. Keep going.</p>
         </div>
 
@@ -104,7 +101,7 @@ export default function ProgressPage() {
         </motion.div>
 
         {/* Stats row */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
             { icon: Flame,    label: 'Current streak', value: `${progress.currentStreak}d`,                       sub: `Longest: ${progress.longestStreak}d`, delay: 0 },
             { icon: Activity, label: 'Total sessions',  value: String(progress.totalSessions),                     sub: 'Completed',                           delay: 0.05 },
@@ -116,10 +113,10 @@ export default function ProgressPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: s.delay }}
-              className="p-5"
+              className="p-6"
               style={{ borderRadius: 20, background: 'var(--surface-solid)', border: '1px solid var(--border)', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}
             >
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-4 mb-4">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center"
                   style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))' }}>
                   <s.icon className="w-4 h-4" style={{ color: 'var(--accent)' }} />
@@ -127,7 +124,7 @@ export default function ProgressPage() {
                 <span className="text-xs text-subtle">{s.label}</span>
               </div>
               <div className="font-display text-3xl font-bold text-app tabular-nums">{s.value}</div>
-              <div className="text-xs text-subtle mt-1">{s.sub}</div>
+              <div className="text-xs text-subtle mt-2">{s.sub}</div>
             </motion.div>
           ))}
         </div>
@@ -137,26 +134,27 @@ export default function ProgressPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
-          className="p-6 sm:p-8 mb-6"
+          className="p-6 sm:p-8 mb-8"
           style={{ borderRadius: 28, background: 'var(--surface-solid)', border: '1px solid var(--border)', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}
         >
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="font-display text-3xl font-bold text-app">Boss Battles</h2>
-              <p className="text-sm text-subtle mt-1">{progress.bossesDefeated?.length ?? 0} of {BOSSES.length} defeated</p>
+              <p className="text-sm text-subtle mt-2">{progress.bossesDefeated?.length ?? 0} of {BOSSES.length} defeated</p>
             </div>
-            <Link href="/exercise" className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
-              Challenge →
+            <Link href="/exercise" className="link-cta">
+              <span>Challenge</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-4">
             {BOSSES.map((boss) => {
               const tier = TIER_CONFIG[boss.tier];
               const defeated = progress.bossesDefeated?.includes(boss.id) ?? false;
               const unlockable = boss.isUnlocked(progress);
               return (
                 <Link key={boss.id} href={unlockable ? `/boss/${boss.id}` : '#'}
-                  className="flex items-center gap-4 p-4 rounded-2xl transition-transform hover:scale-[1.01] duration-200"
+                  className="flex items-center gap-4 p-6 rounded-2xl transition-transform hover:scale-[1.01] duration-200"
                   style={{
                     background: defeated ? tier.bg : 'var(--surface)',
                     border: `1px solid ${defeated ? tier.color + '44' : 'var(--border)'}`,
@@ -192,19 +190,19 @@ export default function ProgressPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.18 }}
-          className="p-6 sm:p-8 mb-6"
+          className="p-6 sm:p-8 mb-8"
           style={{ borderRadius: 28, background: 'var(--surface-solid)', border: '1px solid var(--border)', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}
         >
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="font-display text-3xl font-bold text-app">Titles</h2>
-              <p className="text-sm text-subtle mt-1">
+              <p className="text-sm text-subtle mt-2">
                 {EARNED_TITLES.filter((t) => t.check(progress)).length} of {EARNED_TITLES.length} earned
               </p>
             </div>
             <Crown className="w-5 h-5 text-subtle" />
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {EARNED_TITLES.map((t) => {
               const earned = t.check(progress);
               const prog = t.getProgress?.(progress);
@@ -214,7 +212,7 @@ export default function ProgressPage() {
               return (
                 <div
                   key={t.id}
-                  className="p-4 rounded-2xl"
+                  className="p-6 rounded-2xl"
                   style={earned ? {
                     background: `${rc.color}12`,
                     border: `1px solid ${rc.color}44`,
@@ -297,7 +295,7 @@ export default function ProgressPage() {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {ACHIEVEMENTS.map((a, i) => {
               const isUnlocked = unlocked.has(a.id);
               const prog = a.getProgress?.(progress);
@@ -315,14 +313,14 @@ export default function ProgressPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.25 + i * 0.025 }}
-                  className="p-4 relative overflow-hidden"
+                  className="p-6 relative overflow-hidden"
                   style={isUnlocked ? {
                     borderRadius: 20, background: rc.bg, border: `1px solid ${rc.border}`, boxShadow: `0 6px 24px ${rc.glow}`,
                   } : {
                     borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--border)',
                   }}
                 >
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
                       style={{ background: isUnlocked ? rc.label : 'var(--border)', boxShadow: isUnlocked ? `0 4px 12px ${rc.glow}` : 'none' }}>
                       {isUnlocked ? a.icon : <Lock className="w-5 h-5 text-subtle" />}
@@ -332,8 +330,8 @@ export default function ProgressPage() {
                       {a.rarity}
                     </span>
                   </div>
-                  <div className="text-sm font-bold text-app mb-1">{a.name}</div>
-                  <div className="text-xs text-muted leading-relaxed mb-3">{a.description}</div>
+                  <div className="text-sm font-bold text-app mb-2">{a.name}</div>
+                  <div className="text-xs text-muted leading-relaxed mb-4">{a.description}</div>
 
                   {/* Progress bar */}
                   {prog && !isUnlocked && (

@@ -474,21 +474,196 @@ export function createDeadBugDetector(): Detector {
   };
 }
 
+// ----- MARCH IN PLACE -----
+export function createMarchInPlaceDetector(): Detector {
+  let phase: 'up' | 'down' = 'down';
+  return {
+    detect(lm) {
+      const lHip = lm[23], rHip = lm[24], lKnee = lm[25], rKnee = lm[26];
+      if (![lHip, rHip, lKnee, rKnee].every(v => visible(v))) {
+        return { phase, rep: false, feedback: 'Stand back so hips and knees are visible', metric: null, metricLabel: 'Knee height', formScore: 0 };
+      }
+      const hipY = avg(lHip.y, rHip.y);
+      const anyHigh = lKnee.y < hipY - 0.02 || rKnee.y < hipY - 0.02;
+      let rep = false, feedback = '';
+      if (phase === 'down' && anyHigh) { phase = 'up'; feedback = 'Good — keep marching!'; }
+      else if (phase === 'up' && !anyHigh) { phase = 'down'; rep = true; feedback = 'Step! Other knee up'; }
+      else if (phase === 'down') { feedback = 'Lift your knees — start marching'; }
+      else { feedback = 'Keep the rhythm going'; }
+      const metric = Math.round(Math.max((hipY - lKnee.y) * 100, (hipY - rKnee.y) * 100));
+      return { phase, rep, feedback, metric: Math.max(0, metric), metricLabel: 'Knee height', formScore: 88 };
+    },
+    reset() { phase = 'down'; },
+  };
+}
+
+// ----- HEEL RAISES -----
+export function createHeelRaisesDetector(): Detector {
+  let phase: 'up' | 'down' = 'down';
+  return {
+    detect(lm) {
+      const lAnkle = lm[27], rAnkle = lm[28], lHeel = lm[29], rHeel = lm[30], lToe = lm[31], rToe = lm[32];
+      if (![lAnkle, rAnkle, lHeel, rHeel, lToe, rToe].every(v => visible(v, 0.4))) {
+        return { phase, rep: false, feedback: 'Stand with your feet visible at the bottom', metric: null, metricLabel: 'Heel lift', formScore: 0 };
+      }
+      const lift = avg(lToe.y - lHeel.y, rToe.y - rHeel.y);
+      let rep = false, feedback = '';
+      if (phase === 'down' && lift > 0.03) { phase = 'up'; feedback = 'Hold at the top'; }
+      else if (phase === 'up' && lift < 0.01) { phase = 'down'; rep = true; feedback = 'Lower and rise again'; }
+      else if (phase === 'down') { feedback = 'Rise up onto your toes'; }
+      else { feedback = 'Lower heels back to the floor'; }
+      return { phase, rep, feedback, metric: Math.round(lift * 100), metricLabel: 'Heel lift', formScore: 88 };
+    },
+    reset() { phase = 'down'; },
+  };
+}
+
+// ----- ARM CIRCLES (timed) -----
+export function createArmCirclesDetector(): Detector {
+  return {
+    detect(lm) {
+      const lShoulder = lm[11], rShoulder = lm[12], lWrist = lm[15], rWrist = lm[16];
+      if (![lShoulder, rShoulder, lWrist, rWrist].every(v => visible(v))) {
+        return { phase: 'up', rep: false, feedback: 'Extend arms to the sides — show full upper body', metric: null, metricLabel: 'Arm span', formScore: 0 };
+      }
+      const shoulderSpan = Math.abs(lShoulder.x - rShoulder.x);
+      const wristSpan = Math.abs(lWrist.x - rWrist.x);
+      const extended = wristSpan > shoulderSpan * 1.4;
+      return {
+        phase: 'up', rep: false,
+        feedback: extended ? 'Keep rotating — big circles' : 'Extend arms wider to your sides',
+        metric: Math.round(wristSpan * 100), metricLabel: 'Arm span',
+        formScore: extended ? 90 : 45,
+      };
+    },
+    reset() {},
+  };
+}
+
+// ----- KNEE TO ELBOW -----
+export function createKneeToElbowDetector(): Detector {
+  let phase: 'up' | 'down' = 'up';
+  return {
+    detect(lm) {
+      const lHip = lm[23], rHip = lm[24], lKnee = lm[25], rKnee = lm[26];
+      const lElbow = lm[13], rElbow = lm[14];
+      if (![lHip, rHip, lKnee, rKnee, lElbow, rElbow].every(v => visible(v))) {
+        return { phase, rep: false, feedback: 'Stand so your full body is visible', metric: null, metricLabel: 'Knee height', formScore: 0 };
+      }
+      const hipY = avg(lHip.y, rHip.y);
+      const anyKneeHigh = lKnee.y < hipY - 0.08 || rKnee.y < hipY - 0.08;
+      const elbowLow = avg(lElbow.y, rElbow.y) > hipY - 0.1;
+      const crunch = anyKneeHigh && elbowLow;
+      let rep = false, feedback = '';
+      if (phase === 'up' && crunch) { phase = 'down'; feedback = 'Touch — switch sides!'; }
+      else if (phase === 'down' && !anyKneeHigh) { phase = 'up'; rep = true; feedback = 'Rep! Drive the other knee'; }
+      else if (phase === 'up') { feedback = 'Drive knee up, crunch elbow to meet it'; }
+      else { feedback = 'Lower leg, switch sides'; }
+      const metric = Math.round(Math.max((hipY - lKnee.y) * 100, (hipY - rKnee.y) * 100));
+      return { phase, rep, feedback, metric: Math.max(0, metric), metricLabel: 'Knee height', formScore: 88 };
+    },
+    reset() { phase = 'up'; },
+  };
+}
+
+// ----- PLANK KNEE TAPS -----
+export function createPlankKneeTapsDetector(): Detector {
+  let phase: 'up' | 'down' = 'up';
+  return {
+    detect(lm) {
+      const lShoulder = lm[11], rShoulder = lm[12];
+      const lHip = lm[23], rHip = lm[24], lKnee = lm[25], rKnee = lm[26];
+      const lAnkle = lm[27], rAnkle = lm[28];
+      if (![lShoulder, rShoulder, lHip, rHip, lKnee, rKnee, lAnkle, rAnkle].every(v => visible(v))) {
+        return { phase, rep: false, feedback: 'Get into plank — show full body from the side', metric: null, metricLabel: 'Hip line', formScore: 0 };
+      }
+      const shoulderY = avg(lShoulder.y, rShoulder.y);
+      const hipY = avg(lHip.y, rHip.y);
+      const ankleY = avg(lAnkle.y, rAnkle.y);
+      const kneeY = avg(lKnee.y, rKnee.y);
+      const inPlank = Math.abs(hipY - avg(shoulderY, ankleY)) < 0.1;
+      const kneeDrop = kneeY > hipY + 0.04;
+      let rep = false, feedback = '';
+      if (phase === 'up' && inPlank && kneeDrop) { phase = 'down'; feedback = 'Tap! Lift back up'; }
+      else if (phase === 'down' && !kneeDrop) { phase = 'up'; rep = true; feedback = 'Rep! Tap the other knee'; }
+      else if (phase === 'up') { feedback = inPlank ? 'Good plank — tap a knee to the floor' : 'Hold a straight plank'; }
+      else { feedback = 'Lift knee back to plank position'; }
+      return { phase, rep, feedback, metric: Math.round(Math.abs(hipY - avg(shoulderY, ankleY)) * 100), metricLabel: 'Hip line', formScore: inPlank ? 90 : 60 };
+    },
+    reset() { phase = 'up'; },
+  };
+}
+
+// ----- SLOW BURPEE -----
+export function createSlowBurpeeDetector(): Detector {
+  let phase: 'up' | 'down' = 'up';
+  return {
+    detect(lm) {
+      const lShoulder = lm[11], rShoulder = lm[12];
+      const lHip = lm[23], rHip = lm[24], lKnee = lm[25], rKnee = lm[26];
+      const lAnkle = lm[27], rAnkle = lm[28];
+      if (![lShoulder, rShoulder, lHip, rHip, lKnee, rKnee, lAnkle, rAnkle].every(v => visible(v))) {
+        return { phase, rep: false, feedback: 'Camera further back — show full body', metric: null, metricLabel: 'Hip height', formScore: 0 };
+      }
+      const knee = avg(angleBetween(lHip, lKnee, lAnkle), angleBetween(rHip, rKnee, rAnkle));
+      const shoulderY = avg(lShoulder.y, rShoulder.y);
+      const onFloor = knee < 90 || shoulderY > 0.65;
+      let rep = false, feedback = '';
+      if (phase === 'up' && onFloor) { phase = 'down'; feedback = 'Good — plank, push-up, then stand'; }
+      else if (phase === 'down' && knee > 160 && shoulderY < 0.6) { phase = 'up'; rep = true; feedback = 'Excellent rep!'; }
+      else if (phase === 'up') { feedback = 'Squat down, hands to floor'; }
+      else { feedback = 'Push up and stand tall'; }
+      return { phase, rep, feedback, metric: Math.round(knee), metricLabel: 'Knee angle', formScore: 88 };
+    },
+    reset() { phase = 'up'; },
+  };
+}
+
+// ----- SHADOW BOXING (timed) -----
+export function createShadowBoxingDetector(): Detector {
+  return {
+    detect(lm) {
+      const lShoulder = lm[11], rShoulder = lm[12];
+      const lElbow = lm[13], rElbow = lm[14], lWrist = lm[15], rWrist = lm[16];
+      if (![lShoulder, rShoulder, lElbow, rElbow, lWrist, rWrist].every(v => visible(v))) {
+        return { phase: 'up', rep: false, feedback: 'Show your upper body — arms visible', metric: null, metricLabel: 'Arm extension', formScore: 0 };
+      }
+      const lAngle = angleBetween(lShoulder, lElbow, lWrist);
+      const rAngle = angleBetween(rShoulder, rElbow, rWrist);
+      const punching = lAngle > 140 || rAngle > 140;
+      return {
+        phase: 'up', rep: false,
+        feedback: punching ? 'Keep punching — stay light on your feet' : 'Extend your punches — arms out',
+        metric: Math.round(Math.max(lAngle, rAngle)), metricLabel: 'Arm extension',
+        formScore: punching ? 92 : 50,
+      };
+    },
+    reset() {},
+  };
+}
+
 export function getDetectorForSlug(slug: string): Detector {
   switch (slug) {
-    case 'squat':            return createSquatDetector();
-    case 'pushup':           return createPushupDetector();
-    case 'jumping-jack':     return createJumpingJackDetector();
-    case 'pullup':           return createPullupDetector();
-    case 'plank':            return createPlankDetector();
-    case 'lunge':            return createLungeDetector();
-    case 'glute-bridge':     return createGluteBridgeDetector();
-    case 'mountain-climber': return createMountainClimberDetector();
-    case 'wall-sit':         return createWallSitDetector();
-    case 'high-knees':       return createHighKneesDetector();
-    case 'bird-dog':         return createBirdDogDetector();
-    case 'dead-bug':         return createDeadBugDetector();
-    default:                 return createSquatDetector();
+    case 'squat':             return createSquatDetector();
+    case 'pushup':            return createPushupDetector();
+    case 'jumping-jack':      return createJumpingJackDetector();
+    case 'pullup':            return createPullupDetector();
+    case 'plank':             return createPlankDetector();
+    case 'lunge':             return createLungeDetector();
+    case 'glute-bridge':      return createGluteBridgeDetector();
+    case 'mountain-climber':  return createMountainClimberDetector();
+    case 'wall-sit':          return createWallSitDetector();
+    case 'high-knees':        return createHighKneesDetector();
+    case 'bird-dog':          return createBirdDogDetector();
+    case 'dead-bug':          return createDeadBugDetector();
+    case 'march-in-place':    return createMarchInPlaceDetector();
+    case 'heel-raises':       return createHeelRaisesDetector();
+    case 'arm-circles':       return createArmCirclesDetector();
+    case 'knee-to-elbow':     return createKneeToElbowDetector();
+    case 'plank-knee-taps':   return createPlankKneeTapsDetector();
+    case 'slow-burpee':       return createSlowBurpeeDetector();
+    case 'shadow-boxing':     return createShadowBoxingDetector();
+    default:                  return createSquatDetector();
   }
 }
 

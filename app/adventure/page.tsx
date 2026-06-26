@@ -9,6 +9,7 @@ import { WORLD_THEMES } from '@/lib/worlds';
 import { STAGES, isStageComplete } from '@/lib/stages';
 import { loadProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { useAuth } from '@/components/AuthProvider';
+import { AdventureSkeleton } from '@/components/Skeleton';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
@@ -55,6 +56,8 @@ export default function AdventurePage() {
     return subscribeToProgress(() => setProgress(loadProgress()));
   }, []);
 
+  if (!progress) return <AdventureSkeleton />;
+
   const handleClick = (world: number) => {
     if (!isWorldUnlocked(world, progress, isDev)) return;
     setEntering(world);
@@ -73,9 +76,9 @@ export default function AdventurePage() {
         ))}
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-24 pb-16">
-        <div className="text-center mb-6">
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-1">World Map</h1>
+      <div className="max-w-lg mx-auto px-4 pt-24 pb-20">
+        <div className="text-center mb-8">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-2">World Map</h1>
           <p className="text-white/35 text-sm">Choose your realm to begin</p>
         </div>
 
@@ -178,8 +181,8 @@ export default function AdventurePage() {
                   </div>
 
                   {/* Label */}
-                  <div className="mt-3 text-center" style={{ width: 120 }}>
-                    <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
+                  <div className="mt-4 text-center" style={{ width: 120 }}>
+                    <div className="text-[10px] font-bold uppercase tracking-widest mb-2"
                       style={{ color: unlocked ? theme.primary : 'rgba(255,255,255,0.2)' }}>
                       World {world}
                     </div>
@@ -188,12 +191,12 @@ export default function AdventurePage() {
                       {theme.name}
                     </div>
                     {unlocked && !allDone && (
-                      <div className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      <div className="text-[10px] mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
                         {done}/{total} stages
                       </div>
                     )}
                     {allDone && (
-                      <div className="text-[10px] mt-1 font-semibold text-green-400">Completed</div>
+                      <div className="text-[10px] mt-2 font-semibold text-green-400">Completed</div>
                     )}
                   </div>
                 </motion.div>

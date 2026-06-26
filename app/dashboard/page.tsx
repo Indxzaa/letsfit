@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
-  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight,
+  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight, Lock,
 } from 'lucide-react';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
 import { getWorldTheme } from '@/lib/worlds';
@@ -12,6 +12,7 @@ import { buildCalendar, type CalendarDay } from '@/lib/dashboardMock';
 import { loadProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress } from '@/lib/achievements';
 import { getUsername } from '@/lib/profileSync';
+import { DashboardSkeleton } from '@/components/Skeleton';
 import Navbar from '@/components/Navbar';
 import UserAvatar from '@/components/UserAvatar';
 
@@ -26,13 +27,7 @@ export default function DashboardPage() {
     return unsub;
   }, []);
 
-  if (!progress) {
-    return (
-      <div className="min-h-screen bg-app flex items-center justify-center">
-        <div className="w-10 h-10 rounded-2xl animate-pulse" style={{ background: 'var(--accent)' }} />
-      </div>
-    );
-  }
+  if (!progress) return <DashboardSkeleton />;
 
   const lp = levelProgress(progress.xp);
   const completedQuests = new Set(progress.missions.completed);
@@ -41,12 +36,12 @@ export default function DashboardPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-app">
+    <div className="min-h-screen page-bg">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-10">
           <div className="flex items-center gap-4">
             <UserAvatar progress={progress} size="lg" />
             <div>
@@ -59,8 +54,9 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs text-subtle">
-            <Link href="/shop" className="font-semibold cursor-pointer" style={{ color: 'var(--accent)' }}>
-              Customize →
+            <Link href="/shop" className="link-cta">
+              <span>Customize</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <span>
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -69,20 +65,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Top bento row: Streak hero + 3 stat tiles */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {/* Streak — vibrant accent hero tile */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.35 }}
-            className="p-5 flex flex-col justify-between"
+            className="p-6 flex flex-col justify-between"
             style={{
               borderRadius: 24,
               background: 'var(--accent)',
               boxShadow: '0 12px 40px color-mix(in srgb, var(--accent) 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)',
             }}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <Flame className="w-7 h-7 text-white" />
               <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">Streak</span>
             </div>
@@ -90,7 +86,7 @@ export default function DashboardPage() {
               {progress.currentStreak}
               <span className="text-xl font-semibold text-white/70 ml-1">days</span>
             </div>
-            <div className="text-white/60 text-xs mt-2">Best: {progress.longestStreak}d</div>
+            <div className="text-white/60 text-xs mt-4">Best: {progress.longestStreak}d</div>
           </motion.div>
 
           <StatTile icon={Activity} label="Today's reps" value={progress.todayReps} sub="across exercises" delay={0.04} />
@@ -99,15 +95,15 @@ export default function DashboardPage() {
         </div>
 
         {/* XP + FitCoins */}
-        <div className="grid lg:grid-cols-3 gap-3 mb-4">
+        <div className="grid lg:grid-cols-3 gap-4 mb-6">
           <div className="lg:col-span-2 p-6" style={{
             borderRadius: 24,
             background: 'var(--surface-solid)',
             border: '1px solid var(--border)',
             boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
           }}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
                   style={{ background: 'var(--accent)', boxShadow: '0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent)' }}>
                   <Zap className="w-6 h-6 text-white" />
@@ -132,7 +128,7 @@ export default function DashboardPage() {
                 className="xp-fill"
               />
             </div>
-            <div className="flex justify-between text-xs text-subtle mt-2">
+            <div className="flex justify-between text-xs text-subtle mt-4">
               <span>{lp.intoLevel.toLocaleString()} / {lp.span.toLocaleString()} XP</span>
               <span>{(lp.nextLevelXp - progress.xp).toLocaleString()} XP to Level {lp.level + 1}</span>
             </div>
@@ -153,7 +149,12 @@ export default function DashboardPage() {
               <div className="font-display text-4xl font-bold text-app tabular-nums">
                 {progress.fitCoins.toLocaleString()}
               </div>
-              <div className="text-sm font-semibold mt-1" style={{ color: 'var(--accent)' }}>Open shop →</div>
+              <div className="text-sm font-semibold mt-1">
+                <span className="link-cta">
+                  <span>Open shop</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
             </div>
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
               style={{ background: 'var(--accent)', boxShadow: '0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent)' }}>
@@ -163,16 +164,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Daily Quests */}
-        <div className="p-6 mb-4" style={{
+        <div className="p-6 mb-6" style={{
           borderRadius: 24,
           background: 'var(--surface-solid)',
           border: '1px solid var(--border)',
           boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
         }}>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="font-display text-3xl font-bold text-app">Daily Quests</h2>
-              <p className="text-sm text-subtle mt-0.5">
+              <p className="text-sm text-subtle mt-2">
                 {completedQuests.size} of {DAILY_QUESTS.length} completed · Resets at midnight
               </p>
             </div>
@@ -185,7 +186,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {DAILY_QUESTS.map((quest) => {
               const done = completedQuests.has(quest.id);
               const current = getQuestProgress(progress, quest);
@@ -193,9 +194,9 @@ export default function DashboardPage() {
               return (
                 <div
                   key={quest.id}
-                  className={`p-4 ${done ? 'quest-card-done' : 'quest-card'}`}
+                  className={`p-6 ${done ? 'quest-card-done' : 'quest-card'}`}
                 >
-                  <div className="flex items-center gap-3 mb-2.5">
+                  <div className="flex items-center gap-4 mb-4">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
                       style={{
                         background: done ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
@@ -235,13 +236,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Calendar + Activity */}
-        <div className="grid lg:grid-cols-3 gap-4 mb-4">
+        <div className="grid lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 p-6" style={{
             borderRadius: 24, background: 'var(--surface-solid)', border: '1px solid var(--border)',
             boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
           }}>
-            <h2 className="font-display text-2xl font-bold text-app mb-1">Weekly Activity</h2>
-            <p className="text-xs text-subtle mb-5">Reps per day across all exercises.</p>
+            <h2 className="font-display text-2xl font-bold text-app mb-2">Weekly Activity</h2>
+            <p className="text-xs text-subtle mb-6">Reps per day across all exercises.</p>
             {progress.totalReps === 0 ? (
               <div className="h-52 flex items-center justify-center">
                 <div className="text-center">
@@ -250,8 +251,9 @@ export default function DashboardPage() {
                     <Dumbbell className="w-8 h-8" style={{ color: 'var(--accent)' }} />
                   </div>
                   <p className="text-sm text-subtle mb-2">No workouts yet.</p>
-                  <Link href="/exercise" className="text-sm font-bold cursor-pointer" style={{ color: 'var(--accent)' }}>
-                    Start your first workout →
+                  <Link href="/exercise" className="link-cta">
+                    <span>Start your first workout</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
@@ -266,8 +268,8 @@ export default function DashboardPage() {
             borderRadius: 24, background: 'var(--surface-solid)', border: '1px solid var(--border)',
             boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
           }}>
-            <h2 className="font-display text-2xl font-bold text-app mb-1">Streak Calendar</h2>
-            <p className="text-xs text-subtle mb-4">10 weeks of activity.</p>
+            <h2 className="font-display text-2xl font-bold text-app mb-2">Streak Calendar</h2>
+            <p className="text-xs text-subtle mb-6">10 weeks of activity.</p>
             <CalendarGrid days={calendar} />
             <div className="flex items-center gap-2 text-xs text-subtle mt-4">
               <span>Less</span>
@@ -285,15 +287,16 @@ export default function DashboardPage() {
         <BossChallenge progress={progress} />
 
         {/* Lifetime stats + Achievements */}
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 p-6" style={{
             borderRadius: 24, background: 'var(--surface-solid)', border: '1px solid var(--border)',
             boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
           }}>
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-2xl font-bold text-app">Lifetime Stats</h2>
-              <Link href="/exercise" className="text-sm font-bold flex items-center gap-1 cursor-pointer" style={{ color: 'var(--accent)' }}>
-                Start workout <ChevronRight className="w-4 h-4" />
+              <Link href="/exercise" className="link-cta">
+                <span>Start workout</span>
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             {progress.totalSessions === 0 ? (
@@ -302,24 +305,25 @@ export default function DashboardPage() {
                   style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))' }}>
                   <Dumbbell className="w-8 h-8" style={{ color: 'var(--accent)' }} />
                 </div>
-                <p className="text-sm text-subtle mb-3">No sessions yet.</p>
-                <Link href="/exercise" className="text-sm font-bold cursor-pointer" style={{ color: 'var(--accent)' }}>
-                  Start your first workout →
+                <p className="text-sm text-subtle mb-4">No sessions yet.</p>
+                <Link href="/exercise" className="link-cta">
+                  <span>Start your first workout</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
                   { label: 'Sessions', value: progress.totalSessions },
                   { label: 'Total reps', value: progress.totalReps },
                   { label: 'Achievements', value: `${progress.unlockedAchievements.length}/${ACHIEVEMENTS.length}` },
                   { label: 'Best streak', value: `${progress.longestStreak}d` },
                 ].map((s) => (
-                  <div key={s.label} className="p-4 rounded-2xl" style={{
+                  <div key={s.label} className="p-6 rounded-2xl" style={{
                     background: 'color-mix(in srgb, var(--accent) 8%, var(--surface-solid))',
                     border: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)',
                   }}>
-                    <div className="text-xs text-subtle mb-1">{s.label}</div>
+                    <div className="text-xs text-subtle mb-2">{s.label}</div>
                     <div className="font-display text-2xl font-bold text-app tabular-nums">{s.value}</div>
                   </div>
                 ))}
@@ -331,9 +335,9 @@ export default function DashboardPage() {
             borderRadius: 24, background: 'var(--surface-solid)', border: '1px solid var(--border)',
             boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
           }}>
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-2xl font-bold text-app">Achievements</h2>
-              <Link href="/progress" className="text-sm font-bold cursor-pointer" style={{ color: 'var(--accent)' }}>View all</Link>
+              <Link href="/progress" className="link-cta">View all</Link>
             </div>
             {recentAchievements.length === 0 ? (
               <div className="py-4 text-center">
@@ -341,9 +345,9 @@ export default function DashboardPage() {
                 <p className="text-sm text-subtle">Complete a session to earn your first badge.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {recentAchievements.map((a) => a ? (
-                  <div key={a.id} className="flex items-center gap-3 p-3.5 rounded-2xl"
+                  <div key={a.id} className="flex items-center gap-4 p-4 rounded-2xl"
                     style={{
                       background: 'color-mix(in srgb, var(--accent) 12%, var(--surface-solid))',
                       border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
@@ -385,7 +389,7 @@ function StatTile({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
-      className="p-5"
+      className="p-6"
       style={{
         borderRadius: 24,
         background: 'var(--surface-solid)',
@@ -393,12 +397,12 @@ function StatTile({
         boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
       }}
     >
-      <div className="flex items-center gap-1.5 text-xs text-subtle mb-3">
+      <div className="flex items-center gap-2 text-xs text-subtle mb-4">
         <Icon className="w-3.5 h-3.5" />
         {label}
       </div>
       <div className="font-display text-4xl font-bold text-app tabular-nums leading-none">{value}</div>
-      <div className="text-xs text-subtle mt-1.5">{sub}</div>
+      <div className="text-xs text-subtle mt-2">{sub}</div>
     </motion.div>
   );
 }
@@ -420,11 +424,11 @@ function BossChallenge({ progress }: { progress: Progress }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.18 }}
-      className="mb-4"
+      className="mb-6"
     >
       <Link
         href={unlocked ? `/boss/${next.id}` : '#'}
-        className="flex items-center justify-between gap-4 p-5 transition-transform hover:scale-[1.01] duration-200"
+        className="flex items-center justify-between gap-4 p-6 transition-transform hover:scale-[1.01] duration-200"
         style={{
           borderRadius: 24,
           background: tier.bg,
@@ -437,10 +441,13 @@ function BossChallenge({ progress }: { progress: Progress }) {
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
             style={{ background: `${tier.color}22`, border: `1px solid ${tier.color}44` }}>
-            <Swords className="w-7 h-7" style={{ color: tier.color }} />
+            {unlocked
+              ? <Swords className="w-7 h-7" style={{ color: tier.color }} />
+              : <Lock className="w-6 h-6" style={{ color: tier.color }} />
+            }
           </div>
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: tier.color }}>
+            <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: tier.color }}>
               {tier.label} Boss Challenge · {getWorldTheme(next.world).name}
             </div>
             <div className="font-display text-2xl font-bold text-app">{next.name}</div>
@@ -448,16 +455,16 @@ function BossChallenge({ progress }: { progress: Progress }) {
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-xs text-muted mb-1">Reward</div>
+          <div className="text-xs text-muted mb-2">Reward</div>
           <div className="font-display text-xl font-bold" style={{ color: tier.color }}>
             +{next.rewards.xp}XP
           </div>
           {unlocked ? (
-            <div className="flex items-center gap-1 text-sm font-bold mt-1" style={{ color: tier.color }}>
+            <div className="flex items-center gap-1 text-sm font-bold mt-2" style={{ color: tier.color }}>
               Fight now <ArrowRight className="w-3.5 h-3.5" />
             </div>
           ) : (
-            <div className="text-xs text-muted mt-1">{next.unlockLabel}</div>
+            <div className="text-xs text-muted mt-2">{next.unlockLabel}</div>
           )}
         </div>
       </Link>

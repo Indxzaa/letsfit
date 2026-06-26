@@ -55,25 +55,24 @@ export default function WorldPage() {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <WorldAtmosphere world={world} />
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-16 relative" style={{ zIndex: 1 }}>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-20 relative" style={{ zIndex: 1 }}>
 
-        <Link href="/adventure" className="inline-flex items-center gap-2 text-sm mb-8 hover:opacity-75 transition-opacity"
+        <Link href="/adventure" className="link-back mb-8"
           style={{ color: theme.primary }}>
           <ArrowLeft className="w-4 h-4" /> World Map
         </Link>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-10">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest mb-4"
             style={{ background: `${theme.primary}18`, border: `1px solid ${theme.primary}35`, color: theme.primary }}>
             World {world}
           </div>
-          <h1 className="font-display text-5xl font-bold text-white mb-2">{theme.name}</h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)' }}>{theme.subtitle}</p>
+          <h1 className="font-display text-5xl font-bold text-white mb-2">{theme.name}</h1>          <p style={{ color: 'rgba(255,255,255,0.45)' }}>{theme.subtitle}</p>
         </motion.div>
 
         {/* Stage list */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {stages.map((stage, si) => {
             const complete = progress ? isStageComplete(stage, progress) : false;
             const unlocked = isDev || (progress ? isStageUnlocked(stage, progress) : si === 0);
@@ -104,7 +103,7 @@ export default function WorldPage() {
                     opacity: unlocked ? 1 : 0.45,
                   }}>
                   {/* Badge row */}
-                  <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                       <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest text-white"
                         style={{ background: tier!.color }}>WORLD BOSS</span>
@@ -115,15 +114,15 @@ export default function WorldPage() {
                   </div>
 
                   {/* Content */}
-                  <div className="flex items-start gap-5">
+                  <div className="flex items-center gap-6">
                     {bossConfig && (
                       <img src={bossConfig.image} alt={boss.name}
                         className="w-28 h-28 object-contain shrink-0 boss-float"
                         style={{ filter: `drop-shadow(0 0 20px ${tier!.color}99)` }} />
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-display text-2xl font-bold text-white mb-1">{boss.name}</h3>
-                      <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>{boss.flavour}</p>
+                      <h3 className="font-display text-2xl font-bold text-white mb-2">{boss.name}</h3>
+                      <p className="text-sm mb-6 leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>{boss.flavour}</p>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { icon: <Clock className="w-3.5 h-3.5" />, label: fmt(boss.timeLimitSeconds) },
@@ -131,7 +130,7 @@ export default function WorldPage() {
                           { icon: <Zap className="w-3.5 h-3.5 text-yellow-400" />, label: `+${xpReward} XP` },
                           { icon: <Coins className="w-3.5 h-3.5 text-amber-400" />, label: `+${coinReward} coins` },
                         ].map((item, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-xs font-semibold"
+                          <div key={i} className="flex items-center gap-2 text-xs font-semibold"
                             style={{ color: 'rgba(255,255,255,0.55)' }}>
                             {item.icon} {item.label}
                           </div>
@@ -155,7 +154,7 @@ export default function WorldPage() {
               return (
                 <div key={stage.id}>
                   {/* Boss separator */}
-                  <div className="flex items-center gap-3 my-5">
+                  <div className="flex items-center gap-3 my-6">
                     <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${tier!.color}40)` }} />
                     <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: `${tier!.color}80` }}>Final Challenge</span>
                     <div className="h-px flex-1" style={{ background: `linear-gradient(270deg, transparent, ${tier!.color}40)` }} />
@@ -167,7 +166,7 @@ export default function WorldPage() {
 
             // Exercise stage card
             const card = (
-              <motion.div className="flex items-center gap-4 p-4 rounded-2xl"
+              <motion.div className="flex items-center gap-6 p-6 rounded-2xl"
                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35, delay: si * 0.06 }}
                 style={{
@@ -190,8 +189,8 @@ export default function WorldPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="font-bold text-white text-sm mb-0.5">{stage.name}</div>
-                  <div className="text-xs mb-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <div className="font-bold text-white text-sm mb-2">{stage.name}</div>
+                  <div className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
                     {EXERCISE_LABELS[stage.slug ?? ''] ?? stage.slug} · {isTimed ? `${stage.reps}s hold` : `${stage.reps} reps`}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">

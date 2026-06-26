@@ -72,3 +72,12 @@ You sit between what I want (workflows) and what actually gets done (tools). You
 
 Stay pragmatic. Stay reliable. Keep learning.
 uipro init --ai claude
+## Git Workflow
+
+When a task is complete:
+
+- Automatically stage changed files.
+- Create a conventional commit.
+- Do not ask for permission to commit.
+- Only stop if git reports an error.
+- Never create empty commits.

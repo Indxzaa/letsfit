@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   PoseLandmarker,
   FilesetResolver,
@@ -53,9 +53,13 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
   const finishedRef = useRef(false);
   const popupIdRef = useRef(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const poseValidRef = useRef(false);
+  const lastToastMsRef = useRef(0);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // UI state
   const [phase, setPhase] = useState<Phase>('pick');
+  const [formToast, setFormToast] = useState<string | null>(null);
   const [target, setTarget] = useState(0);
   const [reps, setReps] = useState(0);
   const [elapsed, setElapsed] = useState(0);
@@ -204,6 +208,16 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
           // Only update detector + counters when ACTIVE
           if (phaseRef.current === 'active') {
             const out = detector.detect(landmarks);
+            poseValidRef.current = out.formScore > 0;
+            if (out.formScore > 0 && out.formScore < 70 && out.feedback) {
+              const now = Date.now();
+              if (now - lastToastMsRef.current > 3500) {
+                lastToastMsRef.current = now;
+                if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                setFormToast(out.feedback);
+                toastTimerRef.current = setTimeout(() => setFormToast(null), 2800);
+              }
+            }
             setStance(out.phase);
             setFeedback(out.feedback);
             setMetric(out.metric);
@@ -230,6 +244,8 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
             // Show frozen feedback in paused state
             setFeedback('Paused');
           }
+        } else {
+          poseValidRef.current = false;
         }
       } catch (err) {
         console.error('Pose detection error:', err);
@@ -244,6 +260,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
     stopTick();
     tickRef.current = setInterval(() => {
       if (phaseRef.current !== 'active') return;
+      if (exercise?.isTimed && !poseValidRef.current) return;
       elapsedSecRef.current += 1;
       setElapsed(elapsedSecRef.current);
       if (exercise?.isTimed && elapsedSecRef.current >= targetRef.current) {
@@ -345,6 +362,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
       stopAnimation();
       stopTick();
       stopCamera();
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       landmarkerRef.current?.close();
       landmarkerRef.current = null;
     };
@@ -477,6 +495,22 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
                 )}
 
                 <XpPopupLayer items={xpPopups} onExpire={expirePopup} />
+
+                <AnimatePresence>
+                  {formToast && phase === 'active' && (
+                    <motion.div
+                      key={formToast}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute bottom-14 inset-x-4 flex justify-center pointer-events-none z-20"
+                    >
+                      <div className="px-4 py-2 rounded-xl bg-black/75 backdrop-blur-sm text-sm text-white font-medium text-center max-w-xs">
+                        {formToast}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {showVideo && (
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">

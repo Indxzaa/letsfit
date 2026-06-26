@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Menu, X, LogOut, Coins, Pencil, Check } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
@@ -31,6 +32,7 @@ export default function Navbar() {
   const [usernameSuccess, setUsernameSuccess] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     setProgress(loadProgress());
@@ -119,15 +121,24 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="px-4 py-2 text-sm text-muted hover:text-app transition-colors duration-150 rounded-xl hover:bg-[var(--surface-hover)] cursor-pointer"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={isActive
+                    ? "relative px-4 py-2 text-sm font-semibold rounded-xl cursor-pointer"
+                    : "px-4 py-2 text-sm text-muted hover:text-app transition-colors duration-150 rounded-xl hover:bg-[var(--surface-hover)] cursor-pointer"}
+                  style={isActive ? { color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 10%, transparent)' } : undefined}
+                >
+                  {item.name}
+                  {isActive && (
+                    <span className="absolute bottom-0.5 left-3 right-3 h-0.5 rounded-full" style={{ background: 'var(--accent)', opacity: 0.6 }} />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           <div className="hidden md:flex items-center gap-2">
@@ -138,7 +149,7 @@ export default function Navbar() {
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => { setMenuOpen((o) => !o); setShowUsernameForm(false); }}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl surface surface-hover text-sm text-app cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-xl surface surface-hover text-sm text-app cursor-pointer"
                   aria-label="User menu"
                 >
                   <UserAvatar progress={progress} size="sm" />
@@ -237,7 +248,7 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <Link href="/signin" className="px-4 py-2 text-sm text-muted hover:text-app transition-colors">
+                <Link href="/signin" className="px-4 py-2 text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">
                   Log in
                 </Link>
                 <Link href="/signup" className="px-4 py-2 text-sm font-semibold text-white accent-bg rounded-xl transition-colors cursor-pointer">
@@ -269,18 +280,24 @@ export default function Navbar() {
             transition={{ duration: 0.2 }}
             className="navbar-float max-w-6xl mx-auto mt-2 px-4 py-4 overflow-hidden"
           >
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="block px-3 py-2.5 text-sm text-muted hover:text-app rounded-xl hover:bg-[var(--surface-hover)] transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              <div className="pt-3 mt-3 border-t border-app space-y-2">
+            <div className="space-y-2">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={isActive
+                      ? "block px-3 py-2 text-sm font-semibold rounded-xl"
+                      : "block px-3 py-2 text-sm text-muted hover:text-app rounded-xl hover:bg-[var(--surface-hover)] transition-colors"}
+                    style={isActive ? { color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 10%, transparent)' } : undefined}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+              <div className="pt-3 mt-3 border-t border-app space-y-4">
                 {user ? (
                   <>
                     <div className="px-3 py-2 text-xs text-subtle">Signed in as {displayName}</div>

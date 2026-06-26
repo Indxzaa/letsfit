@@ -11,9 +11,10 @@ import {
   subscribeToProgress,
   type Progress,
 } from '@/lib/progress';
-import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, ACCENT_THEMES } from '@/lib/shop';
+import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, ACCENT_THEMES, PAGE_LABELS } from '@/lib/shop';
 import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
+import { ShopSkeleton } from '@/components/Skeleton';
 import { useAuth } from '@/components/AuthProvider';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
@@ -45,13 +46,7 @@ export default function ShopPage() {
     setTimeout(() => setFeedback(null), 2200);
   };
 
-  if (!progress) {
-    return (
-      <div className="min-h-screen bg-app flex items-center justify-center">
-        <div className="w-8 h-8 rounded-xl accent-bg animate-pulse" />
-      </div>
-    );
-  }
+  if (!progress) return <ShopSkeleton />;
 
   const allUnlocked = new Set([
     ...FREE_DEFAULTS,
@@ -80,20 +75,20 @@ export default function ShopPage() {
   const items = SHOP_ITEMS.filter((i) => i.type === tab);
 
   return (
-    <div className="min-h-screen bg-app">
+    <div className="min-h-screen page-bg">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-8 cursor-pointer"
+          className="link-back mb-10 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           Dashboard
         </Link>
 
-        <div className="flex items-end justify-between gap-4 flex-wrap mb-8">
+        <div className="flex items-end justify-between gap-4 flex-wrap mb-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full accent-pill text-xs font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full accent-pill text-xs font-medium mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
               Shop
             </div>
@@ -121,7 +116,7 @@ export default function ShopPage() {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-4 p-3.5 rounded-2xl text-sm font-medium ${
+            className={`mb-6 p-4 rounded-2xl text-sm font-medium ${
               feedback.kind === 'ok'
                 ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-app'
                 : 'bg-red-500/10 border border-red-500/20 text-red-500'
@@ -131,7 +126,7 @@ export default function ShopPage() {
           </motion.div>
         )}
 
-        <div className="flex gap-1 p-1.5 clay-sm rounded-2xl mb-6 w-full overflow-x-auto">
+        <div className="flex gap-1 p-1.5 clay-sm rounded-2xl mb-8 w-full overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -147,7 +142,7 @@ export default function ShopPage() {
           ))}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item, i) => {
             const isUnlocked = allUnlocked.has(item.id);
             const isEquipped = equipped[item.type] === item.id;
@@ -160,7 +155,7 @@ export default function ShopPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: i * 0.03 }}
-                className={`clay-sm p-5 transition-all duration-200 ${
+                className={`clay-sm p-6 transition-all duration-200 ${
                   isEquipped
                     ? 'border-[var(--accent)]/40 bg-[var(--accent)]/5 scale-[1.01]'
                     : 'hover:scale-[1.01]'
@@ -168,8 +163,8 @@ export default function ShopPage() {
               >
                 <ItemPreview item={item} />
 
-                <div className="mt-4">
-                  <div className="flex items-start justify-between gap-2 mb-4">
+                <div className="mt-6">
+                  <div className="flex items-start justify-between gap-2 mb-6">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <div className="font-display text-xl font-bold text-app truncate">{item.name}</div>
@@ -201,7 +196,7 @@ export default function ShopPage() {
                     ) : (
                       <button
                         onClick={() => handleEquip(item.type, item.id)}
-                        className="w-full py-2.5 rounded-xl accent-bg text-white text-xs font-semibold cursor-pointer transition-opacity hover:opacity-90"
+                        className="w-full py-2.5 rounded-xl accent-bg text-xs font-semibold cursor-pointer"
                       >
                         Equip
                       </button>
@@ -254,41 +249,19 @@ function borderPreviewWrap(value: string): string {
 function ItemPreview({ item }: { item: ShopItem }) {
   if (item.type === 'theme') {
     const palette = ACCENT_THEMES[item.value];
-    const p = palette?.dark ?? '#5ec97a';
-    const s = palette?.secondary ?? palette?.soft ?? p;
-    const t = palette?.tertiary ?? p;
-    const soft = palette?.soft ?? p;
+    const pages = palette?.pages ?? {};
+    const pageKeys = Object.keys(PAGE_LABELS);
     return (
-      <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-app flex flex-col" style={{ background: 'var(--surface-solid)' }}>
-        <div className="flex-1 p-4 flex flex-col justify-between">
-          {/* Palette swatches */}
-          <div className="flex gap-1.5 mb-3">
-            <div className="h-5 flex-1 rounded-lg" style={{ background: p }} />
-            <div className="h-5 flex-1 rounded-lg" style={{ background: s }} />
-            <div className="h-5 flex-1 rounded-lg" style={{ background: soft }} />
-            <div className="h-5 flex-1 rounded-lg" style={{ background: t }} />
-          </div>
-          {/* Mock UI elements */}
-          <div>
-            <div className="h-1.5 w-16 rounded-full mb-1.5" style={{ background: 'var(--border)' }} />
-            <div className="h-1.5 w-11 rounded-full mb-3" style={{ background: 'var(--border)' }} />
-            {/* Button + progress bar row */}
-            <div className="flex items-center gap-2">
-              <div className="h-6 px-3 rounded-lg flex items-center text-[10px] font-bold text-white" style={{ background: p, minWidth: 48 }}>
-                {item.name.split(' ')[0]}
-              </div>
-              <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-                <div className="h-full w-3/5 rounded-full" style={{ background: `linear-gradient(90deg, ${p}, ${s})` }} />
-              </div>
+      <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-app p-4 flex flex-col gap-2" style={{ background: 'var(--surface-solid)' }}>
+        {pageKeys.map((key) => {
+          const color = pages[key] ?? palette?.dark ?? '#5ec97a';
+          return (
+            <div key={key} className="flex items-center gap-3 flex-1">
+              <div className="w-14 shrink-0 h-full rounded-lg" style={{ background: color }} />
+              <span className="text-[10px] text-subtle font-medium">{PAGE_LABELS[key]}</span>
             </div>
-          </div>
-        </div>
-        {/* Bottom accent stripe with secondary + tertiary */}
-        <div className="h-2 flex">
-          <div className="flex-1" style={{ background: p }} />
-          <div className="flex-1" style={{ background: s }} />
-          <div className="flex-1" style={{ background: t }} />
-        </div>
+          );
+        })}
       </div>
     );
   }

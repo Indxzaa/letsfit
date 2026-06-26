@@ -96,7 +96,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <div className="min-h-screen bg-app flex flex-col">
-      <div className="px-6 py-6">
+      <div className="px-6 py-8">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors"
@@ -113,7 +113,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           transition={{ duration: 0.4 }}
           className="w-full max-w-sm"
         >
-          <div className="flex items-center gap-2.5 mb-8 justify-center">
+          <div className="flex items-center gap-4 mb-10 justify-center">
             <div className="w-9 h-9 rounded-lg accent-bg flex items-center justify-center">
               <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
@@ -122,7 +122,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </span>
           </div>
 
-          <h1 className="text-2xl font-semibold text-app mb-2 text-center">
+          <h1 className="text-2xl font-semibold text-app mb-4 text-center">
             {isSignup ? 'Create your account' : 'Welcome back'}
           </h1>
           <p className="text-sm text-muted mb-8 text-center">
@@ -132,7 +132,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </p>
 
           {!configured && (
-            <div className="mb-6 p-3 rounded-lg surface text-xs text-muted leading-relaxed">
+            <div className="mb-8 p-4 rounded-lg surface text-xs text-muted leading-relaxed">
               <div className="font-medium text-app mb-1">
                 Authentication not configured
               </div>
@@ -141,7 +141,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </div>
           )}
 
-          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <Field
               id="email"
               label="Email"
@@ -193,13 +193,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
             )}
 
             {error && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-500">
+              <div className="flex items-start gap-2 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-500">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
             {success && (
-              <div className="flex items-start gap-2 p-3 rounded-lg accent-bg-soft border border-app text-xs text-app">
+              <div className="flex items-start gap-2 p-4 rounded-lg accent-bg-soft border border-app text-xs text-app">
                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 accent-text" />
                 <span>{success}</span>
               </div>
@@ -208,7 +208,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg accent-bg text-white text-sm font-medium disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-lg accent-bg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading
@@ -271,7 +271,7 @@ function Field({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-medium text-muted mb-1.5"
+        className="block text-xs font-medium text-muted mb-2"
       >
         {label}
       </label>
@@ -288,7 +288,7 @@ function Field({
           placeholder={placeholder}
         />
       </div>
-      {hint && <div className="mt-1.5 text-[11px] text-subtle">{hint}</div>}
+      {hint && <div className="mt-2 text-[11px] text-subtle">{hint}</div>}
     </div>
   );
 }
@@ -316,7 +316,7 @@ function PasswordField({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-medium text-muted mb-1.5"
+        className="block text-xs font-medium text-muted mb-2"
       >
         {label}
       </label>
@@ -341,7 +341,7 @@ function PasswordField({
           {show ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
         </button>
       </div>
-      {hint && <div className="mt-1.5 text-[11px] text-subtle">{hint}</div>}
+      {hint && <div className="mt-2 text-[11px] text-subtle">{hint}</div>}
     </div>
   );
 }
