@@ -40,6 +40,9 @@ export type Progress = {
   usernameChangeCount: number;
   bossesDefeated: string[];
   stagesCompleted: string[];
+  loginStreak: number;
+  highestLoginStreak: number;
+  lastLoginDate: string;
 };
 
 const DEFAULT_PROGRESS: Progress = {
@@ -62,6 +65,9 @@ const DEFAULT_PROGRESS: Progress = {
   usernameChangeCount: 0,
   bossesDefeated: [],
   stagesCompleted: [],
+  loginStreak: 0,
+  highestLoginStreak: 0,
+  lastLoginDate: '',
 };
 
 // ---- Reward economy (rebalanced) ----
@@ -373,6 +379,22 @@ export type BossResult = {
   newAchievements: string[];
   leveledUp: boolean;
 };
+
+export function processLogin(progress: Progress): { updated: Progress; rewardDay: number; isNew: boolean } {
+  const today = todayKey();
+  if (progress.lastLoginDate === today) {
+    return { updated: progress, rewardDay: ((progress.loginStreak - 1) % 7) + 1, isNew: false };
+  }
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const newStreak = progress.lastLoginDate === yesterday ? progress.loginStreak + 1 : 1;
+  const updated: Progress = {
+    ...progress,
+    loginStreak: newStreak,
+    lastLoginDate: today,
+    highestLoginStreak: Math.max(progress.highestLoginStreak ?? 0, newStreak),
+  };
+  return { updated, rewardDay: ((newStreak - 1) % 7) + 1, isNew: true };
+}
 
 export function recordBossDefeat(
   current: Progress,

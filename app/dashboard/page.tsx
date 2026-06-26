@@ -4,25 +4,36 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
-  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight, Lock,
+  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight, Lock, Trophy,
 } from 'lucide-react';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
 import { getWorldTheme } from '@/lib/worlds';
-import { buildCalendar, type CalendarDay } from '@/lib/dashboardMock';
-import { loadProgress, levelProgress, subscribeToProgress, type Progress } from '@/lib/progress';
+import { loadProgress, saveProgress, levelProgress, subscribeToProgress, processLogin, type Progress } from '@/lib/progress';
+import { LOGIN_REWARDS, applyLoginReward } from '@/lib/loginRewards';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress } from '@/lib/achievements';
 import { getUsername } from '@/lib/profileSync';
 import { DashboardSkeleton } from '@/components/Skeleton';
 import Navbar from '@/components/Navbar';
 import UserAvatar from '@/components/UserAvatar';
+import LoginRewardPopup from '@/components/LoginRewardPopup';
 
 export default function DashboardPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [calendar, setCalendar] = useState<CalendarDay[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [rewardDay, setRewardDay] = useState(1);
 
   useEffect(() => {
-    setProgress(loadProgress());
-    setCalendar(buildCalendar(10));
+    const p = loadProgress();
+    const { updated, rewardDay: rd, isNew } = processLogin(p);
+    const final = isNew ? applyLoginReward(updated, rd) : updated;
+    if (isNew) saveProgress(final);
+    setProgress(final);
+    setRewardDay(rd);
+    const popupKey = `letsfit:login-popup:${updated.lastLoginDate}`;
+    if (isNew && !sessionStorage.getItem(popupKey)) {
+      setShowPopup(true);
+      sessionStorage.setItem(popupKey, '1');
+    }
     const unsub = subscribeToProgress(() => setProgress(loadProgress()));
     return unsub;
   }, []);
@@ -38,6 +49,12 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen page-bg">
       <Navbar />
+      <LoginRewardPopup
+        open={showPopup}
+        loginStreak={progress.loginStreak}
+        rewardDay={rewardDay}
+        onClose={() => setShowPopup(false)}
+      />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
 
         {/* Header */}
@@ -268,17 +285,44 @@ export default function DashboardPage() {
             borderRadius: 24, background: 'var(--surface-solid)', border: '1px solid var(--border)',
             boxShadow: '0 6px 24px rgba(0,0,0,0.1)',
           }}>
-            <h2 className="font-display text-2xl font-bold text-app mb-2">Streak Calendar</h2>
-            <p className="text-xs text-subtle mb-6">10 weeks of activity.</p>
-            <CalendarGrid days={calendar} />
-            <div className="flex items-center gap-2 text-xs text-subtle mt-4">
-              <span>Less</span>
-              <div className="flex gap-1">
-                {[0, 1, 2, 3, 4].map((lvl) => (
-                  <div key={lvl} className="w-3.5 h-3.5 rounded-sm" style={{ background: intensityColor(lvl) }} />
-                ))}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-2xl font-bold text-app">Login Streak</h2>
+              <button
+                onClick={() => setShowPopup(true)}
+                className="text-xs font-semibold cursor-pointer px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))', color: 'var(--accent)' }}
+              >
+                Rewards
+              </button>
+            </div>
+            <div className="flex items-end gap-3 mb-3">
+              <div className="font-display text-6xl font-bold text-app leading-none tabular-nums">
+                {progress.loginStreak}
               </div>
-              <span>More</span>
+              <div className="pb-1 text-sm text-subtle">days</div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-subtle mb-4">
+              <Trophy className="w-3.5 h-3.5" />
+              Best: {progress.highestLoginStreak} days
+            </div>
+            <p className="text-xs text-muted leading-relaxed">
+              {progress.loginStreak >= 7
+                ? `You're on a ${progress.loginStreak}-day streak!`
+                : progress.loginStreak >= 3
+                ? 'Keep logging in daily to maintain your streak!'
+                : 'Log in every day to build your streak and earn rewards.'}
+            </p>
+            <div className="flex gap-1 mt-4">
+              {LOGIN_REWARDS.map((r) => {
+                const day = ((progress.loginStreak - 1) % 7) + 1;
+                const done = r.day < day || (r.day === day);
+                return (
+                  <div key={r.day} title={`Day ${r.day}: ${r.label}`}
+                    className="flex-1 h-1.5 rounded-full"
+                    style={{ background: done ? 'var(--accent)' : 'var(--border)' }}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
@@ -407,12 +451,6 @@ function StatTile({
   );
 }
 
-function intensityColor(level: number): string {
-  if (level === 0) return 'var(--border)';
-  const pcts: Record<number, string> = { 1: '20%', 2: '42%', 3: '65%', 4: '100%' };
-  return `color-mix(in srgb, var(--accent) ${pcts[level]}, transparent)`;
-}
-
 function BossChallenge({ progress }: { progress: Progress }) {
   const lp = levelProgress(progress.xp);
   const next = BOSSES.find((b) => !(progress.bossesDefeated?.includes(b.id)));
@@ -469,28 +507,5 @@ function BossChallenge({ progress }: { progress: Progress }) {
         </div>
       </Link>
     </motion.div>
-  );
-}
-
-function CalendarGrid({ days }: { days: CalendarDay[] }) {
-  const weeks: CalendarDay[][] = [];
-  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
-  return (
-    <div className="overflow-x-auto">
-      <div className="flex gap-1 min-w-max">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-1">
-            {week.map((day) => (
-              <div
-                key={day.date}
-                title={`${day.date} · ${day.active ? 'active' : 'rest'}`}
-                className="w-3.5 h-3.5 rounded-sm hover:scale-125 transition-transform cursor-default"
-                style={{ background: intensityColor(day.intensity) }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
