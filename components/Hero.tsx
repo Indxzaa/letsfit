@@ -5,79 +5,93 @@ import { ArrowRight, Zap, Flame, Trophy, Star } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import Link from 'next/link';
 
+const featureItems = [
+  { icon: Zap, title: 'XP & Leveling', desc: 'Every rep earns XP. Level up from 1 to 100.' },
+  { icon: Flame, title: 'Streak System', desc: 'Train daily to build momentum and unlock milestones.' },
+  { icon: Trophy, title: 'Achievements', desc: 'Earn badges across 4 rarity tiers: Common to Legendary.' },
+  { icon: Star, title: 'Daily Quests', desc: 'New challenges every day with FitCoin rewards.' },
+];
+
 export default function Hero() {
   const { user } = useAuth();
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-24 pb-16">
-      {/* Background blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px]"
-          style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }} />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px]"
-          style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)' }} />
-      </div>
+    <section
+      className="min-h-screen flex items-center pt-20 pb-20"
+      style={{ background: 'var(--neo-cream)' }}
+    >
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 w-full">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-      <div className="relative max-w-6xl mx-auto px-6 lg:px-8 w-full">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-
-          {/* Left copy */}
+          {/* Left — headline + CTA */}
           <div>
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
-              style={{
-                background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
-                border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
-                color: 'var(--accent)',
-              }}
+              transition={{ duration: 0.35 }}
+              className="neo-badge mb-8"
             >
-              <Star className="w-4 h-4" />
+              <Star className="w-3.5 h-3.5" />
               AI-powered fitness for students
             </motion.div>
 
             <motion.h1
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.05 }}
-              className="font-display text-6xl sm:text-7xl lg:text-8xl font-bold text-app mb-8 leading-[0.9]"
+              transition={{ duration: 0.4, delay: 0.05 }}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(3.5rem, 8vw, 6rem)',
+                lineHeight: 0.92,
+                letterSpacing: '-0.02em',
+                color: 'var(--neo-black)',
+                marginBottom: '2rem',
+              }}
             >
-              Get fit.<br />
-              <span style={{ color: 'var(--accent)' }}>Level up.</span><br />
-              Stay consistent.
+              GET FIT.<br />
+              <span style={{ color: 'var(--neo-accent)' }}>LEVEL UP.</span><br />
+              STAY<br />CONSISTENT.
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.1 }}
-              className="text-xl text-muted mb-12 max-w-md leading-relaxed"
+              transition={{ duration: 0.4, delay: 0.1 }}
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '1.125rem',
+                lineHeight: 1.65,
+                color: 'var(--neo-black)',
+                opacity: 0.7,
+                maxWidth: '26rem',
+                marginBottom: '2.5rem',
+              }}
             >
               Real-time AI posture feedback, daily quests, XP rewards, and achievement streaks.
               10 minutes a day, no equipment needed.
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.15 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
               className="flex flex-col sm:flex-row items-start gap-4 mb-10"
             >
               <Link
                 href={user ? '/dashboard' : '/signup'}
-                className="btn-primary px-8 py-4 rounded-2xl font-display text-xl font-bold flex items-center gap-2 cursor-pointer"
+                className="neo-btn neo-btn-primary"
+                style={{ fontSize: '1.0625rem' }}
               >
-                {user ? 'Go to dashboard' : 'Start for free'}
+                {user ? 'Go to Dashboard' : 'Start for Free'}
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <a
                 href="#features"
-                className="px-8 py-4 rounded-2xl font-semibold text-app flex items-center gap-2 cursor-pointer transition-all surface surface-hover group"
+                className="neo-btn neo-btn-ghost"
+                style={{ border: 'var(--neo-border)', fontSize: '1.0625rem', color: 'var(--neo-black)' }}
               >
                 See how it works
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="w-4 h-4" />
               </a>
             </motion.div>
 
@@ -85,41 +99,55 @@ export default function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.25 }}
-              className="flex items-center gap-4 text-sm text-subtle flex-wrap"
+              className="flex items-center gap-5 flex-wrap"
+              style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--neo-black)', opacity: 0.6 }}
             >
-              {['No equipment needed', 'Works in your dorm', '10 min/day'].map((t, i) => (
+              {['No equipment needed', 'Works in your dorm', '10 min / day'].map((t, i) => (
                 <span key={i} className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+                  <span
+                    className="w-2 h-2"
+                    style={{ background: 'var(--neo-accent)', display: 'inline-block' }}
+                  />
                   {t}
                 </span>
               ))}
             </motion.div>
           </div>
 
-          {/* Right — feature highlights (no fake stats) */}
-          <div className="hidden lg:flex flex-col gap-4">
-            {[
-              { icon: Zap, title: 'XP & Leveling', desc: 'Every rep earns XP. Level up from 1 to 100.' },
-              { icon: Flame, title: 'Streak System', desc: 'Train daily to build momentum and unlock milestones.' },
-              { icon: Trophy, title: 'Achievements', desc: 'Earn badges across 4 rarity tiers: Common to Legendary.' },
-              { icon: Star, title: 'Daily Quests', desc: 'New challenges every day with FitCoin rewards.' },
-            ].map((f) => (
-              <div key={f.title} className="flex items-center gap-4 p-6"
-                style={{
-                  borderRadius: 20,
-                  background: 'var(--surface-solid)',
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                }}>
-                <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
-                  style={{ background: 'var(--accent)', boxShadow: '0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent)' }}>
-                  <f.icon className="w-5 h-5 text-white" />
+          {/* Right — feature highlight cards */}
+          <div className="hidden lg:flex flex-col gap-3">
+            {featureItems.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35, delay: 0.1 + i * 0.07 }}
+                whileHover={{ boxShadow: 'var(--neo-shadow-lg)', transform: 'translate(-2px, -2px)' }}
+                transition={{ duration: 0.1 }}
+                className="flex items-center gap-4 p-5 neo-card cursor-default"
+                style={{ transition: 'box-shadow 0.1s ease, transform 0.1s ease' }}
+              >
+                <div
+                  className="w-11 h-11 shrink-0 flex items-center justify-center"
+                  style={{ background: 'var(--neo-accent)', border: 'var(--neo-border)' }}
+                >
+                  <f.icon className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-app">{f.title}</div>
-                  <div className="text-xs text-muted mt-2">{f.desc}</div>
+                  <div
+                    className="text-sm font-bold uppercase"
+                    style={{ fontFamily: 'var(--font-display)', color: 'var(--neo-black)', marginBottom: '0.2rem' }}
+                  >
+                    {f.title}
+                  </div>
+                  <div
+                    className="text-xs leading-relaxed"
+                    style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', opacity: 0.6 }}
+                  >
+                    {f.desc}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

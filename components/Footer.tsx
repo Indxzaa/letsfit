@@ -5,45 +5,98 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-app mt-20">
+    <footer style={{ background: 'var(--neo-black)', borderTop: '4px solid var(--neo-black)' }}>
       <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-8 mb-12">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-10 mb-14">
+
+          {/* Brand */}
           <div>
-            <a href="/" className="flex items-center gap-4 mb-4">
-              <div className="w-8 h-8 rounded-xl accent-bg flex items-center justify-center">
-                <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
+            <a href="/" className="flex items-center gap-3 mb-5">
+              <div
+                className="w-9 h-9 flex items-center justify-center"
+                style={{ background: 'var(--neo-accent)', border: '2px solid var(--neo-white)' }}
+              >
+                <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
               </div>
-              <span className="font-display text-lg font-bold text-app">LetsFit</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-white)', letterSpacing: '-0.01em' }}>
+                LETSFIT
+              </span>
             </a>
-            <p className="text-sm text-muted max-w-xs leading-relaxed">
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9375rem', color: 'rgba(255,255,255,0.55)', maxWidth: '18rem', lineHeight: 1.65 }}>
               A student-focused wellness app for posture, movement, and consistent habits.
             </p>
           </div>
 
-          <div className="flex gap-12">
+          {/* Links */}
+          <div className="flex gap-14">
             <div>
-              <h3 className="text-xs font-semibold text-app uppercase tracking-wider mb-6">App</h3>
-              <ul className="space-y-4">
-                <li><Link href="/#features" className="text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">Features</Link></li>
-                <li><Link href="/#progress" className="text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">How it works</Link></li>
-                <li><Link href="/exercise" className="text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">Exercises</Link></li>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.75rem', color: 'var(--neo-white)', letterSpacing: '0.1em', marginBottom: '1.25rem' }}>
+                APP
+              </h3>
+              <ul className="space-y-3.5">
+                {[
+                  { label: 'Features', href: '/#features' },
+                  { label: 'How it works', href: '/#progress' },
+                  { label: 'Exercises', href: '/exercise' },
+                ].map(l => (
+                  <li key={l.label}>
+                    <Link
+                      href={l.href}
+                      style={{ fontFamily: 'var(--font-body)', fontSize: '0.9375rem', color: 'rgba(255,255,255,0.55)' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--neo-white)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-app uppercase tracking-wider mb-6">Account</h3>
-              <ul className="space-y-4">
-                <li><Link href="/signup" className="text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">Sign up</Link></li>
-                <li><Link href="/signin" className="text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">Log in</Link></li>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.75rem', color: 'var(--neo-white)', letterSpacing: '0.1em', marginBottom: '1.25rem' }}>
+                ACCOUNT
+              </h3>
+              <ul className="space-y-3.5">
+                {[
+                  { label: 'Sign up', href: '/signup' },
+                  { label: 'Log in', href: '/signin' },
+                ].map(l => (
+                  <li key={l.label}>
+                    <Link
+                      href={l.href}
+                      style={{ fontFamily: 'var(--font-body)', fontSize: '0.9375rem', color: 'rgba(255,255,255,0.55)' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--neo-white)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-app flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-subtle">© 2026 LetsFit. A student wellness project.</p>
-          <div className="flex items-center gap-5 text-xs text-subtle">
-            <a href="#" className="hover:text-app hover:underline underline-offset-2 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-app hover:underline underline-offset-2 transition-colors">Terms</a>
+        {/* Bottom bar */}
+        <div
+          className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-8"
+          style={{ borderTop: '2px solid rgba(255,255,255,0.12)' }}
+        >
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)' }}>
+            © 2026 LetsFit. A student wellness project.
+          </p>
+          <div className="flex items-center gap-5">
+            {['Privacy', 'Terms'].map(l => (
+              <a
+                key={l}
+                href="#"
+                style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+              >
+                {l}
+              </a>
+            ))}
           </div>
         </div>
       </div>

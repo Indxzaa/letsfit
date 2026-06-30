@@ -5,7 +5,6 @@ import { Activity, Menu, X, LogOut, Coins, Pencil, Check } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from './ThemeToggle';
 import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
@@ -103,23 +102,24 @@ export default function Navbar() {
   const navItems = user ? authedNavItems : publicNavItems;
 
   return (
-    <motion.div
-      initial={{ y: -24, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="fixed top-4 left-4 right-4 z-50"
-    >
-      <nav className="navbar-float max-w-6xl mx-auto px-4 lg:px-6">
-        <div className="flex items-center justify-between h-14">
+    <div className="neo-navbar">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl accent-bg flex items-center justify-center shadow-sm">
-              <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
+            <div
+              className="w-9 h-9 flex items-center justify-center"
+              style={{ background: 'var(--neo-accent)', border: 'var(--neo-border)' }}
+            >
+              <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="font-display text-lg font-700 text-app tracking-tight">
-              LetsFit
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-black)', letterSpacing: '-0.01em' }}>
+              LETSFIT
             </span>
           </Link>
 
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -127,98 +127,107 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={isActive
-                    ? "relative px-4 py-2 text-sm font-semibold rounded-xl cursor-pointer"
-                    : "px-4 py-2 text-sm text-muted hover:text-app transition-colors duration-150 rounded-xl hover:bg-[var(--surface-hover)] cursor-pointer"}
-                  style={isActive ? { color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 10%, transparent)' } : undefined}
+                  className="px-4 py-2 text-sm font-semibold transition-colors cursor-pointer"
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    color: isActive ? 'var(--neo-accent)' : 'var(--neo-black)',
+                    textDecoration: isActive ? 'underline' : 'none',
+                    textDecorationThickness: isActive ? '3px' : undefined,
+                    textUnderlineOffset: isActive ? '4px' : undefined,
+                  }}
                 >
                   {item.name}
-                  {isActive && (
-                    <span className="absolute bottom-0.5 left-3 right-3 h-0.5 rounded-full" style={{ background: 'var(--accent)', opacity: 0.6 }} />
-                  )}
                 </Link>
               );
             })}
           </div>
 
-          <div className="hidden md:flex items-center gap-2">
-            <ThemeToggle />
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center gap-3">
             {loading ? (
-              <div className="w-20 h-9 rounded-xl bg-[var(--surface)] animate-pulse" />
+              <div className="w-24 h-9" style={{ background: 'var(--neo-surface)', border: 'var(--neo-border)' }} />
             ) : user ? (
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => { setMenuOpen((o) => !o); setShowUsernameForm(false); }}
-                  className="flex items-center gap-2 px-4 py-1.5 rounded-xl surface surface-hover text-sm text-app cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 cursor-pointer transition-all neo-btn neo-btn-ghost"
+                  style={{ fontFamily: 'var(--font-body)', textTransform: 'none', letterSpacing: 'normal', fontSize: '0.875rem' }}
                   aria-label="User menu"
                 >
                   <UserAvatar progress={progress} size="sm" />
-                  <span className="max-w-[120px] truncate pr-1">{displayName}</span>
+                  <span className="max-w-[120px] truncate">{displayName}</span>
                 </button>
+
                 <AnimatePresence>
                   {menuOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-72 clay-card overflow-hidden"
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute right-0 mt-2 w-72 overflow-hidden"
+                      style={{ background: 'var(--neo-white)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-lg)' }}
                     >
-                      <div className="px-3 py-3 border-b border-app flex items-center gap-3">
+                      {/* User info */}
+                      <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: '2px solid var(--neo-black)' }}>
                         <UserAvatar progress={progress} size="md" />
                         <div className="min-w-0">
-                          <div className="text-xs text-subtle">Signed in as</div>
-                          <div className="text-sm text-app truncate font-medium">{displayName}</div>
-                          <div className="text-xs text-subtle truncate">{user.email}</div>
+                          <div className="text-xs font-semibold uppercase" style={{ color: 'var(--neo-black)', opacity: 0.5, fontFamily: 'var(--font-display)' }}>Signed in as</div>
+                          <div className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}>{displayName}</div>
+                          <div className="text-xs truncate" style={{ color: 'var(--neo-black)', opacity: 0.5 }}>{user.email}</div>
                         </div>
-                        {usernameSuccess && (
-                          <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
-                        )}
+                        {usernameSuccess && <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neo-green)' }} />}
                       </div>
+
+                      {/* FitCoins */}
                       {progress && (
-                        <div className="px-3 py-2.5 border-b border-app flex items-center gap-2 text-xs text-subtle">
-                          <Coins className="w-3.5 h-3.5 accent-text" />
-                          <span className="text-app font-medium">{progress.fitCoins.toLocaleString()}</span>
-                          <span>FitCoins</span>
+                        <div className="px-4 py-2.5 flex items-center gap-2 text-xs" style={{ borderBottom: '2px solid var(--neo-black)', fontFamily: 'var(--font-body)' }}>
+                          <Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} />
+                          <span className="font-bold" style={{ color: 'var(--neo-black)' }}>{progress.fitCoins.toLocaleString()}</span>
+                          <span style={{ color: 'var(--neo-black)', opacity: 0.6 }}>FitCoins</span>
                         </div>
                       )}
 
                       {/* Change username */}
-                      <div className="border-b border-app">
+                      <div style={{ borderBottom: '2px solid var(--neo-black)' }}>
                         {!showUsernameForm ? (
                           <button
                             onClick={() => { setShowUsernameForm(true); setNewUsername(username ?? ''); setUsernameError(''); }}
-                            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-app hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
+                            style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                           >
                             <span className="flex items-center gap-2">
-                              <Pencil className="w-4 h-4 accent-text" />
+                              <Pencil className="w-4 h-4" style={{ color: 'var(--neo-accent)' }} />
                               Change Username
                             </span>
-                            <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{cost} coins</span>
+                            <span className="text-xs font-bold" style={{ color: 'var(--neo-accent)', fontFamily: 'var(--font-display)' }}>{cost} coins</span>
                           </button>
                         ) : (
                           <div className="p-3 space-y-2">
-                            <div className="text-xs text-subtle mb-1">Cost: <span className="font-bold text-app">{cost} FitCoins</span></div>
+                            <div className="text-xs mb-1" style={{ color: 'var(--neo-black)', opacity: 0.6 }}>Cost: <span className="font-bold" style={{ color: 'var(--neo-black)' }}>{cost} FitCoins</span></div>
                             <input
                               autoFocus
                               value={newUsername}
                               onChange={(e) => { setNewUsername(e.target.value); setUsernameError(''); }}
                               onKeyDown={(e) => { if (e.key === 'Enter') handleUsernameChange(); if (e.key === 'Escape') { setShowUsernameForm(false); setUsernameError(''); } }}
                               placeholder="New username"
-                              className="w-full px-3 py-2 text-sm rounded-xl surface border border-app text-app outline-none focus:border-[var(--accent)] transition-colors"
+                              className="neo-input text-sm"
                             />
-                            {usernameError && <div className="text-xs text-red-500">{usernameError}</div>}
+                            {usernameError && <div className="text-xs" style={{ color: 'var(--neo-red)' }}>{usernameError}</div>}
                             <div className="flex gap-2">
                               <button
                                 onClick={handleUsernameChange}
-                                className="flex-1 px-3 py-1.5 text-xs font-bold text-white rounded-xl cursor-pointer"
-                                style={{ background: 'var(--accent)' }}
+                                className="flex-1 px-3 py-1.5 text-xs font-bold cursor-pointer neo-btn neo-btn-primary"
+                                style={{ fontFamily: 'var(--font-display)', fontSize: '0.75rem', padding: '0.4rem 0.75rem' }}
                               >
                                 Confirm
                               </button>
                               <button
                                 onClick={() => { setShowUsernameForm(false); setUsernameError(''); }}
-                                className="flex-1 px-3 py-1.5 text-xs text-app surface rounded-xl cursor-pointer"
+                                className="flex-1 px-3 py-1.5 text-xs cursor-pointer neo-btn neo-btn-ghost"
+                                style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', padding: '0.4rem 0.75rem', border: 'var(--neo-border)' }}
                               >
                                 Cancel
                               </button>
@@ -230,14 +239,21 @@ export default function Navbar() {
                       <Link
                         href="/shop"
                         onClick={() => setMenuOpen(false)}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-app hover:bg-[var(--surface-hover)] transition-colors border-b border-app cursor-pointer"
+                        className="w-full flex items-center gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
+                        style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', borderBottom: '2px solid var(--neo-black)', display: 'flex' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <Coins className="w-4 h-4 accent-text" />
+                        <Coins className="w-4 h-4" style={{ color: 'var(--neo-accent)' }} />
                         Customize profile
                       </Link>
+
                       <button
                         onClick={async () => { setMenuOpen(false); await signOut(); }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-app hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                        className="w-full flex items-center gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
+                        style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <LogOut className="w-4 h-4" />
                         Sign out
@@ -248,62 +264,71 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <Link href="/signin" className="px-4 py-2 text-sm text-muted hover:text-app hover:underline underline-offset-2 transition-colors">
+                <Link
+                  href="/signin"
+                  className="px-4 py-2 text-sm font-semibold cursor-pointer"
+                  style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}
+                >
                   Log in
                 </Link>
-                <Link href="/signup" className="px-4 py-2 text-sm font-semibold text-white accent-bg rounded-xl transition-colors cursor-pointer">
-                  Get started
+                <Link href="/signup" className="neo-btn neo-btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>
+                  Get started →
                 </Link>
               </>
             )}
           </div>
 
-          <div className="md:hidden flex items-center gap-2">
-            <ThemeToggle />
-            <button
-              className="text-app p-2 -mr-1 rounded-xl hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-            >
-              {isOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden p-2 cursor-pointer"
+            style={{ color: 'var(--neo-black)', border: 'var(--neo-border)', background: 'transparent' }}
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
-      </nav>
+      </div>
 
+      {/* Mobile menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="navbar-float max-w-6xl mx-auto mt-2 px-4 py-4 overflow-hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18 }}
+            className="md:hidden overflow-hidden"
+            style={{ borderTop: '3px solid var(--neo-black)', background: 'var(--neo-cream)' }}
           >
-            <div className="space-y-2">
+            <div className="px-6 py-4 space-y-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={isActive
-                      ? "block px-3 py-2 text-sm font-semibold rounded-xl"
-                      : "block px-3 py-2 text-sm text-muted hover:text-app rounded-xl hover:bg-[var(--surface-hover)] transition-colors"}
-                    style={isActive ? { color: 'var(--accent)', background: 'color-mix(in srgb, var(--accent) 10%, transparent)' } : undefined}
+                    className="block px-3 py-2.5 text-sm font-semibold cursor-pointer"
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      color: 'var(--neo-black)',
+                      background: isActive ? 'var(--neo-surface)' : 'transparent',
+                      borderLeft: isActive ? '4px solid var(--neo-accent)' : '4px solid transparent',
+                    }}
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
                   </Link>
                 );
               })}
-              <div className="pt-3 mt-3 border-t border-app space-y-4">
+              <div className="pt-4 mt-3 space-y-3" style={{ borderTop: '2px solid var(--neo-black)' }}>
                 {user ? (
                   <>
-                    <div className="px-3 py-2 text-xs text-subtle">Signed in as {displayName}</div>
+                    <div className="px-3 py-1 text-xs font-bold uppercase" style={{ fontFamily: 'var(--font-display)', color: 'var(--neo-black)', opacity: 0.5 }}>Signed in as {displayName}</div>
                     <button
                       onClick={async () => { setIsOpen(false); await signOut(); }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-app surface rounded-xl cursor-pointer"
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm cursor-pointer neo-btn neo-btn-ghost"
+                      style={{ fontFamily: 'var(--font-body)', border: 'var(--neo-border)', justifyContent: 'flex-start' }}
                     >
                       <LogOut className="w-4 h-4" />
                       Sign out
@@ -311,11 +336,11 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Link href="/signin" onClick={() => setIsOpen(false)} className="block px-3 py-2.5 text-sm text-app">
+                    <Link href="/signin" onClick={() => setIsOpen(false)} className="block px-3 py-2.5 text-sm font-semibold" style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}>
                       Log in
                     </Link>
-                    <Link href="/signup" onClick={() => setIsOpen(false)} className="block px-3 py-2.5 text-sm font-semibold text-white accent-bg rounded-xl text-center cursor-pointer">
-                      Get started
+                    <Link href="/signup" onClick={() => setIsOpen(false)} className="neo-btn neo-btn-primary block text-center" style={{ width: '100%', justifyContent: 'center' }}>
+                      Get started →
                     </Link>
                   </>
                 )}
@@ -324,6 +349,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

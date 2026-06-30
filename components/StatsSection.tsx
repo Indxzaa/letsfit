@@ -26,65 +26,103 @@ const steps = [
     icon: Trophy,
     step: '04',
     title: 'Unlock Rewards',
-    description: 'Earn FitCoins for every session. Spend them on avatars, badges, and themes.',
+    description: 'Earn FitCoins for every session. Spend them on avatars, badges, and more.',
   },
 ];
 
 export default function StatsSection() {
   return (
-    <section id="progress" className="py-24 sm:py-32">
+    <section
+      id="progress"
+      className="py-24 sm:py-32"
+      style={{ background: 'var(--neo-cream)', borderTop: '4px solid var(--neo-black)' }}
+    >
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
+
+        {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.5 }}
-          className="max-w-2xl mb-14"
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.4 }}
+          className="max-w-2xl mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-5"
+          <div className="neo-badge mb-6">How it works</div>
+          <h2
             style={{
-              background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
-              border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
-              color: 'var(--accent)',
-            }}>
-            How it works
-          </div>
-          <h2 className="font-display text-5xl sm:text-6xl font-bold text-app mb-4 leading-tight">
-            Track progress.<br />Build habits.
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+              lineHeight: 0.95,
+              letterSpacing: '-0.02em',
+              color: 'var(--neo-black)',
+              marginBottom: '1.25rem',
+            }}
+          >
+            TRACK PROGRESS.<br />BUILD HABITS.
           </h2>
-          <p className="text-xl text-muted leading-relaxed">
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '1.125rem',
+              lineHeight: 1.65,
+              color: 'var(--neo-black)',
+              opacity: 0.65,
+            }}
+          >
             AI guides your form. XP tracks your growth. Every session makes you stronger.
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Steps grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {steps.map((step, i) => (
             <motion.div
               key={step.title}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.4, delay: i * 0.07 }}
-              className="p-6 hover:scale-[1.02] transition-transform duration-200 cursor-default"
-              style={{
-                borderRadius: 20,
-                background: 'var(--surface-solid)',
-                border: '1px solid var(--border)',
-                boxShadow: '0 6px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.06)',
-              }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.35, delay: i * 0.07 }}
+              whileHover={{ boxShadow: 'var(--neo-shadow-lg)', y: -2, x: -2 }}
+              className="p-6 neo-card cursor-default"
+              style={{ transition: 'box-shadow 0.1s ease, transform 0.1s ease' }}
             >
               <div className="flex items-start justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'var(--accent)', boxShadow: '0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent)' }}>
-                  <step.icon className="w-6 h-6 text-white" strokeWidth={2} />
+                <div
+                  className="w-11 h-11 flex items-center justify-center shrink-0"
+                  style={{ background: 'var(--neo-accent)', border: 'var(--neo-border)' }}
+                >
+                  <step.icon className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
-                <span className="font-display text-5xl font-bold leading-none"
-                  style={{ color: 'color-mix(in srgb, var(--accent) 20%, var(--surface-solid))' }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '3.5rem',
+                    lineHeight: 1,
+                    color: 'var(--neo-accent)',
+                    opacity: 0.15,
+                    userSelect: 'none',
+                  }}
+                >
                   {step.step}
                 </span>
               </div>
-              <h3 className="font-display text-xl font-bold text-app mb-2">{step.title}</h3>
-              <p className="text-sm text-muted leading-relaxed">{step.description}</p>
+              <h3
+                className="mb-2"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1rem',
+                  color: 'var(--neo-black)',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                {step.title.toUpperCase()}
+              </h3>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', opacity: 0.6 }}
+              >
+                {step.description}
+              </p>
             </motion.div>
           ))}
         </div>
