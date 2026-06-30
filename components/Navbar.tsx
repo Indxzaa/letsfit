@@ -129,13 +129,30 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="px-4 py-2 text-sm font-semibold transition-colors cursor-pointer"
                   style={{
                     fontFamily: 'var(--font-body)',
-                    color: isActive ? 'var(--neo-accent)' : 'var(--neo-black)',
-                    textDecoration: isActive ? 'underline' : 'none',
-                    textDecorationThickness: isActive ? '3px' : undefined,
-                    textUnderlineOffset: isActive ? '4px' : undefined,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: isActive ? '#fff' : 'var(--neo-black)',
+                    padding: '0.4rem 0.875rem',
+                    borderRadius: '9999px',
+                    border: '1.5px solid transparent',
+                    background: isActive ? 'var(--neo-accent)' : 'transparent',
+                    transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'var(--neo-surface)';
+                      e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = 'transparent';
+                    }
                   }}
                 >
                   {item.name}
@@ -150,12 +167,32 @@ export default function Navbar() {
             <button
               onClick={toggleMode}
               aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
-              className="w-9 h-9 flex items-center justify-center cursor-pointer shrink-0"
-              style={{ border: 'var(--neo-border)', background: 'var(--neo-white)', color: 'var(--neo-black)', transition: 'box-shadow 0.1s ease, transform 0.1s ease' }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--neo-shadow-sm)'; e.currentTarget.style.transform = 'translate(-1px,-1px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
+              className="flex items-center shrink-0 cursor-pointer"
+              style={{
+                borderRadius: '9999px',
+                border: '1.5px solid rgba(22,163,74,0.25)',
+                background: 'var(--neo-white)',
+                color: 'var(--neo-black)',
+                padding: '0.4rem 0.75rem',
+                gap: '0.375rem',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 600,
+                transition: 'box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.borderColor = 'rgba(22,163,74,0.5)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.borderColor = 'rgba(22,163,74,0.25)';
+              }}
             >
-              {mode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {mode === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              <span>{mode === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
             {loading ? (
               <div className="w-24 h-9" style={{ background: 'var(--neo-surface)', border: 'var(--neo-border)' }} />
@@ -163,8 +200,29 @@ export default function Navbar() {
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => { setMenuOpen((o) => !o); setShowUsernameForm(false); }}
-                  className="flex items-center gap-2 px-4 py-2 cursor-pointer transition-all neo-btn neo-btn-ghost"
-                  style={{ fontFamily: 'var(--font-body)', textTransform: 'none', letterSpacing: 'normal', fontSize: '0.875rem' }}
+                  className="flex items-center cursor-pointer"
+                  style={{
+                    borderRadius: '9999px',
+                    border: '1.5px solid rgba(22,163,74,0.2)',
+                    background: 'var(--neo-white)',
+                    color: 'var(--neo-black)',
+                    padding: '0.35rem 0.875rem 0.35rem 0.5rem',
+                    gap: '0.5rem',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    transition: 'box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.borderColor = 'rgba(22,163,74,0.45)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.borderColor = 'rgba(22,163,74,0.2)';
+                  }}
                   aria-label="User menu"
                 >
                   <UserAvatar progress={progress} size="sm" />
@@ -279,8 +337,27 @@ export default function Navbar() {
               <>
                 <Link
                   href="/signin"
-                  className="px-4 py-2 text-sm font-semibold cursor-pointer"
-                  style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}
+                  className="cursor-pointer"
+                  style={{
+                    borderRadius: '9999px',
+                    border: '1.5px solid rgba(0,0,0,0.15)',
+                    padding: '0.4rem 0.875rem',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: 'var(--neo-black)',
+                    transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'none';
+                  }}
                 >
                   Log in
                 </Link>

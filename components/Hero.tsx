@@ -138,30 +138,49 @@ export default function Hero() {
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35, delay: 0.08 + i * 0.07 }}
-                whileHover={{ boxShadow: 'var(--neo-shadow-lg)', transform: 'translate(-2px, -2px)' }}
-                className="flex items-center gap-4 p-5 neo-card cursor-default"
-                style={{ transition: 'box-shadow 0.1s ease, transform 0.1s ease' }}
+                whileHover={{ boxShadow: '0 8px 24px rgba(0,0,0,0.12)', y: -3 }}
+                className="flex items-center gap-5 cursor-default"
+                style={{
+                  background: 'var(--neo-white)',
+                  border: '2px solid var(--neo-black)',
+                  borderRadius: '20px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                  padding: '1.25rem 1.5rem',
+                  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                }}
               >
                 <div
-                  className="w-11 h-11 shrink-0 flex items-center justify-center"
-                  style={{ background: f.iconBg, border: 'var(--neo-border)' }}
+                  className="shrink-0 flex items-center justify-center"
+                  style={{
+                    width: '3rem',
+                    height: '3rem',
+                    background: f.iconBg,
+                    borderRadius: '14px',
+                    border: 'none',
+                  }}
                 >
                   <f.icon className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
                   <div
-                    className="text-sm font-bold uppercase"
                     style={{
                       fontFamily: 'var(--font-display)',
+                      fontSize: '0.9375rem',
                       color: 'var(--neo-black)',
-                      marginBottom: '0.2rem',
+                      marginBottom: '0.25rem',
+                      letterSpacing: '-0.01em',
                     }}
                   >
                     {f.title}
                   </div>
                   <div
-                    className="text-xs leading-relaxed"
-                    style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', opacity: 0.6 }}
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.8125rem',
+                      lineHeight: 1.55,
+                      color: 'var(--neo-black)',
+                      opacity: 0.6,
+                    }}
                   >
                     {f.desc}
                   </div>
