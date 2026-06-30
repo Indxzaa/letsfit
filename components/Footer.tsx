@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer style={{ background: 'var(--neo-black)', borderTop: '4px solid var(--neo-black)' }}>
+    <footer style={{ background: '#111110', borderTop: '4px solid #111110' }}>
       <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
         <div className="flex flex-col sm:flex-row items-start justify-between gap-10 mb-14">
 

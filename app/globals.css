@@ -6,11 +6,18 @@
   --neo-white: #FFFFFF;
   --neo-cream: #FAFAF5;
   --neo-surface: #F0EFE9;
-  --neo-accent: #FF6B00;
-  --neo-accent-dark: #CC5500;
+  --neo-accent: #16A34A;
+  --neo-accent-dark: #15803D;
   --neo-green: #16A34A;
+  --neo-blue: #2563EB;
+  --neo-purple: #7C3AED;
+  --neo-amber: #D97706;
   --neo-red: #DC2626;
   --neo-yellow: #FACC15;
+  --neo-icon-green:  #16A34A;
+  --neo-icon-blue:   #2563EB;
+  --neo-icon-purple: #7C3AED;
+  --neo-icon-amber:  #D97706;
   --neo-border: 3px solid #111111;
   --neo-border-2: 2px solid #111111;
   --neo-shadow: 4px 4px 0 #111111;
@@ -101,10 +108,10 @@
 }
 
 .neo-btn-ghost:hover {
-  background: var(--neo-black);
-  color: var(--neo-white);
-  box-shadow: none;
-  transform: none;
+  background: var(--neo-surface);
+  color: var(--neo-black);
+  box-shadow: var(--neo-shadow-sm);
+  transform: translate(-1px, -1px);
 }
 
 /* Neo navbar */
@@ -172,6 +179,21 @@
     transform: none;
     box-shadow: var(--neo-shadow);
   }
+}
+
+/* ── Neobrutalist Dark Mode ── */
+[data-theme="dark"] {
+  --neo-black:       #EBEBDF;
+  --neo-white:       #1A1A18;
+  --neo-cream:       #111110;
+  --neo-surface:     #1E1E1B;
+  --neo-accent:      #22C55E;
+  --neo-accent-dark: #16A34A;
+  --neo-border:      3px solid #EBEBDF;
+  --neo-border-2:    2px solid #EBEBDF;
+  --neo-shadow:      4px 4px 0 #EBEBDF;
+  --neo-shadow-lg:   6px 6px 0 #EBEBDF;
+  --neo-shadow-sm:   2px 2px 0 #EBEBDF;
 }
 
 :root,

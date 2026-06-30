@@ -6,10 +6,30 @@ import { useAuth } from './AuthProvider';
 import Link from 'next/link';
 
 const featureItems = [
-  { icon: Zap, title: 'XP & Leveling', desc: 'Every rep earns XP. Level up from 1 to 100.' },
-  { icon: Flame, title: 'Streak System', desc: 'Train daily to build momentum and unlock milestones.' },
-  { icon: Trophy, title: 'Achievements', desc: 'Earn badges across 4 rarity tiers: Common to Legendary.' },
-  { icon: Star, title: 'Daily Quests', desc: 'New challenges every day with FitCoin rewards.' },
+  {
+    icon: Zap,
+    title: 'XP & Leveling',
+    desc: 'Every rep earns XP. Level up from 1 to 100.',
+    iconBg: 'var(--neo-icon-green)',
+  },
+  {
+    icon: Flame,
+    title: 'Streak System',
+    desc: 'Train daily to build momentum and unlock milestones.',
+    iconBg: 'var(--neo-icon-amber)',
+  },
+  {
+    icon: Trophy,
+    title: 'Achievements',
+    desc: 'Earn badges across 4 rarity tiers: Common to Legendary.',
+    iconBg: 'var(--neo-icon-purple)',
+  },
+  {
+    icon: Star,
+    title: 'Daily Quests',
+    desc: 'New challenges every day with FitCoin rewards.',
+    iconBg: 'var(--neo-icon-blue)',
+  },
 ];
 
 export default function Hero() {
@@ -25,23 +45,13 @@ export default function Hero() {
 
           {/* Left — headline + CTA */}
           <div>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="neo-badge mb-8"
-            >
-              <Star className="w-3.5 h-3.5" />
-              AI-powered fitness for students
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.05 }}
+              transition={{ duration: 0.4 }}
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(3.5rem, 8vw, 6rem)',
+                fontSize: 'clamp(2.75rem, 6vw, 4.75rem)',
                 lineHeight: 0.92,
                 letterSpacing: '-0.02em',
                 color: 'var(--neo-black)',
@@ -50,31 +60,31 @@ export default function Hero() {
             >
               GET FIT.<br />
               <span style={{ color: 'var(--neo-accent)' }}>LEVEL UP.</span><br />
-              STAY<br />CONSISTENT.
+              STAY CONSISTENT.
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
+              transition={{ duration: 0.4, delay: 0.08 }}
               style={{
                 fontFamily: 'var(--font-body)',
                 fontSize: '1.125rem',
                 lineHeight: 1.65,
                 color: 'var(--neo-black)',
                 opacity: 0.7,
-                maxWidth: '26rem',
+                maxWidth: '28rem',
                 marginBottom: '2.5rem',
               }}
             >
-              Real-time AI posture feedback, daily quests, XP rewards, and achievement streaks.
-              10 minutes a day, no equipment needed.
+              Real-time AI posture analysis, immersive gamified workouts, Adventure Mode,
+              achievements, and daily challenges — making fitness more engaging every day.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
+              transition={{ duration: 0.4, delay: 0.14 }}
               className="flex flex-col sm:flex-row items-start gap-4 mb-10"
             >
               <Link
@@ -98,9 +108,15 @@ export default function Hero() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.25 }}
+              transition={{ duration: 0.5, delay: 0.22 }}
               className="flex items-center gap-5 flex-wrap"
-              style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--neo-black)', opacity: 0.6 }}
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: 'var(--neo-black)',
+                opacity: 0.6,
+              }}
             >
               {['No equipment needed', 'Works in your dorm', '10 min / day'].map((t, i) => (
                 <span key={i} className="flex items-center gap-1.5">
@@ -121,22 +137,25 @@ export default function Hero() {
                 key={f.title}
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35, delay: 0.1 + i * 0.07 }}
+                transition={{ duration: 0.35, delay: 0.08 + i * 0.07 }}
                 whileHover={{ boxShadow: 'var(--neo-shadow-lg)', transform: 'translate(-2px, -2px)' }}
-                transition={{ duration: 0.1 }}
                 className="flex items-center gap-4 p-5 neo-card cursor-default"
                 style={{ transition: 'box-shadow 0.1s ease, transform 0.1s ease' }}
               >
                 <div
                   className="w-11 h-11 shrink-0 flex items-center justify-center"
-                  style={{ background: 'var(--neo-accent)', border: 'var(--neo-border)' }}
+                  style={{ background: f.iconBg, border: 'var(--neo-border)' }}
                 >
                   <f.icon className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
                   <div
                     className="text-sm font-bold uppercase"
-                    style={{ fontFamily: 'var(--font-display)', color: 'var(--neo-black)', marginBottom: '0.2rem' }}
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      color: 'var(--neo-black)',
+                      marginBottom: '0.2rem',
+                    }}
                   >
                     {f.title}
                   </div>
@@ -150,6 +169,7 @@ export default function Hero() {
               </motion.div>
             ))}
           </div>
+
         </div>
       </div>
     </section>

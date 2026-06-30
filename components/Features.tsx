@@ -9,36 +9,42 @@ const features = [
     title: 'AI Posture Feedback',
     description: 'Real-time on-screen guidance corrects your form during squats, planks, and push-ups.',
     accent: true,
+    iconColor: 'var(--neo-icon-green)',
   },
   {
     icon: Calendar,
     title: 'Daily Routines',
     description: '10–20 min sessions you can do between classes. No equipment.',
     accent: false,
+    iconColor: 'var(--neo-icon-blue)',
   },
   {
     icon: Target,
     title: 'Habit Streaks',
     description: 'Track consistency every week. Stay on track without feeling overwhelmed.',
     accent: false,
+    iconColor: 'var(--neo-icon-amber)',
   },
   {
     icon: TrendingUp,
     title: 'Progress Over Time',
     description: 'Watch your sessions, posture, and active minutes grow.',
     accent: false,
+    iconColor: 'var(--neo-icon-green)',
   },
   {
     icon: BookOpen,
     title: 'Learn As You Go',
     description: 'Every exercise explains the why and what to focus on.',
     accent: false,
+    iconColor: 'var(--neo-icon-blue)',
   },
   {
     icon: Heart,
     title: 'Built for Beginners',
     description: 'No fitness background needed. The app adapts to your pace.',
     accent: false,
+    iconColor: 'var(--neo-icon-purple)',
   },
 ];
 
@@ -106,7 +112,7 @@ export default function Features() {
               <div
                 className="w-12 h-12 flex items-center justify-center mb-6"
                 style={{
-                  background: f.accent ? 'rgba(255,255,255,0.2)' : 'var(--neo-accent)',
+                  background: f.accent ? 'rgba(255,255,255,0.2)' : f.iconColor,
                   border: f.accent ? '2px solid rgba(255,255,255,0.4)' : 'var(--neo-border)',
                 }}
               >

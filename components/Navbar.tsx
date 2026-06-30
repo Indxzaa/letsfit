@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Menu, X, LogOut, Coins, Pencil, Check } from 'lucide-react';
+import { Activity, Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,6 +9,7 @@ import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { getUsername, setUsername } from '@/lib/profileSync';
+import { useTheme } from './ThemeProvider';
 
 const USERNAME_CHANGE_BASE_COST = 100;
 
@@ -31,6 +32,7 @@ export default function Navbar() {
   const [usernameSuccess, setUsernameSuccess] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
+  const { mode, toggleMode } = useTheme();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -144,6 +146,17 @@ export default function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Theme toggle */}
+            <button
+              onClick={toggleMode}
+              aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
+              className="w-9 h-9 flex items-center justify-center cursor-pointer shrink-0"
+              style={{ border: 'var(--neo-border)', background: 'var(--neo-white)', color: 'var(--neo-black)', transition: 'box-shadow 0.1s ease, transform 0.1s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--neo-shadow-sm)'; e.currentTarget.style.transform = 'translate(-1px,-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
+            >
+              {mode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             {loading ? (
               <div className="w-24 h-9" style={{ background: 'var(--neo-surface)', border: 'var(--neo-border)' }} />
             ) : user ? (
