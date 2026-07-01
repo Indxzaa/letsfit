@@ -10,6 +10,13 @@ import Navbar from '@/components/Navbar';
 const CATEGORIES = ['All', 'Lower Body', 'Upper Body', 'Core / Stability', 'Cardio'] as const;
 const DIFFICULTIES = ['All', 'Beginner', 'Intermediate', 'Advanced'] as const;
 
+const CARD_COLORS = [
+  'var(--card-bg-green)',
+  'var(--card-bg-amber)',
+  'var(--card-bg-purple)',
+  'var(--card-bg-blue)',
+];
+
 export default function ExerciseSelectPage() {
   const [cat, setCat] = useState<Exercise['category'] | 'All'>('All');
   const [diff, setDiff] = useState<Exercise['difficulty'] | 'All'>('All');
@@ -28,13 +35,9 @@ export default function ExerciseSelectPage() {
           Back home
         </Link>
 
+        {/* Header */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
-            style={{
-              background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
-              border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
-              color: 'var(--accent)',
-            }}>
+          <div className="neo-badge mb-5">
             Workout Catalog
           </div>
           <h1 className="font-display text-5xl sm:text-6xl font-bold text-app mb-4 leading-tight">
@@ -45,25 +48,54 @@ export default function ExerciseSelectPage() {
           </p>
         </div>
 
-        <div className="space-y-3 mb-8">
+        {/* Filters */}
+        <div className="space-y-3 mb-10">
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map(c => (
-              <button key={c} onClick={() => setCat(c)}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer"
+              <button
+                key={c}
+                onClick={() => setCat(c)}
+                className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-100"
                 style={cat === c
-                  ? { background: 'var(--accent)', color: '#fff' }
-                  : { background: 'var(--surface-solid)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                  ? {
+                      background: 'var(--neo-accent)',
+                      color: '#fff',
+                      border: 'var(--neo-border)',
+                      boxShadow: 'var(--neo-shadow-sm)',
+                    }
+                  : {
+                      background: 'var(--neo-white)',
+                      color: 'var(--neo-black)',
+                      border: 'var(--neo-border)',
+                      boxShadow: 'var(--neo-shadow-sm)',
+                    }
+                }
+              >
                 {c}
               </button>
             ))}
           </div>
           <div className="flex gap-2 flex-wrap">
             {DIFFICULTIES.map(d => (
-              <button key={d} onClick={() => setDiff(d)}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer"
+              <button
+                key={d}
+                onClick={() => setDiff(d)}
+                className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-100"
                 style={diff === d
-                  ? { background: 'var(--accent)', color: '#fff' }
-                  : { background: 'var(--surface-solid)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                  ? {
+                      background: 'var(--neo-accent)',
+                      color: '#fff',
+                      border: 'var(--neo-border)',
+                      boxShadow: 'var(--neo-shadow-sm)',
+                    }
+                  : {
+                      background: 'var(--neo-white)',
+                      color: 'var(--neo-black)',
+                      border: 'var(--neo-border)',
+                      boxShadow: 'var(--neo-shadow-sm)',
+                    }
+                }
+              >
                 {d}
               </button>
             ))}
@@ -74,74 +106,89 @@ export default function ExerciseSelectPage() {
           <div className="text-center py-20 text-muted text-sm">No exercises match these filters.</div>
         )}
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((exercise, i) => (
-            <motion.div key={exercise.slug} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.04 }}>
-              <Link href={`/exercise/${exercise.slug}`} className="block h-full cursor-pointer">
-                <div className="h-full flex flex-col hover:scale-[1.02] transition-transform duration-200 overflow-hidden"
-                  style={{
-                    borderRadius: 24,
-                    background: 'var(--surface-solid)',
-                    border: '1px solid var(--border)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.06)',
-                  }}>
-                  {/* Card header */}
-                  <div className="p-6" style={{
-                    background: 'color-mix(in srgb, var(--accent) 12%, var(--surface-solid))',
-                    borderBottom: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)',
-                  }}>
-                    <div className="flex items-start justify-between">
-                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                        style={{ background: 'var(--accent)', boxShadow: '0 6px 16px color-mix(in srgb, var(--accent) 45%, transparent)' }}>
-                        <exercise.icon className="w-7 h-7 text-white" strokeWidth={2} />
-                      </div>
-                      <div className="flex items-center gap-1.5">
+        {/* Exercise grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((exercise, i) => {
+            const cardBg = CARD_COLORS[i % CARD_COLORS.length];
+            return (
+              <motion.div
+                key={exercise.slug}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.04 }}
+              >
+                <Link href={`/exercise/${exercise.slug}`} className="block h-full cursor-pointer">
+                  <div
+                    className="h-full flex flex-col neo-card hover:scale-[1.02] transition-transform duration-150 overflow-hidden"
+                    style={{ borderRadius: 0, background: cardBg }}
+                  >
+                    {/* Card header */}
+                    <div
+                      className="p-5"
+                      style={{
+                        borderBottom: 'var(--neo-border-2)',
+                        background: 'color-mix(in srgb, var(--neo-black) 6%, ' + cardBg + ')',
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div
+                          className="w-12 h-12 flex items-center justify-center neo-card-accent"
+                          style={{ borderRadius: 0 }}
+                        >
+                          <exercise.icon className="w-6 h-6 text-white" strokeWidth={2} />
+                        </div>
                         {exercise.hasAiDetection && (
-                          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                            style={{ background: 'var(--accent)', color: '#fff' }}>
+                          <div
+                            className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold neo-card-accent"
+                            style={{ borderRadius: 0 }}
+                          >
                             <Sparkles className="w-3 h-3" /> AI
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Card body */}
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="font-display text-2xl font-bold text-app mb-1">{exercise.name}</h3>
-                    <div className="text-xs font-semibold text-subtle mb-4">{exercise.category}</div>
+                    {/* Card body */}
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="font-display text-xl font-bold text-app mb-0.5">{exercise.name}</h3>
+                      <div className="text-xs font-semibold text-subtle mb-4 uppercase tracking-wider">{exercise.category}</div>
 
-                    <div className="flex items-center gap-2 mb-5 flex-wrap">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                        style={{
-                          background: 'color-mix(in srgb, var(--accent) 12%, var(--surface-solid))',
-                          color: 'var(--accent)',
-                          border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
-                        }}>
-                        {exercise.difficulty}
-                      </span>
-                      {exercise.tags.map(tag => (
-                        <span key={tag} className="px-2.5 py-1 rounded-full text-xs font-medium capitalize"
+                      <div className="flex items-center gap-2 mb-5 flex-wrap">
+                        <span
+                          className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider"
                           style={{
-                            background: 'var(--surface)',
-                            color: 'var(--text-muted)',
-                            border: '1px solid var(--border)',
-                          }}>
-                          {tag}
+                            background: 'var(--neo-accent)',
+                            color: '#fff',
+                            border: 'var(--neo-border-2)',
+                          }}
+                        >
+                          {exercise.difficulty}
                         </span>
-                      ))}
-                    </div>
+                        {exercise.tags.map(tag => (
+                          <span
+                            key={tag}
+                            className="px-2.5 py-1 text-xs font-medium capitalize"
+                            style={{
+                              background: 'var(--neo-white)',
+                              color: 'var(--neo-black)',
+                              border: 'var(--neo-border-2)',
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
 
-                    <div className="mt-auto link-cta">
-                      <span>Start session</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <div className="mt-auto link-cta">
+                        <span>Start session</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>

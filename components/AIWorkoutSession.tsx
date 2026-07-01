@@ -8,7 +8,7 @@ import {
   FilesetResolver,
   type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
-import { Camera, Pause, Play, Square, ArrowLeft } from 'lucide-react';
+import { Camera, Pause, Play, Square, ArrowLeft, Sparkles, Activity, Target, Clock } from 'lucide-react';
 import Link from 'next/link';
 import {
   loadProgress,
@@ -71,6 +71,9 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
   const [xpPopups, setXpPopups] = useState<XpPopupItem[]>([]);
   const [achievementToasts, setAchievementToasts] = useState<string[]>([]);
+  const [liveFormScore, setLiveFormScore] = useState(0);
+  const [poseDetected, setPoseDetected] = useState(false);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
 
   const setPhaseBoth = useCallback((p: Phase) => {
     phaseRef.current = p;
@@ -135,6 +138,10 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
     stopAnimation();
     stopTick();
     stopCamera();
+    const acc = formAccumulatorRef.current.count > 0
+      ? Math.round(formAccumulatorRef.current.sum / formAccumulatorRef.current.count)
+      : null;
+    setAccuracy(acc);
     setPhaseBoth('complete');
 
     if (!exercise) return;
@@ -204,11 +211,13 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
         if (result.landmarks && result.landmarks.length > 0) {
           const landmarks = result.landmarks[0];
           drawSkeleton(ctx, landmarks);
+          setPoseDetected(true);
 
           // Only update detector + counters when ACTIVE
           if (phaseRef.current === 'active') {
             const out = detector.detect(landmarks);
             poseValidRef.current = out.formScore > 0;
+            setLiveFormScore(out.formScore);
             if (out.formScore > 0 && out.formScore < 70 && out.feedback) {
               const now = Date.now();
               if (now - lastToastMsRef.current > 3500) {
@@ -246,6 +255,8 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
           }
         } else {
           poseValidRef.current = false;
+          setPoseDetected(false);
+          setLiveFormScore(0);
         }
       } catch (err) {
         console.error('Pose detection error:', err);
@@ -352,6 +363,9 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
     setElapsed(0);
     setMetric(null);
     setError(null);
+    setAccuracy(null);
+    setLiveFormScore(0);
+    setPoseDetected(false);
     setPhaseBoth('pick');
     detectorRef.current?.reset();
   };
@@ -380,7 +394,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
 
   if (!exercise) {
     return (
-      <div className="min-h-screen bg-app flex items-center justify-center">
+      <div className="min-h-screen page-bg flex items-center justify-center">
         <div className="text-muted text-sm">Exercise not found.</div>
       </div>
     );
@@ -389,217 +403,227 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
   const Icon = exercise.icon;
   const isTimed = exercise.isTimed;
   const current = isTimed ? elapsed : reps;
-  const pct = target > 0 ? (current / target) * 100 : 0;
+  const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
   const showVideo = phase === 'loading' || phase === 'active' || phase === 'paused';
+  const accuracyColor = liveFormScore >= 80 ? 'var(--accent)' : liveFormScore >= 50 ? '#f59e0b' : liveFormScore > 0 ? '#ef4444' : 'var(--text-subtle)';
 
   return (
-    <div className="min-h-screen bg-app">
+    <div className="min-h-screen page-bg">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        <Link
-          href={stageId ? '/adventure' : '/exercise'}
-          className="inline-flex items-center gap-2 text-sm text-muted hover:text-app transition-colors mb-6"
-        >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+        <Link href={stageId ? '/adventure' : '/exercise'} className="link-back mb-8 cursor-pointer">
           <ArrowLeft className="w-4 h-4" />
           {stageId ? 'Back to adventure' : 'All exercises'}
         </Link>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl accent-bg-soft flex items-center justify-center">
-            <Icon className="w-5 h-5 accent-text" strokeWidth={2} />
-          </div>
-          <div>
-            <div className="text-sm font-medium accent-text">{exercise.tagline}</div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-app">
-              {phase === 'pick' && `${exercise.name} session`}
-              {(phase === 'loading' || phase === 'active' || phase === 'paused') &&
-                `Target: ${isTimed ? formatTime(target) : `${target} reps`}`}
-              {phase === 'complete' && 'Workout complete'}
-            </h1>
-          </div>
-        </div>
-
         {phase === 'pick' && preset !== null && (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-[var(--accent-soft)] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+              style={{ borderColor: 'var(--accent-soft)', borderTopColor: 'transparent' }} />
           </div>
         )}
 
         {phase === 'pick' && preset === null && (
-          <div className="grid lg:grid-cols-2 gap-6">
-            <TargetPicker exercise={exercise} onStart={startWorkout} />
-            <div className="surface rounded-2xl p-6 sm:p-8">
-              <h3 className="text-base font-semibold text-app mb-3">How it works</h3>
-              <ul className="space-y-2.5 text-sm text-muted">
-                <li className="flex items-start gap-2">
-                  <span className="accent-text font-semibold">1.</span>
-                  Pick your target {isTimed ? 'duration' : 'reps'}.
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="accent-text font-semibold">2.</span>
-                  Allow camera access. Stand 6–8 feet back, full body in frame.
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="accent-text font-semibold">3.</span>
-                  AI tracks your movement and counts reps automatically.
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="accent-text font-semibold">4.</span>
-                  Workout ends when you reach the target.
-                </li>
-              </ul>
-              {error && (
-                <div className="mt-5 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-500">
-                  {error}
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'var(--accent)', boxShadow: '0 6px 20px color-mix(in srgb, var(--accent) 40%, transparent)' }}>
+                <Icon className="w-7 h-7 text-white" strokeWidth={2} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-semibold accent-text uppercase tracking-wider">{exercise.category}</span>
+                  {exercise.hasAiDetection && (
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+                      style={{ background: 'var(--accent-bg)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
+                      <Sparkles className="w-3 h-3" /> AI
+                    </span>
+                  )}
                 </div>
-              )}
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-app">{exercise.name}</h1>
+                <p className="text-sm text-muted mt-0.5">{exercise.tagline}</p>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-[1fr_360px] gap-6">
+              <div className="neo-card p-6 sm:p-8 space-y-5" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
+                <p className="text-sm text-muted leading-relaxed">{exercise.description}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {([
+                    { Icon: Activity, label: 'Difficulty', value: exercise.difficulty, bg: 'var(--card-bg-blue)' },
+                    { Icon: Target, label: 'Equipment', value: exercise.equipment, bg: 'var(--card-bg-green)' },
+                  ] as const).map(({ Icon: I, label, value, bg }) => (
+                    <div key={label} className="neo-card p-3" style={{ background: bg, borderRadius: 0 }}>
+                      <I className="w-3.5 h-3.5 mb-1.5" style={{ color: 'var(--neo-accent)' }} />
+                      <div className="text-xs text-subtle">{label}</div>
+                      <div className="text-sm font-semibold text-app mt-0.5">{value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-subtle mb-2.5 uppercase tracking-wide">How it works</div>
+                  <ol className="space-y-2">
+                    {[
+                      `Pick your target ${isTimed ? 'duration' : 'reps'}.`,
+                      'Allow camera. Stand 6–8 ft back, full body in frame.',
+                      'AI tracks movement and counts reps automatically.',
+                      'Workout ends when you reach the target.',
+                    ].map((step, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-muted">
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5"
+                          style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>{i + 1}</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                {error && (
+                  <div className="p-3 rounded-xl text-xs text-red-400"
+                    style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    {error}
+                  </div>
+                )}
+              </div>
+              <TargetPicker exercise={exercise} onStart={startWorkout} />
             </div>
           </div>
         )}
 
-        {/* Active / paused / loading — keep video element mounted across all three */}
-        {(phase === 'loading' || phase === 'active' || phase === 'paused') && (
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 surface rounded-2xl overflow-hidden">
-              <div className="relative aspect-video bg-black">
-                <video
-                  ref={videoRef}
-                  className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-                  playsInline
-                  muted
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 w-full h-full scale-x-[-1]"
-                />
+        {/* Active / paused / loading */}
+        {showVideo && (
+          <div className="grid lg:grid-cols-[1fr_288px] gap-5">
 
-                {phase === 'loading' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-                    <div className="text-center">
-                      <div className="w-8 h-8 border-2 border-[var(--accent-soft)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                      <p className="text-sm text-muted">Loading camera and AI model…</p>
+            {/* Camera column */}
+            <div className="space-y-3">
+              <div className="relative overflow-hidden bg-black" style={{ borderRadius: 20 }}>
+                <div className="relative" style={{ aspectRatio: '16/9' }}>
+                  <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover scale-x-[-1]" playsInline muted />
+                  <canvas ref={canvasRef} className="absolute inset-0 w-full h-full scale-x-[-1]" />
+
+                  {phase === 'loading' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 gap-3">
+                      <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
+                        style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                      <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>Loading AI model…</p>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {phase === 'paused' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="text-center">
-                      <Pause className="w-10 h-10 text-white mx-auto mb-3" />
-                      <div className="text-lg font-semibold text-white mb-1">Paused</div>
-                      <div className="text-sm text-white/70">
-                        AI tracking is paused. Tap resume to continue.
+                  {phase === 'paused' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+                      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
+                      <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.12)' }}>
+                        <Pause className="w-6 h-6 text-white" fill="white" />
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                <XpPopupLayer items={xpPopups} onExpire={expirePopup} />
-
-                <AnimatePresence>
-                  {formToast && phase === 'active' && (
-                    <motion.div
-                      key={formToast}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute bottom-14 inset-x-4 flex justify-center pointer-events-none z-20"
-                    >
-                      <div className="px-4 py-2 rounded-xl bg-black/75 backdrop-blur-sm text-sm text-white font-medium text-center max-w-xs">
-                        {formToast}
-                      </div>
+                      <span className="text-white font-semibold">Paused</span>
                     </motion.div>
                   )}
-                </AnimatePresence>
 
-                {showVideo && (
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                    <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-xs text-white tabular-nums">
-                      {isTimed ? formatTime(current) : `${current} / ${target}`}
-                    </div>
-                    <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-xs text-white">
-                      {phase === 'paused'
-                        ? 'Paused'
-                        : isTimed
-                        ? 'Holding'
-                        : stance === 'down'
-                        ? 'Down'
-                        : 'Up'}
-                    </div>
+                  {/* AI status pills */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                    <AiStatusPill label="Camera" active={phase !== 'loading'} />
+                    <AiStatusPill label="Pose" active={poseDetected} />
+                    <AiStatusPill label="Tracking" active={phase === 'active' && poseDetected} />
                   </div>
-                )}
+
+                  {/* Counter pill */}
+                  <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-bold tabular-nums text-white"
+                    style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}>
+                    {isTimed ? formatTime(current) : `${current} / ${target}`}
+                  </div>
+
+                  <AnimatePresence>
+                    {formToast && phase === 'active' && (
+                      <motion.div key={formToast} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="absolute bottom-4 inset-x-4 flex justify-center pointer-events-none z-20">
+                        <div className="px-4 py-2 rounded-xl text-sm text-white font-medium text-center max-w-xs"
+                          style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)' }}>
+                          {formToast}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <XpPopupLayer items={xpPopups} onExpire={expirePopup} />
+                </div>
+
+                {/* Animated progress bar */}
+                <div className="xp-track mx-4 mb-4 mt-3" style={{ height: 8 }}>
+                  <motion.div className="xp-fill" animate={{ width: `${pct}%` }} transition={{ duration: 0.35 }} />
+                </div>
               </div>
 
-              <div className="p-4 border-t border-app">
-                <div className="h-2 rounded-full bg-[var(--border)] overflow-hidden mb-3">
-                  <motion.div
-                    animate={{ width: `${Math.min(100, pct)}%` }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full bg-[var(--accent)] rounded-full"
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <p className="text-sm text-muted flex-1 min-w-[200px]">{feedback}</p>
-                  <div className="flex items-center gap-2">
-                    {phase === 'active' && (
-                      <button
-                        onClick={pauseWorkout}
-                        className="px-3 py-2 rounded-lg surface surface-hover text-app text-sm font-medium flex items-center gap-1.5"
-                      >
-                        <Pause className="w-3.5 h-3.5" />
-                        Pause
-                      </button>
-                    )}
-                    {phase === 'paused' && (
-                      <button
-                        onClick={resumeWorkout}
-                        className="px-3 py-2 rounded-lg accent-bg text-white text-sm font-medium flex items-center gap-1.5"
-                      >
-                        <Play className="w-3.5 h-3.5" fill="currentColor" />
-                        Resume
-                      </button>
-                    )}
-                    <button
-                      onClick={endEarly}
-                      disabled={phase === 'loading'}
-                      className="px-3 py-2 rounded-lg surface surface-hover disabled:opacity-50 text-app text-sm font-medium flex items-center gap-1.5"
-                    >
-                      <Square className="w-3.5 h-3.5" />
-                      End
-                    </button>
-                  </div>
-                </div>
+              {/* Mobile stats */}
+              <div className="grid grid-cols-3 gap-2 lg:hidden">
+                <MiniStat label={isTimed ? 'Held' : 'Reps'} value={isTimed ? formatTime(current) : String(current)} bg="var(--card-bg-green)" />
+                <MiniStat label="Duration" value={formatTime(elapsed)} bg="var(--card-bg-blue)" />
+                <MiniStat label="Accuracy" value={liveFormScore > 0 ? `${liveFormScore}%` : '—'} color={liveFormScore > 0 ? accuracyColor : undefined} bg="var(--card-bg-amber)" />
+              </div>
+
+              {/* Mobile controls */}
+              <div className="neo-card p-4 flex items-center justify-between gap-3 lg:hidden" style={{ background: 'var(--neo-white)', borderRadius: 0 }}>
+                <AnimatePresence mode="wait">
+                  <motion.p key={feedback} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="text-sm text-muted flex-1 min-w-0 truncate">{feedback}</motion.p>
+                </AnimatePresence>
+                <WorkoutControls phase={phase} onPause={pauseWorkout} onResume={resumeWorkout} onEnd={endEarly} />
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="surface rounded-2xl p-5">
-                <div className="text-xs text-subtle mb-1">{isTimed ? 'Time held' : 'Reps'}</div>
-                <div className="text-4xl font-semibold text-app tabular-nums">
-                  {isTimed ? formatTime(current) : current}
-                </div>
-                <div className="text-xs text-subtle mt-1">
-                  of {isTimed ? formatTime(target) : `${target}`} target
+            {/* Sidebar — desktop only */}
+            <div className="hidden lg:flex flex-col gap-3">
+              <div className="neo-card p-5 text-center" style={{ background: 'var(--card-bg-green)', borderRadius: 0 }}>
+                <div className="text-xs font-bold uppercase tracking-wider text-subtle mb-1">{isTimed ? 'Time held' : 'Reps completed'}</div>
+                <motion.div key={current} initial={{ scale: 1.1 }} animate={{ scale: 1 }}
+                  className="text-5xl font-bold text-app tabular-nums">{isTimed ? formatTime(current) : current}</motion.div>
+                <div className="text-xs text-muted mt-1">of {isTimed ? formatTime(target) : `${target}`}</div>
+              </div>
+
+              <div className="neo-card p-4 flex items-center gap-3" style={{ background: 'var(--card-bg-blue)', borderRadius: 0 }}>
+                <Clock className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--neo-accent)' }} />
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-subtle">Duration</div>
+                  <div className="text-lg font-bold tabular-nums text-app">{formatTime(elapsed)}</div>
                 </div>
               </div>
-              <div className="surface rounded-2xl p-5">
-                <div className="text-xs text-subtle mb-1">Duration</div>
-                <div className="text-2xl font-semibold text-app tabular-nums">
-                  {formatTime(elapsed)}
-                </div>
-              </div>
-              {metric !== null && (
-                <div className="surface rounded-2xl p-5">
-                  <div className="text-xs text-subtle mb-1">{metricLabel}</div>
-                  <div className="text-2xl font-semibold text-app tabular-nums">
-                    {metric}
-                    {metricLabel.toLowerCase().includes('angle') ? '°' : ''}
+
+              {liveFormScore > 0 && (
+                <div className="neo-card p-4 flex items-center gap-3" style={{ background: 'var(--card-bg-amber)', borderRadius: 0 }}>
+                  <LiveAccuracyRing score={liveFormScore} />
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-subtle">Pose Accuracy</div>
+                    <div className="text-lg font-bold tabular-nums" style={{ color: accuracyColor }}>{liveFormScore}%</div>
                   </div>
                 </div>
               )}
-              <div className="surface rounded-2xl p-5">
-                <div className="text-xs text-subtle mb-1">Status</div>
-                <div className="text-sm text-app font-medium">{feedback}</div>
+
+              {metric !== null && (
+                <div className="neo-card p-4" style={{ background: 'var(--card-bg-purple)', borderRadius: 0 }}>
+                  <div className="text-xs font-bold uppercase tracking-wider text-subtle mb-0.5">{metricLabel}</div>
+                  <div className="text-xl font-bold text-app tabular-nums">
+                    {metric}{metricLabel.toLowerCase().includes('angle') ? '°' : ''}
+                  </div>
+                </div>
+              )}
+
+              <div className="neo-card p-4" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
+                <div className="text-xs font-bold uppercase tracking-wider text-subtle mb-1.5">AI Feedback</div>
+                <AnimatePresence mode="wait">
+                  <motion.p key={feedback} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    className="text-sm font-medium text-app leading-snug">{feedback}</motion.p>
+                </AnimatePresence>
+              </div>
+
+              <div className="neo-card p-4 space-y-2.5" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
+                <div className="text-xs font-bold uppercase tracking-wider text-subtle mb-1">AI Status</div>
+                <StatusRow label="Camera Ready" active={phase !== 'loading'} />
+                <StatusRow label="Pose Detected" active={poseDetected} />
+                <StatusRow label="Tracking Active" active={phase === 'active' && poseDetected} />
+              </div>
+
+              <div className="neo-card p-4" style={{ background: 'var(--neo-white)', borderRadius: 0 }}>
+                <WorkoutControls phase={phase} onPause={pauseWorkout} onResume={resumeWorkout} onEnd={endEarly} />
               </div>
             </div>
           </div>
@@ -611,31 +635,24 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
             reps={isTimed ? elapsed : reps}
             durationSeconds={elapsed}
             exerciseName={exercise.name}
+            accuracy={accuracy}
             onRestart={restart}
             backHref={stageId ? '/adventure' : '/dashboard'}
           />
         )}
 
         {phase === 'complete' && !sessionResult && (
-          <div className="surface rounded-2xl p-8 text-center">
+          <div className="neo-card p-10 text-center" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
             <Camera className="w-8 h-8 text-subtle mx-auto mb-3" />
-            <p className="text-muted mb-6">
-              No {isTimed ? 'time' : 'reps'} recorded.
-            </p>
-            <button
-              onClick={restart}
-              className="px-5 py-2.5 rounded-lg accent-bg text-white text-sm font-medium"
-            >
+            <p className="text-muted mb-6">No {isTimed ? 'time' : 'reps'} recorded.</p>
+            <button onClick={restart} className="neo-btn neo-btn-primary cursor-pointer">
               Try again
             </button>
           </div>
         )}
       </div>
 
-      <AchievementToastLayer
-        achievementIds={achievementToasts}
-        onDismiss={dismissAchievement}
-      />
+      <AchievementToastLayer achievementIds={achievementToasts} onDismiss={dismissAchievement} />
     </div>
   );
 }
@@ -644,4 +661,89 @@ function formatTime(s: number): string {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return m > 0 ? `${m}:${r.toString().padStart(2, '0')}` : `0:${r.toString().padStart(2, '0')}`;
+}
+
+function MiniStat({ label, value, color, bg }: { label: string; value: string; color?: string; bg?: string }) {
+  return (
+    <div className="neo-card p-3 text-center" style={{ background: bg ?? 'var(--neo-surface)', borderRadius: 0 }}>
+      <div className="text-xs font-bold uppercase tracking-wider text-subtle">{label}</div>
+      <div className="text-base font-bold tabular-nums mt-0.5" style={{ color: color ?? 'var(--text)' }}>{value}</div>
+    </div>
+  );
+}
+
+function AiStatusPill({ label, active }: { label: string; active: boolean }) {
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', color: active ? 'var(--accent)' : 'rgba(255,255,255,0.5)' }}>
+      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+        style={{ background: active ? 'var(--accent)' : 'rgba(255,255,255,0.3)' }} />
+      {label}
+    </div>
+  );
+}
+
+function StatusRow({ label, active }: { label: string; active: boolean }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-muted">{label}</span>
+      <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: active ? 'var(--accent)' : 'var(--text-subtle)' }}>
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: active ? 'var(--accent)' : 'var(--text-subtle)' }} />
+        {active ? 'Active' : 'Waiting'}
+      </span>
+    </div>
+  );
+}
+
+function LiveAccuracyRing({ score, size = 44 }: { score: number; size?: number }) {
+  const r = (size / 2) - 4;
+  const circ = 2 * Math.PI * r;
+  const fill = Math.max(0, Math.min(100, score));
+  const color = fill >= 80 ? 'var(--accent)' : fill >= 50 ? '#f59e0b' : '#ef4444';
+  return (
+    <svg width={size} height={size} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border)" strokeWidth="3.5" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="3.5"
+        strokeDasharray={`${(fill / 100) * circ} ${circ}`} strokeLinecap="round"
+        style={{ transition: 'stroke-dasharray 0.4s ease, stroke 0.3s ease' }} />
+    </svg>
+  );
+}
+
+function WorkoutControls({ phase, onPause, onResume, onEnd }: {
+  phase: Phase;
+  onPause: () => void;
+  onResume: () => void;
+  onEnd: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {phase === 'active' && (
+        <button
+          onClick={onPause}
+          className="neo-btn neo-btn-ghost flex items-center gap-1.5 text-sm cursor-pointer"
+          style={{ padding: '0.5rem 0.875rem' }}
+        >
+          <Pause className="w-3.5 h-3.5" /> Pause
+        </button>
+      )}
+      {phase === 'paused' && (
+        <button
+          onClick={onResume}
+          className="neo-btn neo-btn-primary flex items-center gap-1.5 text-sm cursor-pointer"
+          style={{ padding: '0.5rem 0.875rem' }}
+        >
+          <Play className="w-3.5 h-3.5" fill="currentColor" /> Resume
+        </button>
+      )}
+      <button
+        onClick={onEnd}
+        disabled={phase === 'loading'}
+        className="neo-btn neo-btn-ghost flex items-center gap-1.5 text-sm cursor-pointer disabled:opacity-50"
+        style={{ padding: '0.5rem 0.875rem' }}
+      >
+        <Square className="w-3.5 h-3.5" /> End
+      </button>
+    </div>
+  );
 }
