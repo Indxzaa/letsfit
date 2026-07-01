@@ -11,24 +11,28 @@ const featureItems = [
     title: 'XP & Leveling',
     desc: 'Every rep earns XP. Level up from 1 to 100.',
     iconBg: 'var(--neo-icon-green)',
+    cardBg: 'var(--card-bg-green)',
   },
   {
     icon: Flame,
     title: 'Streak System',
     desc: 'Train daily to build momentum and unlock milestones.',
     iconBg: 'var(--neo-icon-amber)',
+    cardBg: 'var(--card-bg-amber)',
   },
   {
     icon: Trophy,
     title: 'Achievements',
     desc: 'Earn badges across 4 rarity tiers: Common to Legendary.',
     iconBg: 'var(--neo-icon-purple)',
+    cardBg: 'var(--card-bg-purple)',
   },
   {
     icon: Star,
     title: 'Daily Quests',
     desc: 'New challenges every day with FitCoin rewards.',
     iconBg: 'var(--neo-icon-blue)',
+    cardBg: 'var(--card-bg-blue)',
   },
 ];
 
@@ -131,32 +135,33 @@ export default function Hero() {
           </div>
 
           {/* Right — feature highlight cards */}
-          <div className="hidden lg:flex flex-col gap-3">
+          <div className="hidden lg:flex flex-col gap-4">
             {featureItems.map((f, i) => (
               <motion.div
                 key={f.title}
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35, delay: 0.08 + i * 0.07 }}
-                whileHover={{ boxShadow: '0 8px 24px rgba(0,0,0,0.12)', y: -3 }}
-                className="flex items-center gap-5 cursor-default"
+                whileHover={{ boxShadow: 'var(--neo-shadow-lg)', y: -2, x: -2 }}
+                className="flex items-center gap-4 cursor-default"
                 style={{
-                  background: 'var(--neo-white)',
-                  border: '2px solid var(--neo-black)',
-                  borderRadius: '20px',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                  padding: '1.25rem 1.5rem',
-                  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                  background: f.cardBg,
+                  border: 'var(--neo-border)',
+                  borderRadius: '4px',
+                  boxShadow: 'var(--neo-shadow)',
+                  padding: '1.125rem 1.375rem',
+                  transition: 'box-shadow 0.1s ease, transform 0.1s ease',
                 }}
               >
                 <div
                   className="shrink-0 flex items-center justify-center"
                   style={{
-                    width: '3rem',
-                    height: '3rem',
+                    width: '2.75rem',
+                    height: '2.75rem',
                     background: f.iconBg,
-                    borderRadius: '14px',
-                    border: 'none',
+                    border: 'var(--neo-border)',
+                    borderRadius: '4px',
+                    flexShrink: 0,
                   }}
                 >
                   <f.icon className="w-5 h-5 text-white" strokeWidth={2.5} />
@@ -165,13 +170,13 @@ export default function Hero() {
                   <div
                     style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: '0.9375rem',
+                      fontSize: '0.875rem',
                       color: 'var(--neo-black)',
-                      marginBottom: '0.25rem',
+                      marginBottom: '0.2rem',
                       letterSpacing: '-0.01em',
                     }}
                   >
-                    {f.title}
+                    {f.title.toUpperCase()}
                   </div>
                   <div
                     style={{
@@ -179,7 +184,7 @@ export default function Hero() {
                       fontSize: '0.8125rem',
                       lineHeight: 1.55,
                       color: 'var(--neo-black)',
-                      opacity: 0.6,
+                      opacity: 0.65,
                     }}
                   >
                     {f.desc}

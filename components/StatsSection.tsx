@@ -35,7 +35,7 @@ export default function StatsSection() {
     <section
       id="progress"
       className="py-24 sm:py-32"
-      style={{ background: 'var(--neo-cream)', borderTop: '4px solid var(--neo-black)' }}
+      style={{ background: 'var(--neo-cream)' }}
     >
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
 

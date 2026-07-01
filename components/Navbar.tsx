@@ -170,25 +170,24 @@ export default function Navbar() {
               className="flex items-center shrink-0 cursor-pointer"
               style={{
                 borderRadius: '9999px',
-                border: '1.5px solid rgba(22,163,74,0.25)',
-                background: 'var(--neo-white)',
+                border: '2px solid var(--neo-black)',
+                background: 'var(--neo-surface)',
                 color: 'var(--neo-black)',
-                padding: '0.4rem 0.75rem',
+                padding: '0.4rem 0.875rem',
                 gap: '0.375rem',
                 fontSize: '0.75rem',
                 fontFamily: 'var(--font-body)',
                 fontWeight: 600,
-                transition: 'box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease',
+                boxShadow: '2px 2px 0 var(--neo-black)',
+                transition: 'box-shadow 0.1s ease, transform 0.1s ease',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.borderColor = 'rgba(22,163,74,0.5)';
+                e.currentTarget.style.boxShadow = '4px 4px 0 var(--neo-black)';
+                e.currentTarget.style.transform = 'translate(-1px, -1px)';
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.boxShadow = '2px 2px 0 var(--neo-black)';
                 e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.borderColor = 'rgba(22,163,74,0.25)';
               }}
             >
               {mode === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
@@ -203,25 +202,24 @@ export default function Navbar() {
                   className="flex items-center cursor-pointer"
                   style={{
                     borderRadius: '9999px',
-                    border: '1.5px solid rgba(22,163,74,0.2)',
-                    background: 'var(--neo-white)',
+                    border: '2px solid var(--neo-black)',
+                    background: 'var(--neo-surface)',
                     color: 'var(--neo-black)',
                     padding: '0.35rem 0.875rem 0.35rem 0.5rem',
                     gap: '0.5rem',
                     fontFamily: 'var(--font-body)',
                     fontSize: '0.875rem',
                     fontWeight: 600,
-                    transition: 'box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease',
+                    boxShadow: '2px 2px 0 var(--neo-black)',
+                    transition: 'box-shadow 0.1s ease, transform 0.1s ease',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.borderColor = 'rgba(22,163,74,0.45)';
+                    e.currentTarget.style.boxShadow = '4px 4px 0 var(--neo-black)';
+                    e.currentTarget.style.transform = 'translate(-1px, -1px)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.boxShadow = '2px 2px 0 var(--neo-black)';
                     e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.borderColor = 'rgba(22,163,74,0.2)';
                   }}
                   aria-label="User menu"
                 >
@@ -340,22 +338,24 @@ export default function Navbar() {
                   className="cursor-pointer"
                   style={{
                     borderRadius: '9999px',
-                    border: '1.5px solid rgba(0,0,0,0.15)',
+                    border: '2px solid var(--neo-black)',
+                    background: 'var(--neo-surface)',
                     padding: '0.4rem 0.875rem',
                     fontFamily: 'var(--font-body)',
                     fontSize: '0.875rem',
                     fontWeight: 600,
                     color: 'var(--neo-black)',
-                    transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+                    boxShadow: '2px 2px 0 var(--neo-black)',
+                    transition: 'box-shadow 0.1s ease, transform 0.1s ease',
                     textDecoration: 'none',
                     display: 'inline-block',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '4px 4px 0 var(--neo-black)';
+                    e.currentTarget.style.transform = 'translate(-1px, -1px)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.boxShadow = '2px 2px 0 var(--neo-black)';
                     e.currentTarget.style.transform = 'none';
                   }}
                 >

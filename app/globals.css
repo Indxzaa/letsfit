@@ -4,7 +4,11 @@
 :root {
   --neo-black: #111111;
   --neo-white: #FFFFFF;
-  --neo-cream: #FAFAF5;
+  --neo-cream: #F5F0E5;
+  --card-bg-green:  #DCFCE7;
+  --card-bg-amber:  #FEF3C7;
+  --card-bg-purple: #EDE9FE;
+  --card-bg-blue:   #DBEAFE;
   --neo-surface: #F0EFE9;
   --neo-accent: #16A34A;
   --neo-accent-dark: #15803D;
@@ -117,7 +121,6 @@
 /* Neo navbar */
 .neo-navbar {
   background: var(--neo-cream);
-  border-bottom: 4px solid var(--neo-black);
   position: fixed;
   top: 0;
   left: 0;
@@ -189,11 +192,15 @@
   --neo-surface:     #1E1E1B;
   --neo-accent:      #22C55E;
   --neo-accent-dark: #16A34A;
-  --neo-border:      3px solid #EBEBDF;
+  --neo-border: 3px solid #EBEBDF;
   --neo-border-2:    2px solid #EBEBDF;
   --neo-shadow:      4px 4px 0 #EBEBDF;
   --neo-shadow-lg:   6px 6px 0 #EBEBDF;
   --neo-shadow-sm:   2px 2px 0 #EBEBDF;
+  --card-bg-green:  #0F2B1A;
+  --card-bg-amber:  #261C05;
+  --card-bg-purple: #1F0E35;
+  --card-bg-blue:   #0E1F38;
 }
 
 :root,
