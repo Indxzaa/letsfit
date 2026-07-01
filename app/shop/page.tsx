@@ -8,29 +8,36 @@ import {
   loadProgress,
   purchaseItem,
   equipItem,
+  saveProgress,
   subscribeToProgress,
   type Progress,
 } from '@/lib/progress';
-import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, ACCENT_THEMES, PAGE_LABELS } from '@/lib/shop';
+import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG } from '@/lib/shop';
 import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
 import { ShopSkeleton } from '@/components/Skeleton';
 import { useAuth } from '@/components/AuthProvider';
+import { applyNewAchievements } from '@/lib/achievements';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
-type TabType = 'theme' | 'avatar' | 'border' | 'aura';
+type TabType = 'avatar' | 'border' | 'aura';
 
 const TABS: { id: TabType; label: string }[] = [
-  { id: 'theme',  label: 'Themes' },
   { id: 'avatar', label: 'Avatars' },
   { id: 'border', label: 'Borders' },
   { id: 'aura',   label: 'Auras' },
 ];
 
+const CARD_COLORS: Record<TabType, string> = {
+  avatar: 'var(--card-bg-green)',
+  border: 'var(--card-bg-blue)',
+  aura:   'var(--card-bg-purple)',
+};
+
 export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [tab, setTab] = useState<TabType>('theme');
+  const [tab, setTab] = useState<TabType>('avatar');
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
   const { user } = useAuth();
   const isDev = user?.email === DEV_EMAIL;
@@ -51,7 +58,6 @@ export default function ShopPage() {
   const allUnlocked = new Set([
     ...FREE_DEFAULTS,
     ...progress.unlockedItems,
-    // world-completion themes unlocked by boss defeats (or dev)
     ...SHOP_ITEMS
       .filter(i => i.rarity === 'world' && i.requirement && (isDev || progress.bossesDefeated.includes(i.requirement)))
       .map(i => i.id),
@@ -62,7 +68,9 @@ export default function ShopPage() {
     const result = purchaseItem(progress, id, cost);
     if (result.reason === 'insufficient') { showFeedback('err', 'Not enough FitCoins.'); return; }
     if (result.reason === 'owned') { showFeedback('err', 'You already own this item.'); return; }
-    setProgress(result.progress);
+    const final = applyNewAchievements(result.progress);
+    if (final !== result.progress) saveProgress(final);
+    setProgress(final);
     showFeedback('ok', 'Item unlocked!');
   };
 
@@ -73,25 +81,22 @@ export default function ShopPage() {
   };
 
   const items = SHOP_ITEMS.filter((i) => i.type === tab);
+  const cardBg = CARD_COLORS[tab];
 
   return (
     <div className="min-h-screen page-bg">
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
-        <Link
-          href="/dashboard"
-          className="link-back mb-10 cursor-pointer"
-        >
+
+        <Link href="/dashboard" className="link-back mb-10 cursor-pointer">
           <ArrowLeft className="w-4 h-4" />
           Dashboard
         </Link>
 
+        {/* Header */}
         <div className="flex items-end justify-between gap-4 flex-wrap mb-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full accent-pill text-xs font-medium mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-              Shop
-            </div>
+            <div className="neo-badge mb-5">Shop</div>
             <h1 className="font-display text-4xl sm:text-5xl font-bold text-app leading-tight">
               Customize your profile.
             </h1>
@@ -99,50 +104,56 @@ export default function ShopPage() {
               Spend FitCoins on cosmetic upgrades. Earned items stay unlocked permanently.
             </p>
           </div>
-          <div className="clay-sm px-5 py-3.5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl accent-bg flex items-center justify-center">
-              <Coins className="w-4.5 h-4.5 text-white" />
+          {/* FitCoins balance */}
+          <div className="neo-card px-5 py-3.5 flex items-center gap-3" style={{ background: 'var(--card-bg-amber)', borderRadius: 0 }}>
+            <div className="w-9 h-9 flex items-center justify-center neo-card-accent" style={{ borderRadius: 0 }}>
+              <Coins className="w-4 h-4 text-white" />
             </div>
             <div>
               <div className="font-display text-2xl font-bold text-app tabular-nums leading-none">
                 {progress.fitCoins.toLocaleString()}
               </div>
-              <div className="text-xs text-subtle">FitCoins</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-subtle">FitCoins</div>
             </div>
           </div>
         </div>
 
+        {/* Feedback toast */}
         {feedback && (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-2xl text-sm font-medium ${
-              feedback.kind === 'ok'
-                ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-app'
-                : 'bg-red-500/10 border border-red-500/20 text-red-500'
-            }`}
+            className="mb-6 p-4 text-sm font-bold neo-card"
+            style={{
+              borderRadius: 0,
+              background: feedback.kind === 'ok' ? 'var(--card-bg-green)' : 'color-mix(in srgb, #ef4444 15%, var(--neo-white))',
+              borderColor: feedback.kind === 'ok' ? 'var(--neo-accent)' : '#ef4444',
+              color: feedback.kind === 'ok' ? 'var(--neo-accent)' : '#ef4444',
+            }}
           >
             {feedback.msg}
           </motion.div>
         )}
 
-        <div className="flex gap-1 p-1.5 clay-sm rounded-2xl mb-8 w-full overflow-x-auto">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 flex-wrap">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 min-w-fit px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 whitespace-nowrap cursor-pointer ${
-                tab === t.id
-                  ? 'accent-bg text-white shadow-sm'
-                  : 'text-muted hover:text-app hover:bg-[var(--surface-hover)]'
-              }`}
+              className="px-5 py-2 text-sm font-bold uppercase tracking-wider cursor-pointer transition-all duration-100"
+              style={tab === t.id
+                ? { background: 'var(--neo-accent)', color: '#fff', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)' }
+                : { background: 'var(--neo-white)', color: 'var(--neo-black)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-sm)' }
+              }
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Item grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {items.map((item, i) => {
             const isUnlocked = allUnlocked.has(item.id);
             const isEquipped = equipped[item.type] === item.id;
@@ -155,22 +166,32 @@ export default function ShopPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: i * 0.03 }}
-                className={`clay-sm p-6 transition-all duration-200 ${
-                  isEquipped
-                    ? 'border-[var(--accent)]/40 bg-[var(--accent)]/5 scale-[1.01]'
-                    : 'hover:scale-[1.01]'
-                }`}
+                className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
+                style={{
+                  borderRadius: 0,
+                  background: isEquipped ? 'var(--card-bg-green)' : cardBg,
+                  borderColor: isEquipped ? 'var(--neo-accent)' : undefined,
+                  boxShadow: isEquipped ? 'var(--neo-shadow-lg)' : 'var(--neo-shadow)',
+                }}
               >
-                <ItemPreview item={item} />
+                {/* Preview */}
+                <div style={{ borderBottom: 'var(--neo-border-2)' }}>
+                  <ItemPreview item={item} />
+                </div>
 
-                <div className="mt-6">
-                  <div className="flex items-start justify-between gap-2 mb-6">
+                {/* Info + actions */}
+                <div className="p-5 flex flex-col flex-1">
+                  <div className="flex items-start justify-between gap-2 mb-4">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <div className="font-display text-xl font-bold text-app truncate">{item.name}</div>
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <div className="font-display text-lg font-bold text-app truncate">{item.name}</div>
                         <span
-                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{ color: rarity.color, background: `${rarity.color}22` }}
+                          className="text-[10px] font-bold px-2 py-0.5 shrink-0"
+                          style={{
+                            color: rarity.color,
+                            background: `${rarity.color}22`,
+                            border: `2px solid ${rarity.color}`,
+                          }}
                         >
                           {rarity.label}
                         </span>
@@ -178,56 +199,81 @@ export default function ShopPage() {
                       <div className="text-xs text-subtle">{item.description}</div>
                     </div>
                     {isEquipped && (
-                      <span className="text-xs accent-text font-semibold shrink-0 px-2 py-1 rounded-lg bg-[var(--accent)]/12">
+                      <span
+                        className="text-xs font-bold shrink-0 px-2 py-1 neo-card-accent"
+                        style={{ borderRadius: 0 }}
+                      >
                         Active
                       </span>
                     )}
                   </div>
 
-                  {isUnlocked ? (
-                    isEquipped ? (
+                  <div className="mt-auto">
+                    {isUnlocked ? (
+                      isEquipped ? (
+                        <button
+                          disabled
+                          className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                          style={{
+                            background: 'var(--neo-white)',
+                            border: 'var(--neo-border)',
+                            color: 'var(--text-subtle)',
+                            opacity: 0.7,
+                          }}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Equipped
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleEquip(item.type, item.id)}
+                          className="w-full py-2.5 neo-btn neo-btn-primary text-xs font-bold uppercase tracking-wider justify-center cursor-pointer"
+                          style={{ padding: '0.625rem 1rem' }}
+                        >
+                          Equip
+                        </button>
+                      )
+                    ) : item.rarity === 'world' ? (
                       <button
                         disabled
-                        className="w-full py-2.5 rounded-xl surface text-xs text-subtle font-semibold flex items-center justify-center gap-1.5"
+                        className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-not-allowed"
+                        style={{
+                          background: 'var(--neo-white)',
+                          border: 'var(--neo-border)',
+                          color: 'var(--text-subtle)',
+                          opacity: 0.6,
+                        }}
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        Equipped
+                        <Lock className="w-3.5 h-3.5" />
+                        Clear a world to unlock
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleEquip(item.type, item.id)}
-                        className="w-full py-2.5 rounded-xl accent-bg text-xs font-semibold cursor-pointer"
+                        onClick={() => handlePurchase(item.id, item.cost)}
+                        disabled={!canAfford}
+                        className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                          background: canAfford ? 'var(--neo-white)' : 'var(--neo-white)',
+                          border: 'var(--neo-border)',
+                          color: canAfford ? 'var(--neo-black)' : 'var(--text-subtle)',
+                          boxShadow: canAfford ? 'var(--neo-shadow-sm)' : 'none',
+                          transition: 'box-shadow 0.1s, transform 0.1s',
+                        }}
                       >
-                        Equip
+                        {canAfford ? (
+                          <>
+                            <Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} />
+                            <span>{item.cost.toLocaleString()}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Need {item.cost.toLocaleString()}</span>
+                          </>
+                        )}
                       </button>
-                    )
-                  ) : item.rarity === 'world' ? (
-                    <button
-                      disabled
-                      className="w-full py-2.5 rounded-xl surface text-xs text-subtle font-semibold flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      Clear a world to unlock
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handlePurchase(item.id, item.cost)}
-                      disabled={!canAfford}
-                      className="w-full py-2.5 rounded-xl surface surface-hover text-app text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      {canAfford ? (
-                        <>
-                          <Coins className="w-3.5 h-3.5 accent-text" />
-                          <span>{item.cost.toLocaleString()}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-3.5 h-3.5" />
-                          <span>Need {item.cost.toLocaleString()}</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );
@@ -247,28 +293,9 @@ function borderPreviewWrap(value: string): string {
 }
 
 function ItemPreview({ item }: { item: ShopItem }) {
-  if (item.type === 'theme') {
-    const palette = ACCENT_THEMES[item.value];
-    const pages = palette?.pages ?? {};
-    const pageKeys = Object.keys(PAGE_LABELS);
-    return (
-      <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-app p-4 flex flex-col gap-2" style={{ background: 'var(--surface-solid)' }}>
-        {pageKeys.map((key) => {
-          const color = pages[key] ?? palette?.dark ?? '#5ec97a';
-          return (
-            <div key={key} className="flex items-center gap-3 flex-1">
-              <div className="w-14 shrink-0 h-full rounded-lg" style={{ background: color }} />
-              <span className="text-[10px] text-subtle font-medium">{PAGE_LABELS[key]}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
   if (item.type === 'avatar') {
     return (
-      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
+      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
         <div className="text-6xl">{item.value || '🙂'}</div>
       </div>
     );
@@ -277,59 +304,13 @@ function ItemPreview({ item }: { item: ShopItem }) {
   if (item.type === 'border') {
     const wrap = borderPreviewWrap(item.value);
     return (
-      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
+      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
         {wrap ? (
           <div className={wrap}>
-            <div className="w-20 h-20 rounded-full bg-[var(--surface-solid)] flex items-center justify-center text-3xl">🙂</div>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
           </div>
         ) : (
-          <div className="w-20 h-20 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-3xl">🙂</div>
-        )}
-      </div>
-    );
-  }
-
-  if (item.type === 'badge') {
-    const rColor = RARITY_CONFIG[item.rarity].color;
-    return (
-      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
-        {item.value ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl">🙂</div>
-            <div
-              className="px-3 py-1 rounded-full text-sm font-bold"
-              style={{ color: rColor, background: `${rColor}22`, border: `1px solid ${rColor}44` }}
-            >
-              {item.value}
-            </div>
-          </div>
-        ) : (
-          <div className="text-xs text-subtle">No badge</div>
-        )}
-      </div>
-    );
-  }
-
-  if (item.type === 'title') {
-    const rColor = RARITY_CONFIG[item.rarity].color;
-    return (
-      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)]">
-        {item.value ? (
-          <div className="flex flex-col items-center gap-2">
-            <div
-              className="text-xs font-bold px-2.5 py-1 rounded-full"
-              style={{ color: rColor, background: `${rColor}22`, border: `1px solid ${rColor}44` }}
-            >
-              {item.value}
-            </div>
-            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl">🙂</div>
-            <div className="text-xs text-subtle font-medium">username</div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl">🙂</div>
-            <div className="text-xs text-subtle font-medium">username</div>
-          </div>
+          <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
         )}
       </div>
     );
@@ -337,14 +318,14 @@ function ItemPreview({ item }: { item: ShopItem }) {
 
   if (item.type === 'aura') {
     return (
-      <div className="aspect-[4/3] rounded-2xl border border-app flex items-center justify-center bg-[var(--surface-solid)] overflow-hidden">
+      <div className="aspect-[4/3] flex items-center justify-center overflow-hidden" style={{ background: 'var(--neo-white)' }}>
         {item.value ? (
           <div className="relative flex items-center justify-center">
             <div className={`absolute w-28 h-28 rounded-full aura-${item.value}`} />
-            <div className="w-14 h-14 rounded-full bg-[var(--surface-solid)] flex items-center justify-center text-3xl relative z-10">🙂</div>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl relative z-10" style={{ background: 'var(--neo-surface)' }}>🙂</div>
           </div>
         ) : (
-          <div className="w-14 h-14 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-3xl">🙂</div>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
         )}
       </div>
     );

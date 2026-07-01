@@ -13,7 +13,7 @@ export type ShopItem = {
   id: string;
   name: string;
   description: string;
-  type: 'theme' | 'avatar' | 'border' | 'badge' | 'title' | 'aura';
+  type: 'avatar' | 'border' | 'badge' | 'title' | 'aura';
   cost: number;
   value: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world';
@@ -43,6 +43,9 @@ export type Progress = {
   loginStreak: number;
   highestLoginStreak: number;
   lastLoginDate: string;
+  calendarClaimedDays: number[];
+  calendarMonth: string;
+  calendarLastClaimDate: string;
 };
 
 const DEFAULT_PROGRESS: Progress = {
@@ -68,6 +71,9 @@ const DEFAULT_PROGRESS: Progress = {
   loginStreak: 0,
   highestLoginStreak: 0,
   lastLoginDate: '',
+  calendarClaimedDays: [],
+  calendarMonth: '',
+  calendarLastClaimDate: '',
 };
 
 // ---- Reward economy (rebalanced) ----
@@ -380,20 +386,36 @@ export type BossResult = {
   leveledUp: boolean;
 };
 
-export function processLogin(progress: Progress): { updated: Progress; rewardDay: number; isNew: boolean } {
+export function processLogin(progress: Progress): { updated: Progress; isNew: boolean } {
   const today = todayKey();
-  if (progress.lastLoginDate === today) {
-    return { updated: progress, rewardDay: ((progress.loginStreak - 1) % 7) + 1, isNew: false };
-  }
+  if (progress.lastLoginDate === today) return { updated: progress, isNew: false };
+  return { updated: { ...progress, lastLoginDate: today }, isNew: true };
+}
+
+export function claimCalendarDay(
+  progress: Progress,
+  day: number
+): { updated: Progress; rewardIndex: number } | null {
+  const today = todayKey();
+  if (day !== new Date().getDate()) return null;
+  if (progress.lastLoginDate !== today) return null;
+
+  const currentMonth = today.slice(0, 7);
+  const claimedDays = progress.calendarMonth === currentMonth ? [...progress.calendarClaimedDays] : [];
+  if (claimedDays.includes(day)) return null;
+
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  const newStreak = progress.lastLoginDate === yesterday ? progress.loginStreak + 1 : 1;
+  const newStreak = progress.calendarLastClaimDate === yesterday ? progress.loginStreak + 1 : 1;
+
   const updated: Progress = {
     ...progress,
+    calendarClaimedDays: [...claimedDays, day],
+    calendarMonth: currentMonth,
+    calendarLastClaimDate: today,
     loginStreak: newStreak,
-    lastLoginDate: today,
     highestLoginStreak: Math.max(progress.highestLoginStreak ?? 0, newStreak),
   };
-  return { updated, rewardDay: ((newStreak - 1) % 7) + 1, isNew: true };
+  return { updated, rewardIndex: (day - 1) % 7 };
 }
 
 export function recordBossDefeat(
