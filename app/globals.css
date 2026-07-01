@@ -5,6 +5,7 @@
   --neo-black: #111111;
   --neo-white: #FFFFFF;
   --neo-cream: #F5F0E5;
+  --neo-page-bg: var(--neo-cream);
   --card-bg-green:  #DCFCE7;
   --card-bg-amber:  #FEF3C7;
   --card-bg-purple: #EDE9FE;
@@ -280,7 +281,7 @@ html.theme-transitioning *::after {
 }
 
 .page-bg {
-  background: var(--page-bg, var(--bg));
+  background: var(--neo-page-bg, var(--bg));
 }
 
 .bg-elev {
