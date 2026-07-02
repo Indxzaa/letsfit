@@ -110,33 +110,28 @@ export async function startSync(userId: string): Promise<void> {
   if (activeUserId === userId) return;
   activeUserId = userId;
 
-  // Guard: if localStorage was written by a different user, wipe it before
-  // loading this user's data. Without this, User B inherits User A's coins,
-  // XP, achievements, etc. and that data gets pushed to User B's Supabase row.
   const storedOwner = typeof window !== 'undefined' ? localStorage.getItem(OWNER_KEY) : null;
-  if (storedOwner !== userId) {
-    clearLocalProgress();
-    currentUsername = null;
-    if (typeof window !== 'undefined') localStorage.setItem(OWNER_KEY, userId);
-  }
+  // Only treat as a different user if a previous owner is known and it differs.
+  // null storedOwner means fresh browser — don't clear the user's own data.
+  const isDifferentUser = storedOwner !== null && storedOwner !== userId;
+  if (isDifferentUser) currentUsername = null;
+  if (typeof window !== 'undefined') localStorage.setItem(OWNER_KEY, userId);
 
+  // Fetch remote BEFORE clearing local so we never push empty data to the DB.
   const remote = await fetchRemote(userId);
+  if (isDifferentUser) clearLocalProgress();
   const local = loadProgress();
 
   if (remote?.username) currentUsername = remote.username;
 
   if (remote?.data) {
-    // If we have remote data and local is empty (fresh device), prefer remote.
-    // Otherwise, prefer whichever has more cumulative XP — a safe heuristic.
-    const remoteData = remote.data;
-    if (isProgressEmpty(local) || remoteData.xp > local.xp) {
-      saveProgress(remoteData);
+    if (isProgressEmpty(local) || remote.data.xp > local.xp) {
+      saveProgress(remote.data);
     } else {
-      // local is ahead — push it up
       await pushRemote(userId, local);
     }
-  } else {
-    // No remote yet, seed it with whatever we have
+  } else if (!isProgressEmpty(local)) {
+    // Only seed remote when local actually has progress — never push empty defaults.
     await pushRemote(userId, local);
   }
 

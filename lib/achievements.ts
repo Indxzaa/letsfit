@@ -80,6 +80,12 @@ export function getQuestProgress(p: Progress, quest: DailyQuest): number {
   return Math.min(quest.target, p.missions.questProgress?.[quest.metric] ?? 0);
 }
 
+export function applyNewAchievements(p: Progress): Progress {
+  const already = new Set(p.unlockedAchievements);
+  const newIds = ACHIEVEMENTS.filter(a => !already.has(a.id) && a.check(p)).map(a => a.id);
+  return newIds.length ? { ...p, unlockedAchievements: [...p.unlockedAchievements, ...newIds] } : p;
+}
+
 export function getAchievement(id: string): Achievement | undefined {
   return ACHIEVEMENTS.find((a) => a.id === id);
 }
