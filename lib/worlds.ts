@@ -16,7 +16,7 @@ export type WorldTheme = {
 export const WORLD_THEMES: Record<number, WorldTheme> = {
   1: {
     name: 'Forest Realm',
-    subtitle: 'The Beginning of the Journey',
+    subtitle: 'Is this the beginning?',
     primary: '#7ecf8a',
     secondary: '#c8b866',
     glow: '#a8d4a0',
@@ -30,7 +30,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
   },
   2: {
     name: 'Winter Kingdom',
-    subtitle: 'Where Only the Strong Endure',
+    subtitle: 'Oh! Baby its cold outside',
     primary: '#7cc4e8',
     secondary: '#a888d8',
     glow: '#68d4c0',
@@ -44,7 +44,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
   },
   3: {
     name: 'Witch Coven',
-    subtitle: 'Realm of Ancient Magic',
+    subtitle: 'Wanna see some magic?',
     primary: '#b870dc',
     secondary: '#58d4c0',
     glow: '#e890b8',
@@ -58,7 +58,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
   },
   4: {
     name: 'Elven Sanctuary',
-    subtitle: 'The Final Sacred Challenge',
+    subtitle: 'I love elfs',
     primary: '#e8c050',
     secondary: '#78d890',
     glow: '#e8a870',
