@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Lock, CheckCircle2, Clock, Zap, Coins, Star, Swords, Shield,
 } from 'lucide-react';
@@ -430,6 +430,8 @@ export default function WorldPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const { user } = useAuth();
   const isDev = user?.email === DEV_EMAIL;
+  const router = useRouter();
+  const [showExit, setShowExit] = useState(false);
 
   useEffect(() => {
     setProgress(loadProgress());
@@ -458,10 +460,13 @@ export default function WorldPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-20 relative" style={{ zIndex: 1 }}>
 
         {/* Back link */}
-        <Link href="/adventure" className="link-back mb-8 inline-flex"
-          style={{ color: theme.primary, borderColor: `${theme.primary}40` }}>
+        <button
+          onClick={() => setShowExit(true)}
+          className="link-back mb-8 inline-flex cursor-pointer"
+          style={{ color: theme.primary, borderColor: `${theme.primary}40` }}
+        >
           <ArrowLeft className="w-4 h-4" /> World Map
-        </Link>
+        </button>
 
         {/* World header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -554,6 +559,76 @@ export default function WorldPage() {
           })}
         </div>
       </div>
+      {/* ── Exit confirmation dialog ── */}
+      <AnimatePresence>
+        {showExit && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center px-4"
+            style={{ zIndex: 100, background: 'rgba(0,0,0,0.72)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-sm"
+              style={{
+                background: 'var(--neo-white, #fff)',
+                border: '4px solid #000',
+                boxShadow: '6px 6px 0 #000',
+              }}
+            >
+              {/* Dialog header strip */}
+              <div
+                className="px-6 py-4"
+                style={{ borderBottom: '3px solid #000', background: 'var(--card-bg-amber, #fef3c7)' }}
+              >
+                <div className="font-display text-xl font-bold text-app uppercase tracking-tight">
+                  Leave Adventure?
+                </div>
+              </div>
+
+              {/* Dialog body */}
+              <div className="px-6 py-5">
+                <p className="text-sm text-muted leading-relaxed mb-6">
+                  Your progress has already been saved.
+                  <br />
+                  Are you sure you want to leave this journey?
+                </p>
+
+                {/* Buttons */}
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => router.push('/progress')}
+                    className="w-full py-3 text-sm font-black uppercase tracking-widest text-white cursor-pointer"
+                    style={{
+                      background: '#000',
+                      border: '3px solid #000',
+                      boxShadow: '3px 3px 0 #555',
+                    }}
+                  >
+                    Leave Adventure
+                  </button>
+                  <button
+                    onClick={() => setShowExit(false)}
+                    className="w-full py-3 text-sm font-bold uppercase tracking-widest cursor-pointer text-app"
+                    style={{
+                      background: 'transparent',
+                      border: '3px solid #000',
+                    }}
+                  >
+                    Stay
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
