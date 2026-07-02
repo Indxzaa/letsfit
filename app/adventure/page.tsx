@@ -27,13 +27,17 @@ function getWorldProg(world: number, progress: Progress | null) {
 }
 
 // Alternating left / right — S-shape layout
-// [side: 'left'|'right', topPx in a 1120px container]
+// [side: 'left'|'right', topPx in a 1280px container]
+// Island slot = 220px image + 70px label = 290px; gap between slots = 40px → stride = 330px
 const ISLAND_LAYOUT = [
   { side: 'left',  top: 0   },
-  { side: 'right', top: 258 },
-  { side: 'left',  top: 530 },
-  { side: 'right', top: 798 },
+  { side: 'right', top: 330 },
+  { side: 'left',  top: 660 },
+  { side: 'right', top: 990 },
 ] as const;
+
+// Fixed visual size — all islands render identically regardless of source dimensions
+const ISLAND_SIZE = 220;
 
 export default function AdventurePage() {
   const [progress, setProgress] = useState<Progress | null>(null);
@@ -87,29 +91,24 @@ export default function AdventurePage() {
         </div>
 
         {/* ── Map ── */}
-        <div className="relative" style={{ height: 1120 }}>
+        <div className="relative" style={{ height: 1280 }}>
 
-          {/* ── S-curve adventure path (SVG overlay) ──
-               viewBox matches container: 576 × 1120
-               Island centers (approx, island width ~300, height ~240):
-                 L = left 4% = ~23px, center x ≈ 23+150 = 173
-                 R = right 4% = 576-23-300=253px left, center x ≈ 253+150 = 403
-               Tops: 0, 258, 530, 798 → island midpoints at top+120:
-                 W1 center: (173, 120)
-                 W2 center: (403, 378)
-                 W3 center: (173, 650)
-                 W4 center: (403, 918)
-          ── */}
+          {/*
+            SVG viewBox: 576 × 1280
+            Left island center x  = 6% of 576 + ISLAND_SIZE/2 = 35 + 110 = 145
+            Right island center x = 576 - 35 - 110 = 431
+            Island tops: 0, 330, 660, 990  → image bottoms: 220, 550, 880, 1210
+          */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 576 1120"
+            viewBox="0 0 576 1280"
             preserveAspectRatio="xMidYMid meet"
           >
             {/* Outer earth shadow */}
             <path
-              d="M 173 230 C 173 310 403 300 403 378
-                 M 403 490 C 403 570 173 560 173 650
-                 M 173 762 C 173 840 403 830 403 918"
+              d="M 145 220 C 145 278 431 278 431 330
+                 M 431 550 C 431 608 145 608 145 660
+                 M 145 880 C 145 938 431 938 431 990"
               fill="none"
               stroke="rgba(50,35,15,0.55)"
               strokeWidth="14"
@@ -118,9 +117,9 @@ export default function AdventurePage() {
             />
             {/* Inner dashed trail */}
             <path
-              d="M 173 230 C 173 310 403 300 403 378
-                 M 403 490 C 403 570 173 560 173 650
-                 M 173 762 C 173 840 403 830 403 918"
+              d="M 145 220 C 145 278 431 278 431 330
+                 M 431 550 C 431 608 145 608 145 660
+                 M 145 880 C 145 938 431 938 431 990"
               fill="none"
               stroke="rgba(160,130,70,0.55)"
               strokeWidth="5"
@@ -128,11 +127,11 @@ export default function AdventurePage() {
               strokeLinejoin="round"
               strokeDasharray="14 9"
             />
-            {/* Stepping stones */}
+            {/* Stepping stones — 3 per segment */}
             {([
-              [250, 270],[320, 310],[355, 350],
-              [310, 510],[240, 555],[195, 600],
-              [255, 775],[330, 818],[375, 860],
+              [210,245],[288,264],[366,293],
+              [366,575],[288,600],[210,625],
+              [210,905],[288,928],[366,957],
             ] as [number,number][]).map(([cx,cy],i) => (
               <g key={i}>
                 <circle cx={cx} cy={cy} r="6.5" fill="rgba(25,18,8,0.6)" stroke="rgba(130,105,55,0.45)" strokeWidth="1.5" />
@@ -155,8 +154,8 @@ export default function AdventurePage() {
                 className="absolute"
                 style={{
                   top,
-                  ...(side === 'left' ? { left: '4%' } : { right: '4%' }),
-                  width: 'clamp(240px, 52vw, 310px)',
+                  ...(side === 'left' ? { left: '6%' } : { right: '6%' }),
+                  width: ISLAND_SIZE,
                 }}
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -174,15 +173,17 @@ export default function AdventurePage() {
                   whileHover={unlocked ? { scale: 1.04 } : undefined}
                   whileTap={unlocked ? { scale: 0.97 } : undefined}
                 >
-                  {/* Island image — no card, no border, no background */}
-                  <div className="relative">
+                  {/* Island image — fixed square, objectFit contain for uniform scale */}
+                  <div className="relative" style={{ width: ISLAND_SIZE, height: ISLAND_SIZE }}>
                     <img
                       src={theme.islandImg}
                       alt={theme.name}
                       draggable={false}
                       style={{
-                        width: '100%',
-                        height: 'auto',
+                        width: ISLAND_SIZE,
+                        height: ISLAND_SIZE,
+                        objectFit: 'contain',
+                        objectPosition: 'center',
                         display: 'block',
                         filter: unlocked
                           ? 'drop-shadow(0 12px 24px rgba(0,0,0,0.7))'
