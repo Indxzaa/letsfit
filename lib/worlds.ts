@@ -22,7 +22,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     ambientColor: 'rgba(126,207,138,0.1)',
     particleColor: '#b8e898',
     particleType: 'leaf',
-    introBg: 'linear-gradient(150deg, #071507 0%, #0e2510 20%, #1c3214 45%, #162808 70%, #071507 100%)',
+    introBg: 'linear-gradient(150deg, #2a4a1e 0%, #3a6228 30%, #2e5220 60%, #243d18 100%)',
   },
   2: {
     name: 'Winter Kingdom',
@@ -34,7 +34,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     ambientColor: 'rgba(124,196,232,0.1)',
     particleColor: '#e0f4ff',
     particleType: 'snow',
-    introBg: 'linear-gradient(150deg, #040e1c 0%, #0a1830 20%, #100e38 45%, #0a1428 70%, #040e1c 100%)',
+    introBg: 'linear-gradient(150deg, #1a2c40 0%, #243850 30%, #1c3248 60%, #162840 100%)',
   },
   3: {
     name: 'Witch Coven',
@@ -46,7 +46,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     ambientColor: 'rgba(184,112,220,0.12)',
     particleColor: '#d8aff0',
     particleType: 'rune',
-    introBg: 'linear-gradient(150deg, #0a0220 0%, #16042e 20%, #0c0a28 45%, #16021e 70%, #0a0220 100%)',
+    introBg: 'linear-gradient(150deg, #12081e 0%, #1e0c30 30%, #180a28 60%, #100618 100%)',
   },
   4: {
     name: 'Elven Sanctuary',
@@ -58,7 +58,7 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     ambientColor: 'rgba(232,192,80,0.1)',
     particleColor: '#f8dca0',
     particleType: 'mote',
-    introBg: 'linear-gradient(150deg, #0e0a00 0%, #1c1200 20%, #0a1800 45%, #1a0e04 70%, #0e0a00 100%)',
+    introBg: 'linear-gradient(150deg, #0a1a0a 0%, #122018 30%, #0e1c10 60%, #0a1608 100%)',
   },
 };
 
