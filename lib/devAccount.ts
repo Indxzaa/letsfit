@@ -15,11 +15,11 @@ export function applyDevAccount(p: Progress): Progress {
   return {
     ...p,
     xp: 500000,
-    fitCoins: 99999999,
-    totalSessions: 999,
-    totalReps: 9999,
-    currentStreak: 365,
-    longestStreak: 365,
+    fitCoins: 676767,
+    totalSessions: 6767,
+    totalReps: 6767,
+    currentStreak: 67,
+    longestStreak: 67,
     unlockedAchievements: allAchievementIds,
     unlockedItems: allItemIds,
   };
