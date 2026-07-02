@@ -203,6 +203,14 @@ export default function AdventurePage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Redirect to the last-visited world if one is stored
+    const last = typeof window !== 'undefined'
+      ? localStorage.getItem('letsfit:lastWorld')
+      : null;
+    if (last) {
+      router.replace(`/adventure/${last}`);
+      return;
+    }
     setProgress(loadProgress());
     return subscribeToProgress(() => setProgress(loadProgress()));
   }, []);

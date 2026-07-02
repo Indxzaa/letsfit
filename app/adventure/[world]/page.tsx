@@ -434,9 +434,11 @@ export default function WorldPage() {
   const [showExit, setShowExit] = useState(false);
 
   useEffect(() => {
+    // Persist the current world so /adventure can redirect back here
+    localStorage.setItem('letsfit:lastWorld', String(world));
     setProgress(loadProgress());
     return subscribeToProgress(() => setProgress(loadProgress()));
-  }, []);
+  }, [world]);
 
   if (!theme || !stages.length) {
     return <div className="min-h-screen bg-app flex items-center justify-center text-muted">World not found</div>;
@@ -614,12 +616,22 @@ export default function WorldPage() {
                     Leave Adventure
                   </button>
                   <button
-                    onClick={() => setShowExit(false)}
+                    onClick={() => {
+                      localStorage.removeItem('letsfit:lastWorld');
+                      router.push('/adventure');
+                    }}
                     className="w-full py-3 text-sm font-bold uppercase tracking-widest cursor-pointer text-app"
                     style={{
                       background: 'transparent',
                       border: '3px solid #000',
                     }}
+                  >
+                    Back to World Map
+                  </button>
+                  <button
+                    onClick={() => setShowExit(false)}
+                    className="w-full py-2.5 text-sm font-semibold cursor-pointer"
+                    style={{ color: 'var(--text-muted)', background: 'transparent', border: 'none' }}
                   >
                     Stay
                   </button>
