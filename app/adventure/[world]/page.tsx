@@ -13,7 +13,6 @@ import { getWorldStages, isStageComplete, isStageUnlocked } from '@/lib/stages';
 import { getBoss, BOSS_GAME_CONFIGS, TIER_CONFIG } from '@/lib/bosses';
 import { loadProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { useAuth } from '@/components/AuthProvider';
-import { WorldAtmosphere } from '@/components/WorldAtmosphere';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
@@ -451,12 +450,30 @@ export default function WorldPage() {
   return (
     <motion.div
       className="min-h-screen"
-      style={{ background: theme.introBg }}
+      style={{ background: '#0a0a0a' }}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
     >
-      <WorldAtmosphere world={world} />
-      <div className="fixed top-0 left-0 right-0 h-24 pointer-events-none"
-        style={{ zIndex: 39, background: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%)' }} />
+      {/* Background image — fixed, fills viewport */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ zIndex: 0 }}
+      >
+        <img
+          src={theme.bgImg}
+          alt=""
+          aria-hidden
+          style={{
+            width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
+            display: 'block',
+          }}
+        />
+        {/* Readability overlay */}
+        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.42)' }} />
+      </div>
+
+      <div className="fixed top-0 left-0 right-0 h-24 pointer-events-none" style={{ zIndex: 39,
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%)' }} />
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-20 relative" style={{ zIndex: 1 }}>
