@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PoseLandmarker,
@@ -37,6 +37,8 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
   const stageId = searchParams.get('stageId');
   const presetStr = searchParams.get('preset');
   const preset = presetStr !== null ? Number(presetStr) : null;
+  const router = useRouter();
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   // Refs that survive re-renders without triggering them
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -411,10 +413,20 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
     <div className="min-h-screen page-bg">
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        <Link href={stageId ? '/adventure' : '/exercise'} className="link-back mb-8 cursor-pointer">
-          <ArrowLeft className="w-4 h-4" />
-          {stageId ? 'Back to adventure' : 'All exercises'}
-        </Link>
+        {stageId ? (
+          <button
+            onClick={() => setShowExitDialog(true)}
+            className="link-back mb-8 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to adventure
+          </button>
+        ) : (
+          <Link href="/exercise" className="link-back mb-8 cursor-pointer">
+            <ArrowLeft className="w-4 h-4" />
+            All exercises
+          </Link>
+        )}
 
         {phase === 'pick' && preset !== null && (
           <div className="flex items-center justify-center py-20">
@@ -653,6 +665,76 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
       </div>
 
       <AchievementToastLayer achievementIds={achievementToasts} onDismiss={dismissAchievement} />
+
+      {/* ── Leave Adventure confirmation dialog ── */}
+      <AnimatePresence>
+        {showExitDialog && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center px-4"
+            style={{ zIndex: 100, background: 'rgba(0,0,0,0.72)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-sm"
+              style={{
+                background: 'var(--neo-white, #fff)',
+                border: '4px solid #000',
+                boxShadow: '6px 6px 0 #000',
+              }}
+            >
+              {/* Header strip */}
+              <div
+                className="px-6 py-4"
+                style={{ borderBottom: '3px solid #000', background: 'var(--card-bg-amber, #fef3c7)' }}
+              >
+                <div className="font-display text-xl font-bold text-app uppercase tracking-tight">
+                  Leave Adventure?
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 py-5">
+                <p className="text-sm text-muted leading-relaxed mb-6">
+                  Your progress has been saved.
+                  <br />
+                  Are you sure you want to leave this journey?
+                </p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => router.push('/progress')}
+                    className="w-full py-3 text-sm font-black uppercase tracking-widest text-white cursor-pointer"
+                    style={{
+                      background: '#000',
+                      border: '3px solid #000',
+                      boxShadow: '3px 3px 0 #555',
+                    }}
+                  >
+                    Leave Adventure
+                  </button>
+                  <button
+                    onClick={() => setShowExitDialog(false)}
+                    className="w-full py-3 text-sm font-bold uppercase tracking-widest cursor-pointer text-app"
+                    style={{
+                      background: 'transparent',
+                      border: '3px solid #000',
+                    }}
+                  >
+                    Stay
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
