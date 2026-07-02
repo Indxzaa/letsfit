@@ -695,21 +695,24 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
                 style={{ borderBottom: '3px solid #000', background: 'var(--card-bg-amber, #fef3c7)' }}
               >
                 <div className="font-display text-xl font-bold text-app uppercase tracking-tight">
-                  Leave Adventure?
+                  Quit Exercise?
                 </div>
               </div>
 
               {/* Body */}
               <div className="px-6 py-5">
                 <p className="text-sm text-muted leading-relaxed mb-6">
-                  Your progress has been saved.
+                  Your progress for this stage will not be completed.
                   <br />
-                  Are you sure you want to leave this journey?
+                  Are you sure you want to quit?
                 </p>
 
                 <div className="flex flex-col gap-3">
                   <button
-                    onClick={() => router.push('/progress')}
+                    onClick={() => {
+                      const world = stageId ? stageId.charAt(1) : null;
+                      router.push(world ? `/adventure/${world}` : '/adventure');
+                    }}
                     className="w-full py-3 text-sm font-black uppercase tracking-widest text-white cursor-pointer"
                     style={{
                       background: '#000',
@@ -717,7 +720,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
                       boxShadow: '3px 3px 0 #555',
                     }}
                   >
-                    Leave Adventure
+                    Quit Exercise
                   </button>
                   <button
                     onClick={() => setShowExitDialog(false)}
@@ -727,7 +730,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
                       border: '3px solid #000',
                     }}
                   >
-                    Stay
+                    Continue Exercise
                   </button>
                 </div>
               </div>
