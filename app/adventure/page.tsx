@@ -13,16 +13,13 @@ import { AdventureSkeleton } from '@/components/Skeleton';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
-// [leftPct, topPct] — node is 140×160px within h-[680px] relative container
-const POSITIONS = [[12, 6], [56, 28], [10, 54], [55, 76]] as const;
+// Island size: 220×200. Container: max-w-lg (~512px logical, 400px SVG viewBox).
+// [leftPct, topPct] positions island top-left within the map container.
+const POSITIONS = [[4, 2], [46, 24], [4, 50], [46, 74]] as const;
 
-// Fixed star positions — avoid hydration mismatch
-const STARS = [
-  [8,5],[15,18],[25,8],[35,22],[48,6],[55,15],[72,9],[82,3],[92,20],
-  [5,35],[20,42],[38,38],[50,50],[65,44],[78,35],[90,48],
-  [12,62],[30,70],[42,65],[58,72],[75,60],[88,68],[7,85],[22,90],
-  [40,82],[55,93],[70,87],[85,94],[45,28],[60,68],[25,55],[33,14],
-];
+// Island display size
+const ISLAND_W = 220;
+const ISLAND_H = 200;
 
 function isWorldUnlocked(world: number, progress: Progress | null, isDev: boolean) {
   if (isDev || world === 1) return true;
@@ -37,31 +34,42 @@ function getWorldProg(world: number, progress: Progress | null) {
   return { done: stages.filter(s => isStageComplete(s, progress)).length, total: stages.length };
 }
 
-// ── Island artwork ────────────────────────────────────────────────────────
+// ── Island component ──────────────────────────────────────────────────────
 
 function WorldIsland({ world, unlocked }: { world: number; unlocked: boolean }) {
   const theme = WORLD_THEMES[world];
   return (
-    <div className="relative" style={{ width: 140, height: 130 }}>
+    <div className="relative" style={{ width: ISLAND_W, height: ISLAND_H }}>
       <img
         src={theme.islandImg}
         alt={theme.name}
         draggable={false}
         style={{
-          width: 140,
-          height: 130,
-          objectFit: 'cover',
-          objectPosition: 'center',
+          width: ISLAND_W,
+          height: ISLAND_H,
+          objectFit: 'contain',
+          objectPosition: 'center bottom',
           display: 'block',
-          filter: unlocked ? 'none' : 'grayscale(80%) brightness(0.45)',
-          border: unlocked ? `3px solid ${theme.primary}` : '3px solid rgba(255,255,255,0.15)',
-          boxShadow: unlocked ? `4px 4px 0 rgba(0,0,0,0.6)` : 'none',
+          filter: unlocked ? 'none' : 'grayscale(75%) brightness(0.4)',
         }}
       />
+      {/* Neo border frame — unlocked only */}
+      {unlocked && (
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            outline: `3px solid ${theme.primary}`,
+            outlineOffset: '3px',
+            boxShadow: `4px 4px 0 rgba(0,0,0,0.55)`,
+          }}
+        />
+      )}
+      {/* Lock overlay */}
       {!unlocked && (
         <div className="absolute inset-0 flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.45)' }}>
-          <Lock className="w-8 h-8 text-white/40" />
+          style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div style={{ background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(255,255,255,0.15)', padding: '10px 12px' }}>
+            <Lock className="w-8 h-8 text-white/35" />
+          </div>
         </div>
       )}
     </div>
@@ -78,7 +86,6 @@ export default function AdventurePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to the last-visited world if one is stored
     const last = typeof window !== 'undefined'
       ? localStorage.getItem('letsfit:lastWorld')
       : null;
@@ -102,19 +109,12 @@ export default function AdventurePage() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #06030f 0%, #0b0422 50%, #030a14 100%)' }}>
       <Navbar />
 
-      {/* Top gradient blends Navbar into the adventure background */}
+      {/* Navbar blend */}
       <div className="fixed top-0 left-0 right-0 h-24 pointer-events-none" style={{ zIndex: 39,
         background: 'linear-gradient(to bottom, rgba(6,3,15,0.85) 0%, transparent 100%)' }} />
 
-      {/* Stars */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {STARS.map(([x, y], i) => (
-          <div key={i} className="absolute rounded-full bg-white"
-            style={{ left: `${x}%`, top: `${y}%`, width: i % 4 === 0 ? 2 : 1, height: i % 4 === 0 ? 2 : 1, opacity: 0.12 + (i % 5) * 0.07 }} />
-        ))}
-      </div>
-
       <div className="max-w-lg mx-auto px-4 pt-24 pb-20">
+        {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-[10px] font-bold uppercase tracking-widest"
             style={{ border: '2px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)' }}>
@@ -128,129 +128,129 @@ export default function AdventurePage() {
           </p>
         </div>
 
-        {/* Map container */}
-        <div className="relative h-[680px]">
+        {/* Map container — taller to accommodate larger islands */}
+        <div className="relative h-[920px]">
 
-          {/* Stone-path trail SVG */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 680" preserveAspectRatio="none">
+          {/* ── Curved adventure path ── */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 400 920"
+            preserveAspectRatio="none"
+          >
             <defs>
-              <linearGradient id="g-trail" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%"   stopColor="#22c55e" stopOpacity="0.6" />
-                <stop offset="33%"  stopColor="#7cc4e8" stopOpacity="0.6" />
-                <stop offset="66%"  stopColor="#b870dc" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#e8c050" stopOpacity="0.6" />
+              {/* Earth-tone dirt path gradient */}
+              <linearGradient id="path-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%"   stopColor="#7ecf8a" stopOpacity="0.7" />
+                <stop offset="33%"  stopColor="#7cc4e8" stopOpacity="0.7" />
+                <stop offset="66%"  stopColor="#b870dc" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#e8c050" stopOpacity="0.7" />
               </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
-              </filter>
             </defs>
-            {/* Main glow path */}
-            <path d="M 130 90 C 130 200 310 180 310 280 C 310 370 120 360 120 450 C 120 540 295 535 295 615"
-              fill="none" stroke="url(#g-trail)" strokeWidth="1.5" strokeOpacity="0.35" filter="url(#glow)" />
-            {/* Stone nodes along the path */}
+
+            {/*
+              Island centers (approximate, based on POSITIONS + ISLAND_W/2, ISLAND_H/2):
+              W1: left=4%→~16px, top=2%→~18px  → center ≈ (16+110, 18+100) = (126, 118)
+              W2: left=46%→~184px, top=24%→~221px → center ≈ (184+110, 221+100) = (294, 321)
+              W3: left=4%→~16px, top=50%→~460px  → center ≈ (126, 560)
+              W4: left=46%→~184px, top=74%→~681px → center ≈ (294, 781)
+              Path connects bottom of each island to top of next.
+            */}
+
+            {/* Outer earth path (wider, darker) */}
+            <path
+              d="M 126 215 C 126 280 294 260 294 321 C 294 420 126 440 126 560 C 126 650 294 670 294 781"
+              fill="none"
+              stroke="rgba(60,40,20,0.45)"
+              strokeWidth="12"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Inner path highlight */}
+            <path
+              d="M 126 215 C 126 280 294 260 294 321 C 294 420 126 440 126 560 C 126 650 294 670 294 781"
+              fill="none"
+              stroke="url(#path-grad)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="12 8"
+            />
+
+            {/* Stepping stone markers along the path */}
             {[
-              [183, 185], [238, 228], [210, 318], [165, 390], [180, 488], [242, 568],
+              [194, 262], [240, 295], [210, 380], [160, 450], [158, 510],
+              [210, 605], [254, 650], [276, 710],
             ].map(([cx, cy], i) => (
               <g key={i}>
-                <circle cx={cx} cy={cy} r="5" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5" />
-                <circle cx={cx} cy={cy} r="2.5" fill="rgba(255,255,255,0.18)" />
+                <circle cx={cx} cy={cy} r="6" fill="rgba(30,20,10,0.55)" stroke="rgba(120,100,60,0.5)" strokeWidth="1.5" />
+                <circle cx={cx} cy={cy} r="3" fill="rgba(160,130,80,0.6)" />
               </g>
             ))}
-            {/* Rope bridge horizontal lines between worlds */}
-            <line x1="158" y1="135" x2="220" y2="178" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4 6" />
-            <line x1="258" y1="298" x2="185" y2="368" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4 6" />
-            <line x1="150" y1="468" x2="218" y2="530" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4 6" />
           </svg>
 
-          {/* World nodes */}
+          {/* ── World nodes ── */}
           {([1, 2, 3, 4] as const).map((world, wi) => {
             const theme = WORLD_THEMES[world];
             const [lp, tp] = POSITIONS[wi];
             const unlocked = isWorldUnlocked(world, progress, isDev);
             const { done, total } = getWorldProg(world, progress);
             const allDone = done === total;
-            const r = 68, circ = 2 * Math.PI * r, dashLen = (done / total) * circ;
 
             return (
-              <motion.div key={world}
+              <motion.div
+                key={world}
                 className="absolute select-none"
                 style={{ left: `${lp}%`, top: `${tp}%` }}
-                initial={{ opacity: 0, scale: 0.7 }}
+                initial={{ opacity: 0, scale: 0.75 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: wi * 0.1, type: 'spring', stiffness: 200 }}
+                transition={{ duration: 0.5, delay: wi * 0.1, type: 'spring', stiffness: 180 }}
               >
                 <motion.div
                   className={unlocked ? 'cursor-pointer' : 'cursor-default'}
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 3.5 + wi * 0.6, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 3.8 + wi * 0.5, repeat: Infinity, ease: 'easeInOut' }}
                   onClick={() => handleClick(world)}
-                  whileHover={unlocked ? { scale: 1.07 } : undefined}
-                  whileTap={unlocked ? { scale: 0.95 } : undefined}
+                  whileHover={unlocked ? { scale: 1.05 } : undefined}
+                  whileTap={unlocked ? { scale: 0.96 } : undefined}
                 >
-                  {/* Ambient glow beneath island */}
-                  {unlocked && (
-                    <div className="absolute pointer-events-none"
-                      style={{
-                        inset: -20, bottom: -4,
-                        background: `radial-gradient(ellipse at 50% 80%, ${theme.primary}30 0%, transparent 65%)`,
-                        filter: 'blur(8px)',
-                      }} />
-                  )}
-
-                  <div className="relative w-[140px]" style={{ height: 160 }}>
-                    {/* Progress ring */}
-                    <svg className="absolute inset-0 w-full" style={{ height: 150, top: 0 }} viewBox="0 0 150 150">
-                      <circle cx="75" cy="75" r={r} fill="none" stroke={`${theme.primary}18`} strokeWidth="3" />
-                      {done > 0 && (
-                        <circle cx="75" cy="75" r={r} fill="none"
-                          stroke={allDone ? '#22c55e' : theme.primary}
-                          strokeWidth="3" strokeLinecap="round"
-                          strokeDasharray={`${dashLen} ${circ}`}
-                          style={{ transform: 'rotate(-90deg)', transformOrigin: '75px 75px' }} />
-                      )}
-                    </svg>
-
-                    {/* Island */}
-                    <div className="absolute" style={{ left: '50%', top: 15, transform: 'translateX(-50%)' }}>
-                      <WorldIsland world={world} unlocked={unlocked} />
-                    </div>
-
-                    {/* Lock overlay */}
-                    {!unlocked && (
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: 20 }}>
-                        <div style={{ background: 'rgba(0,0,0,0.55)', border: '2px solid rgba(255,255,255,0.1)', padding: '8px 10px' }}>
-                          <Lock className="w-6 h-6 text-white/30" />
-                        </div>
-                      </div>
-                    )}
+                  <div className="relative" style={{ width: ISLAND_W }}>
+                    <WorldIsland world={world} unlocked={unlocked} />
 
                     {/* Completion badge */}
                     {allDone && (
-                      <div className="absolute -top-1 -right-1 w-8 h-8 flex items-center justify-center text-sm font-bold"
+                      <div
+                        className="absolute -top-2 -right-2 w-9 h-9 flex items-center justify-center text-sm font-bold z-10"
                         style={{
                           background: '#22c55e',
-                          border: '3px solid var(--neo-black, #000)',
+                          border: '3px solid #000',
                           boxShadow: '2px 2px 0 #000',
                           color: '#fff',
-                        }}>
+                        }}
+                      >
                         ✓
                       </div>
                     )}
                   </div>
 
-                  {/* Label */}
-                  <div className="mt-1 text-center" style={{ width: 140 }}>
-                    <div className="text-[10px] font-bold uppercase tracking-widest mb-1"
-                      style={{ color: unlocked ? theme.primary : 'rgba(255,255,255,0.2)' }}>
+                  {/* World label */}
+                  <div className="mt-2 text-center" style={{ width: ISLAND_W }}>
+                    <div
+                      className="text-[10px] font-bold uppercase tracking-widest mb-1"
+                      style={{ color: unlocked ? theme.primary : 'rgba(255,255,255,0.2)' }}
+                    >
                       World {world}
                     </div>
-                    <div className="font-display text-sm font-bold leading-tight"
-                      style={{ color: unlocked ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.2)' }}>
+                    <div
+                      className="font-display text-sm font-bold leading-tight"
+                      style={{ color: unlocked ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.2)' }}
+                    >
                       {theme.name}
                     </div>
                     {unlocked && !allDone && (
-                      <div className="text-[10px] mt-1.5 font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      <div
+                        className="text-[10px] mt-1.5 font-semibold tabular-nums"
+                        style={{ color: 'rgba(255,255,255,0.38)' }}
+                      >
                         {done}/{total} stages
                       </div>
                     )}
@@ -270,7 +270,8 @@ export default function AdventurePage() {
       {/* World enter transition overlay */}
       <AnimatePresence>
         {entering !== null && (
-          <motion.div className="fixed inset-0 z-50 pointer-events-none"
+          <motion.div
+            className="fixed inset-0 z-50 pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.42, ease: 'easeIn' }}

@@ -25,8 +25,8 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     particleColor: '#b8e898',
     particleType: 'leaf',
     introBg: 'linear-gradient(150deg, #2a4a1e 0%, #3a6228 30%, #2e5220 60%, #243d18 100%)',
-    islandImg: '/world-1-island.jpg',
-    bgImg: '/world-1-bg.jpg',
+    islandImg: '/forest-island.png',
+    bgImg: '/forest-background.png',
   },
   2: {
     name: 'Winter Kingdom',
@@ -39,8 +39,8 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     particleColor: '#e0f4ff',
     particleType: 'snow',
     introBg: 'linear-gradient(150deg, #1a2c40 0%, #243850 30%, #1c3248 60%, #162840 100%)',
-    islandImg: '/world-2-island.jpg',
-    bgImg: '/world-2-bg.jpg',
+    islandImg: '/winter-island.png',
+    bgImg: '/winter-background.png',
   },
   3: {
     name: 'Witch Coven',
@@ -53,8 +53,8 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     particleColor: '#d8aff0',
     particleType: 'rune',
     introBg: 'linear-gradient(150deg, #12081e 0%, #1e0c30 30%, #180a28 60%, #100618 100%)',
-    islandImg: '/world-3-island.jpg',
-    bgImg: '/world-3-bg.jpg',
+    islandImg: '/witch-island.png',
+    bgImg: '/witch-background.png',
   },
   4: {
     name: 'Elven Sanctuary',
@@ -67,8 +67,8 @@ export const WORLD_THEMES: Record<number, WorldTheme> = {
     particleColor: '#f8dca0',
     particleType: 'mote',
     introBg: 'linear-gradient(150deg, #0a1a0a 0%, #122018 30%, #0e1c10 60%, #0a1608 100%)',
-    islandImg: '/world-4-island.jpg',
-    bgImg: '/world-4-bg.jpg',
+    islandImg: '/elven-island.png',
+    bgImg: '/elven-background.png',
   },
 };
 
