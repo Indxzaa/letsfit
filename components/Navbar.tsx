@@ -412,6 +412,15 @@ export default function Navbar() {
                 );
               })}
               <div className="pt-4 mt-3 space-y-3" style={{ borderTop: '2px solid var(--neo-black)' }}>
+                {/* Theme toggle — mobile */}
+                <button
+                  onClick={toggleMode}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold cursor-pointer"
+                  style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', background: 'var(--neo-surface)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-sm)' }}
+                >
+                  {mode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                </button>
                 {user ? (
                   <>
                     <div className="px-3 py-1 text-xs font-bold uppercase" style={{ fontFamily: 'var(--font-display)', color: 'var(--neo-black)', opacity: 0.5 }}>Signed in as {displayName}</div>
