@@ -72,29 +72,6 @@ You sit between what I want (workflows) and what actually gets done (tools). You
 
 Stay pragmatic. Stay reliable. Keep learning.
 uipro init --ai claude
-## LetsFit Page Terminology
-
-These two pages are frequently confused. Use the exact names below.
-
-**Progress Dashboard** (`app/progress/page.tsx`)
-- Accessed via `/progress`
-- Shows: Current Level, XP bar, stat tiles, Boss Battles summary, Titles, Achievement Wall
-- This is a stats/analytics page. It is NOT part of Adventure Mode.
-- When the user says "Progress page" or "Progress Dashboard", they mean this page.
-
-**Adventure Journey** (`app/adventure/[world]/page.tsx`)
-- Accessed via `/adventure/1`, `/adventure/2`, etc. — after selecting a world on the World Map
-- Shows the ordered list of stages for a world: Training Ground, Forest Path, … Boss Battle
-- This is the gameplay progression page inside Adventure Mode.
-- When the user says "Journey", they mean THIS page, not the Progress Dashboard.
-
-**World Map** (`app/adventure/page.tsx`)
-- Accessed via `/adventure`
-- Shows the 4 worlds as floating islands: Forest Realm, Winter Kingdom, Witch Coven, Elven Sanctuary
-- Entry point to Adventure Mode before a world is selected.
-
-**Never confuse "Journey" with "Progress Dashboard".** They are completely separate pages with different purposes.
-
 ## Git Workflow
 
 When a task is complete:
