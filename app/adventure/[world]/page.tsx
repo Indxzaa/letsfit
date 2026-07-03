@@ -10,7 +10,7 @@ import {
 import Navbar from '@/components/Navbar';
 import { WORLD_THEMES } from '@/lib/worlds';
 import { getWorldStages, isStageComplete, isStageUnlocked } from '@/lib/stages';
-import { getBoss, BOSS_GAME_CONFIGS, TIER_CONFIG } from '@/lib/bosses';
+import { getBoss, BOSS_GAME_CONFIGS, TIER_CONFIG, type BossTier } from '@/lib/bosses';
 import { loadProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -38,8 +38,8 @@ function BossCard({
   xpReward, coinReward, diffLabel, diffColor, diffBg, href, si,
 }: {
   boss: NonNullable<ReturnType<typeof getBoss>>;
-  bossConfig: typeof BOSS_GAME_CONFIGS[string] | null;
-  tier: NonNullable<typeof TIER_CONFIG[string]>;
+  bossConfig: (typeof BOSS_GAME_CONFIGS)[keyof typeof BOSS_GAME_CONFIGS] | null;
+  tier: (typeof TIER_CONFIG)[BossTier];
   complete: boolean; unlocked: boolean;
   xpReward: number; coinReward: number;
   diffLabel: string; diffColor: string; diffBg: string;
