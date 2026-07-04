@@ -278,7 +278,15 @@ function BossCard({
     </motion.div>
   );
 
-  return unlocked ? <Link href={href} className="block no-underline group">{card}</Link> : card;
+  return unlocked ? (
+    <motion.div
+      whileHover={{ y: -4 }}
+      whileTap={{ y: 2, scale: 0.985 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+    >
+      <Link href={href} className="block no-underline">{card}</Link>
+    </motion.div>
+  ) : card;
 }
 
 // ── Stage Card ────────────────────────────────────────────────────────────────
@@ -416,7 +424,15 @@ function StageCard({
     </motion.div>
   );
 
-  return unlocked ? <Link href={href} className="block no-underline">{card}</Link> : card;
+  return unlocked ? (
+    <motion.div
+      whileHover={{ y: -3 }}
+      whileTap={{ y: 2, scale: 0.985 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+    >
+      <Link href={href} className="block no-underline">{card}</Link>
+    </motion.div>
+  ) : card;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -499,7 +515,7 @@ export default function WorldPage() {
           <h1 className="font-display text-5xl font-bold text-white mb-2 uppercase leading-tight">
             {theme.name}
           </h1>
-          <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <p className="text-sm font-semibold text-white">
             {theme.subtitle}
           </p>
 

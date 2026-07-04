@@ -1,10 +1,53 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { Trophy, Zap, Coins, RotateCcw, ArrowRight, Star, Flame } from 'lucide-react';
 import type { SessionResult } from '@/lib/progress';
 import { getAchievement, getQuest } from '@/lib/achievements';
+
+// ── Confetti burst ────────────────────────────────────────────────────────
+const CONFETTI_COLORS = ['#22c55e','#facc15','#3b82f6','#a855f7','#ef4444','#f97316','#ffffff'];
+
+// Fixed particle data — seeded so no hydration mismatch
+const PARTICLES = Array.from({ length: 28 }, (_, i) => {
+  const angle = (i / 28) * 2 * Math.PI + (i % 3) * 0.4;
+  const dist  = 120 + (i % 5) * 40;
+  return {
+    id: i,
+    x: Math.cos(angle) * dist,
+    y: Math.sin(angle) * dist - 60,
+    rotate: (i * 47) % 360,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    size: 6 + (i % 3) * 4,
+    delay: (i % 5) * 0.06,
+    isCircle: i % 3 === 0,
+  };
+});
+
+function ConfettiBurst() {
+  const reduced = useReducedMotion();
+  if (reduced) return null;
+  return (
+    <div className="pointer-events-none fixed inset-0 flex items-center justify-center" style={{ zIndex: 200 }}>
+      {PARTICLES.map((p) => (
+        <motion.div
+          key={p.id}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
+          animate={{ x: p.x, y: p.y, opacity: 0, scale: 0.4, rotate: p.rotate }}
+          transition={{ duration: 1.8, delay: p.delay, ease: [0.2, 0.8, 0.4, 1] }}
+          style={{
+            position: 'absolute',
+            width: p.size,
+            height: p.size,
+            background: p.color,
+            borderRadius: p.isCircle ? '50%' : 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 type Props = {
   result: SessionResult;
@@ -29,6 +72,7 @@ export default function WorkoutComplete({
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
+      <ConfettiBurst />
 
       {/* ── Hero header ── */}
       <div className="neo-card p-8 mb-4 text-center" style={{ background: 'var(--neo-accent)', borderRadius: 0 }}>
