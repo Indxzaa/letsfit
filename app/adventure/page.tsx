@@ -78,14 +78,14 @@ export default function AdventurePage() {
         <div className="text-center mb-12">
           <div
             className="inline-flex items-center gap-2 px-3 py-1 mb-4 text-[10px] font-bold uppercase tracking-widest"
-            style={{ border: '2px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)' }}
+            style={{ border: '2px solid rgba(255,255,255,0.35)', color: 'rgba(255,255,255,0.8)' }}
           >
             Adventure Mode
           </div>
           <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-2 uppercase tracking-tight">
             World Map
           </h1>
-          <p className="text-white/35 text-sm font-semibold uppercase tracking-widest">
+          <p className="text-white/60 text-sm font-semibold uppercase tracking-widest">
             Choose your realm
           </p>
         </div>
@@ -221,23 +221,23 @@ export default function AdventurePage() {
                     )}
                   </div>
 
-                  {/* Label below island — never overlays the image */}
+                  {/* Label below island */}
                   <div className="mt-3 text-center px-1">
                     <div
                       className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                      style={{ color: unlocked ? theme.primary : 'rgba(255,255,255,0.18)' }}
+                      style={{ color: unlocked ? theme.primary : 'rgba(255,255,255,0.3)' }}
                     >
                       World {world}
                     </div>
                     <div
                       className="font-display text-base font-bold uppercase leading-tight"
-                      style={{ color: unlocked ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.18)' }}
+                      style={{ color: unlocked ? '#ffffff' : 'rgba(255,255,255,0.3)' }}
                     >
                       {theme.name}
                     </div>
                     <div
                       className="text-[11px] mt-1 font-semibold tabular-nums"
-                      style={{ color: allDone ? '#4ade80' : 'rgba(255,255,255,0.32)' }}
+                      style={{ color: allDone ? '#4ade80' : 'rgba(255,255,255,0.55)' }}
                     >
                       {allDone ? '✓ Completed' : `${done} / ${total} Stages`}
                     </div>

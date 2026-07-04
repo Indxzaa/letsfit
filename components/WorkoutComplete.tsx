@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { CheckCircle2, Zap, Flame, Trophy, ArrowRight, RotateCcw, Star } from 'lucide-react';
+import { Trophy, Zap, Coins, RotateCcw, ArrowRight, Star, Flame } from 'lucide-react';
 import type { SessionResult } from '@/lib/progress';
 import { getAchievement, getQuest } from '@/lib/achievements';
 
@@ -16,135 +16,179 @@ type Props = {
   backHref?: string;
 };
 
-const stagger = {
-  container: { animate: { transition: { staggerChildren: 0.07 } } },
-  item: {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-  },
-};
-
 export default function WorkoutComplete({
   result, reps, durationSeconds, exerciseName, accuracy, onRestart, backHref = '/dashboard',
 }: Props) {
   const mins = Math.floor(durationSeconds / 60);
   const secs = durationSeconds % 60;
   const durationLabel = mins > 0 ? `${mins}m ${secs.toString().padStart(2, '0')}s` : `${secs}s`;
-  const accuracyColor = accuracy == null ? 'var(--text-muted)' : accuracy >= 80 ? 'var(--accent)' : accuracy >= 50 ? '#f59e0b' : '#ef4444';
+  const accuracyColor = accuracy == null ? 'var(--text-muted)'
+    : accuracy >= 80 ? 'var(--neo-accent)'
+    : accuracy >= 50 ? '#d97706'
+    : '#dc2626';
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      {/* Hero */}
-      <div className="text-center mb-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>
+
+      {/* ── Hero header ── */}
+      <div className="neo-card p-8 mb-4 text-center" style={{ background: 'var(--neo-accent)', borderRadius: 0 }}>
         <motion.div
-          initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 220, damping: 14, delay: 0.1 }}
-          className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center"
-          style={{ background: 'var(--accent)', boxShadow: '0 12px 40px color-mix(in srgb, var(--accent) 50%, transparent)' }}>
-          <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={2.5} />
+          initial={{ scale: 0, rotate: -15 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 220, damping: 14, delay: 0.08 }}
+          className="w-20 h-20 mx-auto mb-5 flex items-center justify-center"
+          style={{
+            background: 'rgba(255,255,255,0.2)',
+            border: '3px solid rgba(255,255,255,0.5)',
+            boxShadow: '4px 4px 0 rgba(0,0,0,0.25)',
+          }}
+        >
+          <Trophy className="w-10 h-10 text-white" strokeWidth={2.5} />
         </motion.div>
-        <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="font-display text-3xl sm:text-4xl font-bold text-app mb-2">
-          Workout Complete
-        </motion.h2>
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-          className="text-muted text-sm">
-          {exerciseName} session logged · {durationLabel}
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
+          className="font-display text-4xl sm:text-5xl font-bold text-white uppercase leading-tight mb-2"
+        >
+          Workout Complete!
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.26 }}
+          className="text-white/75 text-sm font-semibold"
+        >
+          {exerciseName} · {durationLabel}
         </motion.p>
       </div>
 
-      {/* XP + Coins hero row */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-        className="grid grid-cols-2 gap-3 mb-4">
-        <div className="card-tinted p-5 text-center">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2"
-            style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)' }}>
-            <Zap className="w-4.5 h-4.5 accent-text" />
+      {/* ── XP + Coins reward row ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
+        className="grid grid-cols-2 gap-4 mb-4"
+      >
+        {/* XP */}
+        <div className="neo-card p-5 text-center" style={{ background: 'var(--card-bg-green)', borderRadius: 0 }}>
+          <div
+            className="w-10 h-10 mx-auto mb-3 flex items-center justify-center"
+            style={{ background: 'var(--neo-accent)', border: '2px solid var(--neo-black)', boxShadow: '2px 2px 0 var(--neo-black)' }}
+          >
+            <Zap className="w-5 h-5 text-white" />
           </div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-            className="text-3xl font-bold tabular-nums accent-text">
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.38 }}
+            className="font-display text-4xl font-bold tabular-nums text-app"
+          >
             +{result.xpGained}
           </motion.div>
-          <div className="text-xs text-muted mt-1">XP earned</div>
+          <div className="text-xs font-bold uppercase tracking-widest text-subtle mt-1">XP Earned</div>
           {result.leveledUp && (
-            <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
-              style={{ background: 'var(--accent)', color: '#fff' }}>
+            <div
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase tracking-wider text-white"
+              style={{ background: 'var(--neo-accent)', border: '2px solid var(--neo-black)', boxShadow: '2px 2px 0 var(--neo-black)' }}
+            >
               <Star className="w-3 h-3" fill="currentColor" /> Level Up!
             </div>
           )}
         </div>
-        <div className="card-tinted p-5 text-center">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2"
-            style={{ background: 'color-mix(in srgb, #f59e0b 18%, transparent)' }}>
-            <Flame className="w-4.5 h-4.5" style={{ color: '#f59e0b' }} />
+
+        {/* Coins */}
+        <div className="neo-card p-5 text-center" style={{ background: 'var(--card-bg-amber)', borderRadius: 0 }}>
+          <div
+            className="w-10 h-10 mx-auto mb-3 flex items-center justify-center"
+            style={{ background: '#d97706', border: '2px solid var(--neo-black)', boxShadow: '2px 2px 0 var(--neo-black)' }}
+          >
+            <Coins className="w-5 h-5 text-white" />
           </div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
-            className="text-3xl font-bold tabular-nums" style={{ color: '#f59e0b' }}>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.42 }}
+            className="font-display text-4xl font-bold tabular-nums"
+            style={{ color: '#92400e' }}
+          >
             +{result.coinsGained}
           </motion.div>
-          <div className="text-xs text-muted mt-1">FitCoins</div>
+          <div className="text-xs font-bold uppercase tracking-widest text-subtle mt-1">FitCoins</div>
         </div>
       </motion.div>
 
-      {/* Stats grid */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
+      {/* ── Stats row ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"
+      >
         {[
-          { label: 'Reps', value: reps.toString() },
+          { label: 'Reps',     value: reps.toString() },
           { label: 'Duration', value: durationLabel },
-          { label: 'Calories', value: `${result.caloriesBurned}` },
-          { label: 'Streak', value: `${result.after.currentStreak}d` },
+          { label: 'Calories', value: String(result.caloriesBurned) },
+          { label: 'Streak',   value: `${result.after.currentStreak}d` },
         ].map(({ label, value }) => (
-          <div key={label} className="clay-sm p-3 text-center">
-            <div className="text-xs text-subtle mb-0.5">{label}</div>
-            <div className="text-xl font-bold text-app tabular-nums">{value}</div>
+          <div
+            key={label}
+            className="neo-card p-4 text-center"
+            style={{ background: 'var(--neo-surface)', borderRadius: 0 }}
+          >
+            <div className="text-[10px] font-bold uppercase tracking-widest text-subtle mb-1">{label}</div>
+            <div className="font-display text-2xl font-bold text-app tabular-nums">{value}</div>
           </div>
         ))}
       </motion.div>
 
-      {/* Accuracy */}
+      {/* ── Accuracy ── */}
       {accuracy != null && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="clay-sm p-4 mb-4 flex items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36 }}
+          className="neo-card p-5 mb-4 flex items-center gap-5"
+          style={{ background: 'var(--neo-surface)', borderRadius: 0 }}
+        >
           <AccuracyRing score={accuracy} />
           <div>
-            <div className="text-xs text-subtle mb-0.5">Pose Accuracy</div>
-            <div className="text-2xl font-bold tabular-nums" style={{ color: accuracyColor }}>{accuracy}%</div>
-            <div className="text-xs text-muted mt-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-subtle mb-1">Pose Accuracy</div>
+            <div className="font-display text-3xl font-bold tabular-nums" style={{ color: accuracyColor }}>
+              {accuracy}%
+            </div>
+            <div className="text-xs text-muted mt-1 font-semibold">
               {accuracy >= 80 ? 'Excellent form' : accuracy >= 60 ? 'Good form' : 'Keep practicing'}
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Streak bonus */}
+      {/* ── Streak bonus ── */}
       {result.streakBonus && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-          className="rounded-xl p-4 mb-4" style={{ background: 'var(--accent-bg)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
-          <div className="flex items-center gap-2 text-xs font-semibold accent-text mb-1">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}
+          className="neo-card p-4 mb-4"
+          style={{ background: 'var(--card-bg-green)', borderRadius: 0, borderColor: 'var(--neo-accent)' }}
+        >
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider mb-2"
+            style={{ color: 'var(--neo-accent)' }}>
             <Flame className="w-3.5 h-3.5" /> {result.streakBonus.day}-day streak bonus!
           </div>
-          <div className="text-sm text-app">+{result.streakBonus.xp} XP · +{result.streakBonus.coins} FitCoins</div>
+          <div className="font-display text-lg font-bold text-app">
+            +{result.streakBonus.xp} XP · +{result.streakBonus.coins} FitCoins
+          </div>
         </motion.div>
       )}
 
-      {/* Quests + Achievements */}
+      {/* ── Quests + Achievements ── */}
       {(result.completedQuests.length > 0 || result.newAchievements.length > 0) && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="clay-sm p-4 mb-4 space-y-3">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}
+          className="neo-card p-5 mb-4 space-y-4"
+          style={{ background: 'var(--neo-surface)', borderRadius: 0 }}
+        >
           {result.completedQuests.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold accent-text mb-2">
-                <Trophy className="w-3.5 h-3.5" /> Quest{result.completedQuests.length > 1 ? 's' : ''} completed
+              <div className="text-[10px] font-black uppercase tracking-widest mb-3"
+                style={{ color: 'var(--neo-accent)' }}>
+                Quest{result.completedQuests.length > 1 ? 's' : ''} Completed
               </div>
               {result.completedQuests.map((id) => {
                 const q = getQuest(id);
                 if (!q) return null;
                 return (
-                  <div key={id} className="flex items-center gap-2 text-sm text-app py-1">
-                    <span>{q.icon}</span>
-                    <span className="flex-1">{q.name}</span>
-                    <span className="text-xs text-muted">+{q.reward.xp} XP · +{q.reward.coins}c</span>
+                  <div key={id} className="flex items-center gap-3 text-sm text-app py-1">
+                    <span className="text-lg">{q.icon}</span>
+                    <span className="flex-1 font-semibold">{q.name}</span>
+                    <span className="text-xs font-bold text-subtle">+{q.reward.xp} XP · +{q.reward.coins}c</span>
                   </div>
                 );
               })}
@@ -152,16 +196,17 @@ export default function WorkoutComplete({
           )}
           {result.newAchievements.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold accent-text mb-2">
-                <Star className="w-3.5 h-3.5" /> Achievement{result.newAchievements.length > 1 ? 's' : ''} unlocked
+              <div className="text-[10px] font-black uppercase tracking-widest mb-3"
+                style={{ color: 'var(--neo-accent)' }}>
+                Achievement{result.newAchievements.length > 1 ? 's' : ''} Unlocked
               </div>
               {result.newAchievements.map((id) => {
                 const a = getAchievement(id);
                 if (!a) return null;
                 return (
-                  <div key={id} className="flex items-center gap-2 text-sm text-app py-1">
-                    <span>{a.icon}</span>
-                    <span>{a.name}</span>
+                  <div key={id} className="flex items-center gap-3 text-sm text-app py-1">
+                    <span className="text-lg">{a.icon}</span>
+                    <span className="font-semibold">{a.name}</span>
                   </div>
                 );
               })}
@@ -170,17 +215,37 @@ export default function WorkoutComplete({
         </motion.div>
       )}
 
-      {/* Actions */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-        className="flex flex-col sm:flex-row gap-2 mt-6">
-        <button onClick={onRestart}
-          className="flex-1 px-5 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
-          style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)', color: 'var(--text)' }}>
-          <RotateCcw className="w-4 h-4" /> Do another
+      {/* ── Actions ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.54 }}
+        className="flex flex-col sm:flex-row gap-3 mt-6"
+      >
+        <button
+          onClick={onRestart}
+          className="flex-1 py-3.5 text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
+          style={{
+            background: 'var(--neo-white)',
+            border: 'var(--neo-border)',
+            boxShadow: 'var(--neo-shadow)',
+            color: 'var(--neo-black)',
+          }}
+          onMouseDown={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--neo-shadow-sm)'; (e.currentTarget as HTMLElement).style.transform = 'translate(2px,2px)'; }}
+          onMouseUp={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--neo-shadow)'; (e.currentTarget as HTMLElement).style.transform = ''; }}
+        >
+          <RotateCcw className="w-4 h-4" /> Again
         </button>
-        <Link href={backHref}
-          className="flex-1 px-5 py-3 rounded-xl btn-primary text-white text-sm font-semibold flex items-center justify-center gap-2">
-          {backHref === '/adventure' ? 'Back to adventure' : 'Go to dashboard'}
+        <Link
+          href={backHref}
+          className="flex-1 py-3.5 text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2"
+          style={{
+            background: 'var(--neo-accent)',
+            border: 'var(--neo-border)',
+            boxShadow: 'var(--neo-shadow)',
+            color: '#fff',
+            textDecoration: 'none',
+          }}
+        >
+          {backHref?.includes('/adventure') ? 'Continue Adventure' : 'Back to Dashboard'}
           <ArrowRight className="w-4 h-4" />
         </Link>
       </motion.div>
@@ -192,13 +257,15 @@ function AccuracyRing({ score }: { score: number }) {
   const r = 26;
   const circ = 2 * Math.PI * r;
   const fill = Math.max(0, Math.min(100, score));
-  const color = fill >= 80 ? 'var(--accent)' : fill >= 50 ? '#f59e0b' : '#ef4444';
+  const color = fill >= 80 ? 'var(--neo-accent)' : fill >= 50 ? '#d97706' : '#dc2626';
   return (
     <svg width="68" height="68" style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
       <circle cx="34" cy="34" r={r} fill="none" stroke="var(--border)" strokeWidth="5" />
-      <circle cx="34" cy="34" r={r} fill="none" stroke={color} strokeWidth="5"
+      <circle
+        cx="34" cy="34" r={r} fill="none" stroke={color} strokeWidth="5"
         strokeDasharray={`${(fill / 100) * circ} ${circ}`} strokeLinecap="round"
-        style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }} />
+        style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }}
+      />
     </svg>
   );
 }
