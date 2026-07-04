@@ -45,8 +45,9 @@ function BossCard({
   diffLabel: string; diffColor: string; diffBg: string;
   href: string; si: number;
 }) {
-  const borderColor = complete ? '#22c55e' : unlocked ? tier.color : 'rgba(255,255,255,0.12)';
-  const shadowColor = complete ? '#22c55e' : tier.color;
+  const accentBg  = complete ? '#0a1e0c' : `color-mix(in srgb, ${tier.color} 10%, #08080e)`;
+  const accentBdr = complete ? '#22c55e' : unlocked ? tier.color : 'rgba(255,255,255,0.15)';
+  const shadow    = complete ? '6px 6px 0 #22c55e' : unlocked ? `6px 6px 0 ${tier.color}` : 'none';
 
   const card = (
     <motion.div
@@ -55,42 +56,20 @@ function BossCard({
       transition={{ duration: 0.45, delay: si * 0.07 }}
       className="relative overflow-hidden"
       style={{
-        border: `4px solid ${borderColor}`,
-        boxShadow: unlocked ? `6px 6px 0 ${shadowColor}` : 'none',
-        opacity: unlocked ? 1 : 0.4,
-        background: complete
-          ? 'linear-gradient(180deg, rgba(10,30,15,0.97) 0%, rgba(5,18,8,0.99) 100%)'
-          : 'linear-gradient(180deg, rgba(12,8,24,0.97) 0%, rgba(6,4,14,0.99) 100%)',
-        transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+        border: `4px solid ${accentBdr}`,
+        boxShadow: shadow,
+        opacity: unlocked ? 1 : 0.45,
+        background: accentBg,
       }}
     >
-      {/* Tier-color top accent strip */}
-      <div style={{ height: 6, background: complete ? '#22c55e' : tier.color }} />
+      {/* ── World-color top strip ── */}
+      <div style={{ height: 7, background: complete ? '#22c55e' : tier.color }} />
 
-      {/* Boss artwork — full-width hero zone */}
+      {/* ── Artwork zone ── */}
       <div
-        className="relative flex items-end justify-center pt-8 pb-4"
-        style={{
-          background: complete
-            ? `radial-gradient(ellipse at 50% 30%, rgba(34,197,94,0.18) 0%, transparent 70%)`
-            : `radial-gradient(ellipse at 50% 30%, ${tier.color}28 0%, transparent 70%)`,
-          minHeight: 220,
-        }}
+        className="relative flex items-center justify-center py-8"
+        style={{ background: `color-mix(in srgb, ${complete ? '#22c55e' : tier.color} 8%, #0a0a0e)`, minHeight: 200 }}
       >
-        {/* Glow ring behind artwork */}
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: 220, height: 220,
-            top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: complete
-              ? 'radial-gradient(circle, rgba(34,197,94,0.14) 0%, transparent 70%)'
-              : `radial-gradient(circle, ${tier.color}20 0%, transparent 70%)`,
-            filter: 'blur(12px)',
-          }}
-        />
-
         {bossConfig ? (
           <img
             src={bossConfig.image}
@@ -99,77 +78,62 @@ function BossCard({
             style={{
               width: 180, height: 180,
               objectFit: 'contain',
-              filter: `drop-shadow(0 0 32px ${complete ? '#22c55e' : tier.color}cc)
-                       drop-shadow(0 8px 24px rgba(0,0,0,0.8))`,
+              filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
             }}
           />
         ) : (
           <div
-            className="relative z-10 flex items-center justify-center"
+            className="flex items-center justify-center"
             style={{
-              width: 160, height: 160,
-              background: `${tier.color}18`,
-              border: `3px solid ${tier.color}50`,
+              width: 150, height: 150,
+              background: `color-mix(in srgb, ${tier.color} 15%, #0a0a0e)`,
+              border: `3px solid ${tier.color}`,
+              boxShadow: `4px 4px 0 ${tier.color}`,
             }}
           >
-            <Swords style={{ width: 64, height: 64, color: tier.color }} />
+            <Swords style={{ width: 56, height: 56, color: tier.color }} />
           </div>
         )}
 
-        {/* Completion overlay badge */}
+        {/* Defeated badge */}
         {complete && (
           <div
-            className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 z-20"
-            style={{
-              background: '#22c55e',
-              border: '3px solid #000',
-              boxShadow: '3px 3px 0 #000',
-              color: '#fff',
-            }}
+            className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 z-20"
+            style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '3px 3px 0 #000', color: '#fff' }}
           >
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-3.5 h-3.5" />
             <span className="text-xs font-black uppercase tracking-wider">Defeated</span>
           </div>
         )}
+        {/* Locked overlay */}
         {!unlocked && (
-          <div
-            className="absolute inset-0 flex items-center justify-center z-20"
-            style={{ background: 'rgba(0,0,0,0.55)' }}
-          >
-            <div style={{ border: '3px solid rgba(255,255,255,0.15)', padding: 16 }}>
-              <Lock className="w-10 h-10 text-white/30" />
+          <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: 'rgba(0,0,0,0.6)' }}>
+            <div style={{ border: '3px solid rgba(255,255,255,0.2)', padding: 16 }}>
+              <Lock className="w-10 h-10 text-white/35" />
             </div>
           </div>
         )}
       </div>
 
-      {/* Boss info block */}
-      <div className="p-6">
+      {/* ── Info block ── */}
+      <div className="p-5">
         {/* Badges row */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div
             className="text-[10px] font-black tracking-widest text-white uppercase px-3 py-1"
-            style={{ background: complete ? '#22c55e' : tier.color }}
+            style={{ background: complete ? '#22c55e' : tier.color, border: '2px solid #000', boxShadow: '2px 2px 0 #000' }}
           >
             World Boss
           </div>
           <div
             className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1"
-            style={{
-              color: tier.color,
-              border: `2px solid ${tier.color}50`,
-              background: `${tier.color}12`,
-            }}
+            style={{ color: tier.color, border: `2px solid ${tier.color}`, background: `color-mix(in srgb, ${tier.color} 12%, transparent)` }}
           >
             {tier.label}
           </div>
           <div
             className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2.5 py-1"
-            style={{
-              color: diffColor,
-              border: `2px solid ${diffColor}50`,
-              background: diffBg,
-            }}
+            style={{ color: diffColor, border: `2px solid ${diffColor}`, background: diffBg }}
           >
             {diffLabel}
           </div>
@@ -177,22 +141,19 @@ function BossCard({
 
         {/* Boss name */}
         <h3
-          className="font-display font-bold text-white uppercase leading-tight mb-3"
-          style={{ fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', letterSpacing: '-0.01em' }}
+          className="font-display font-bold text-white uppercase leading-tight mb-2"
+          style={{ fontSize: 'clamp(1.6rem, 5vw, 2.4rem)', letterSpacing: '-0.01em' }}
         >
           {boss.name}
         </h3>
 
         {/* Description */}
-        <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.55)' }}>
+        <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.82)' }}>
           {boss.flavour}
         </p>
 
         {/* Stats row */}
-        <div
-          className="grid grid-cols-2 gap-3 mb-4"
-          style={{ borderTop: `1px solid rgba(255,255,255,0.08)`, paddingTop: 16 }}
-        >
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {[
             { icon: <Clock className="w-4 h-4" />, label: 'Time Limit', value: fmt(boss.timeLimitSeconds) },
             { icon: <Star  className="w-4 h-4" />, label: 'Rounds',     value: `${boss.rounds.length}` },
@@ -201,13 +162,14 @@ function BossCard({
               key={i}
               className="flex items-center gap-3 p-3"
               style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '2px solid rgba(255,255,255,0.1)',
+                background: `color-mix(in srgb, ${complete ? '#22c55e' : tier.color} 10%, #0a0a0e)`,
+                border: `2px solid ${complete ? '#22c55e' : tier.color}`,
+                boxShadow: `2px 2px 0 ${complete ? '#22c55e' : tier.color}`,
               }}
             >
-              <div style={{ color: 'rgba(255,255,255,0.45)' }}>{stat.icon}</div>
+              <div style={{ color: complete ? '#22c55e' : tier.color }}>{stat.icon}</div>
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.65)' }}>
                   {stat.label}
                 </div>
                 <div className="font-display text-lg font-bold text-white">{stat.value}</div>
@@ -217,30 +179,24 @@ function BossCard({
         </div>
 
         {/* Rewards row */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-5">
           <div
             className="flex items-center gap-3 p-3"
-            style={{
-              background: 'rgba(253,224,71,0.08)',
-              border: '2px solid rgba(253,224,71,0.25)',
-            }}
+            style={{ background: '#0f1a0a', border: '2px solid #22c55e', boxShadow: '2px 2px 0 #22c55e' }}
           >
-            <Zap className="w-4 h-4 text-yellow-400" />
+            <Zap className="w-4 h-4" style={{ color: '#22c55e' }} />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-yellow-400/60">XP Reward</div>
-              <div className="font-display text-lg font-bold text-yellow-300">+{xpReward}</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.65)' }}>XP Reward</div>
+              <div className="font-display text-lg font-bold" style={{ color: '#4ade80' }}>+{xpReward}</div>
             </div>
           </div>
           <div
             className="flex items-center gap-3 p-3"
-            style={{
-              background: 'rgba(245,158,11,0.08)',
-              border: '2px solid rgba(245,158,11,0.25)',
-            }}
+            style={{ background: '#1a1200', border: '2px solid #d97706', boxShadow: '2px 2px 0 #d97706' }}
           >
             <Coins className="w-4 h-4 text-amber-400" />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400/60">Coins</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.65)' }}>Coins</div>
               <div className="font-display text-lg font-bold text-amber-300">+{coinReward}</div>
             </div>
           </div>
@@ -249,11 +205,12 @@ function BossCard({
         {/* CTA */}
         {unlocked && !complete && (
           <div
-            className="w-full py-4 flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest text-white"
+            className="w-full py-4 flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest cursor-pointer"
             style={{
               background: tier.color,
               border: '3px solid #000',
               boxShadow: '4px 4px 0 #000',
+              color: '#fff',
               letterSpacing: '0.12em',
             }}
           >
@@ -263,15 +220,17 @@ function BossCard({
         )}
         {complete && (
           <div
-            className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest"
+            className="w-full py-3.5 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest cursor-pointer"
             style={{
-              background: 'rgba(34,197,94,0.1)',
-              border: '2px solid rgba(34,197,94,0.3)',
+              background: 'transparent',
+              border: '3px solid #22c55e',
+              boxShadow: '4px 4px 0 #22c55e',
               color: '#4ade80',
+              letterSpacing: '0.1em',
             }}
           >
             <Shield className="w-4 h-4" />
-            Boss Defeated — Challenge Again
+            Challenge Again
           </div>
         )}
       </div>
