@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
-  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight, Lock, Trophy,
+  Activity, Flame, CheckCircle2, Zap, ChevronRight, Dumbbell, Coins, Clock, Swords, ArrowRight, Lock, Trophy, Users,
 } from 'lucide-react';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
 import { getWorldTheme } from '@/lib/worlds';
@@ -453,6 +453,31 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* ── Workout Together promo ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+          className="mt-4 neo-card p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
+          style={{ borderRadius: 16, background: 'var(--card-bg-blue)' }}
+        >
+          <div
+            className="w-12 h-12 flex items-center justify-center neo-card-accent shrink-0"
+            style={{ borderRadius: 12 }}
+          >
+            <Users className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-display text-xl font-bold text-app">Workout Together</h2>
+            <p className="text-sm text-muted mt-0.5">Exercise with a friend in real-time. Compete, motivate each other, and earn rewards.</p>
+          </div>
+          <Link href="/workout-together" className="link-cta shrink-0 whitespace-nowrap">
+            <span>Try it now</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </motion.div>
+
       </div>
     </div>
   );
