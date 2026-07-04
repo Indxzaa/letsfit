@@ -324,10 +324,10 @@ function StageCard({
 
         {/* Exercise + requirement */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.82)' }}>
             {EXERCISE_LABELS[stage.slug ?? ''] ?? stage.slug}
           </span>
-          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>·</span>
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>·</span>
           <span
             className="text-xs font-bold px-2 py-0.5"
             style={{
