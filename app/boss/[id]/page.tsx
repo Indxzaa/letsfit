@@ -612,112 +612,202 @@ export default function BossPage() {
 
         {phase === 'intro' && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-            <div className="p-8 rounded-3xl mb-6" style={{ background: 'rgba(0,0,0,0.55)', border: `1px solid ${tier.color}44`, backdropFilter: 'blur(12px)' }}>
-              {/* World title banner */}
-              <div className="flex items-center gap-2 mb-6 pb-4" style={{ borderBottom: `1px solid ${worldTheme.primary}22` }}>
-                <span className="text-xs font-bold uppercase tracking-[0.25em] px-3 py-1.5 rounded-full"
-                  style={{ background: `${worldTheme.primary}20`, color: worldTheme.primary, border: `1px solid ${worldTheme.primary}40` }}>
-                  {worldTheme.name} — {worldTheme.subtitle}
-                </span>
-              </div>
-              <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full mb-3 inline-block"
-                    style={{ background: `${tier.color}22`, color: tier.color }}>
-                    {tier.label} Boss
-                  </span>
-                  <h1 className="font-display text-5xl font-bold text-app">{boss.name}</h1>
-                  <p className="text-muted mt-2">{boss.flavour}</p>
-                </div>
-                {cfg && (
-                  <img
-                    src={cfg.image}
-                    alt={boss.name}
-                    className="shrink-0 boss-float rounded-2xl"
-                    style={{
-                      height: 160,
-                      width: 'auto',
-                      objectFit: 'contain',
-                      filter: `drop-shadow(0 0 16px ${tier.color}88)`,
-                    }}
-                  />
-                )}
-              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                {[
-                  { label: 'Rounds', value: boss.rounds.length },
-                  { label: 'Time limit', value: formatTime(boss.timeLimitSeconds) },
-                  { label: 'Rewards', value: `+${boss.rewards.xp}XP · +${boss.rewards.coins}🪙` },
-                ].map(s => (
-                  <div key={s.label} className={`p-4 rounded-2xl ${s.label === 'Rewards' ? 'sm:col-span-1 col-span-2' : ''}`}
-                    style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                    <div className="text-xs text-subtle mb-2">{s.label}</div>
-                    <div className="font-display text-2xl font-bold text-app">{s.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4 mb-6">
-                {boss.rounds.map((r, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 rounded-xl"
-                    style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                      style={{ background: tier.color }}>{i + 1}</span>
-                    <span className="text-sm font-semibold text-app flex-1">{r.label}</span>
-                    <span className="text-sm font-bold tabular-nums" style={{ color: tier.color }}>
-                      {r.isTimed ? `${r.reps}s` : `${r.reps} reps`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {wasDefeated && (
-                <div className="text-xs font-bold mb-4 px-3 py-2 rounded-xl"                  style={{ background: `${tier.color}15`, color: tier.color }}>
-                  ✓ Already defeated — rewards won&apos;t stack, but you can still practice.
-                </div>
-              )}
-
-              {/* Relic picker */}
-              {isUnlocked && !wasDefeated && (
-                <div className="mb-6">
-                  <div className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: tier.color }}>
-                    Choose your Relic
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {pickRelics(boss.id).map(relic => (
-                      <button key={relic.id} onClick={() => setSelectedRelic(r => r?.id === relic.id ? null : relic)}
-                        className="p-3 rounded-xl text-left transition-all cursor-pointer"
-                        style={{
-                          background: selectedRelic?.id === relic.id ? `${tier.color}22` : 'var(--surface-solid)',
-                          border: `1px solid ${selectedRelic?.id === relic.id ? tier.color : 'var(--border)'}`,
-                          boxShadow: selectedRelic?.id === relic.id ? `0 0 12px ${tier.color}44` : 'none',
-                        }}>
-                        <div className="mb-2" style={{ color: selectedRelic?.id === relic.id ? tier.color : 'var(--text-muted)' }}>
-                          {relic.icon}
-                        </div>
-                        <div className="text-xs font-bold text-app leading-tight">{relic.name}</div>
-                        <div className="text-xs text-muted mt-2 leading-tight">{relic.desc}</div>
-                      </button>
-                    ))}
-                  </div>
-                  {!selectedRelic && <p className="text-xs text-subtle mt-4">Select a relic to get a pre-battle bonus.</p>}
-                </div>
-              )}
-
-              {isUnlocked ? (
-                <button onClick={startBattle}
-                  className="w-full py-4 rounded-2xl font-display text-xl font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                  style={{ background: tier.color, boxShadow: `0 8px 24px ${tier.color}55` }}>
-                  {selectedRelic ? `Start Battle · ${selectedRelic.name}` : 'Start Battle'}
-                </button>
+            {/* ── Boss artwork hero ── */}
+            <div className="flex justify-center mb-6">
+              {cfg ? (
+                <motion.img
+                  src={cfg.image}
+                  alt={boss.name}
+                  className="boss-float"
+                  style={{
+                    height: 200, width: 'auto', objectFit: 'contain',
+                    filter: 'drop-shadow(0 14px 28px rgba(0,0,0,0.8))',
+                  }}
+                />
               ) : (
-                <div className="w-full py-4 rounded-2xl text-center font-semibold text-subtle flex items-center justify-center gap-2"
-                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <Lock className="w-4 h-4" /> {boss.unlockLabel}
-                </div>
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="w-40 h-40 flex items-center justify-center"
+                  style={{ background: `color-mix(in srgb, ${tier.color} 15%, #0a0a0e)`, border: `4px solid ${tier.color}`, boxShadow: `4px 4px 0 ${tier.color}` }}
+                >
+                  <Shield style={{ width: 64, height: 64, color: tier.color }} />
+                </motion.div>
               )}
             </div>
+
+            {/* ── Info card ── */}
+            <div style={{
+              background: `color-mix(in srgb, ${tier.color} 8%, #0a0a0e)`,
+              border: `4px solid ${tier.color}`,
+              boxShadow: `6px 6px 0 ${tier.color}`,
+            }}>
+              {/* World-color top strip */}
+              <div style={{ height: 6, background: tier.color }} />
+
+              <div className="p-6 sm:p-8">
+                {/* World + tier badges */}
+                <div className="flex items-center gap-2 flex-wrap mb-5">
+                  <div
+                    className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 text-white"
+                    style={{ background: tier.color, border: '2px solid #000', boxShadow: '2px 2px 0 #000' }}
+                  >
+                    {worldTheme.name}
+                  </div>
+                  <div
+                    className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5"
+                    style={{ color: tier.color, border: `2px solid ${tier.color}`, background: `color-mix(in srgb, ${tier.color} 12%, transparent)` }}
+                  >
+                    {tier.label} Boss
+                  </div>
+                  {wasDefeated && (
+                    <div className="ml-auto text-[10px] font-black uppercase tracking-wider px-3 py-1.5 text-white"
+                      style={{ background: '#22c55e', border: '2px solid #000', boxShadow: '2px 2px 0 #000' }}>
+                      ✓ Defeated
+                    </div>
+                  )}
+                </div>
+
+                {/* Boss name + description */}
+                <h1 className="font-display font-bold text-white uppercase leading-tight mb-3"
+                  style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', letterSpacing: '-0.01em' }}>
+                  {boss.name}
+                </h1>
+                <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.88)' }}>
+                  {boss.flavour}
+                </p>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                  {[
+                    { label: 'Rounds', value: String(boss.rounds.length) },
+                    { label: 'Time Limit', value: formatTime(boss.timeLimitSeconds) },
+                    { label: 'Rewards', value: `+${boss.rewards.xp} XP · +${boss.rewards.coins} coins`, span: true },
+                  ].map(s => (
+                    <div
+                      key={s.label}
+                      className={s.span ? 'sm:col-span-1 col-span-2' : ''}
+                      style={{
+                        background: `color-mix(in srgb, ${tier.color} 10%, #0a0a0e)`,
+                        border: `2px solid ${tier.color}`,
+                        boxShadow: `3px 3px 0 ${tier.color}`,
+                        padding: '12px 14px',
+                      }}
+                    >
+                      <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.65)' }}>{s.label}</div>
+                      <div className="font-display text-xl font-bold text-white">{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Round list */}
+                <div className="space-y-2 mb-6">
+                  <div className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: tier.color }}>
+                    Battle Rounds
+                  </div>
+                  {boss.rounds.map((r, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-4 p-4"
+                      style={{
+                        background: `color-mix(in srgb, ${tier.color} 6%, #0a0a0e)`,
+                        border: `2px solid ${tier.color}`,
+                        borderLeft: `5px solid ${tier.color}`,
+                      }}
+                    >
+                      <div
+                        className="w-7 h-7 flex items-center justify-center text-xs font-black text-white shrink-0"
+                        style={{ background: tier.color, border: '2px solid #000', boxShadow: '2px 2px 0 #000' }}
+                      >{i + 1}</div>
+                      <span className="text-sm font-bold text-white flex-1">{r.label}</span>
+                      <span className="text-sm font-black tabular-nums" style={{ color: tier.color }}>
+                        {r.isTimed ? `${r.reps}s` : `${r.reps} reps`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {wasDefeated && (
+                  <div
+                    className="text-xs font-bold mb-5 px-4 py-3"
+                    style={{ background: 'rgba(34,197,94,0.1)', border: '2px solid #22c55e', color: '#4ade80' }}
+                  >
+                    ✓ Already defeated — rewards won&apos;t stack, but you can still practice.
+                  </div>
+                )}
+
+                {/* Relic picker */}
+                {isUnlocked && !wasDefeated && (
+                  <div className="mb-6">
+                    <div className="text-[10px] font-black uppercase tracking-widest mb-4" style={{ color: tier.color }}>
+                      Choose your Relic
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {pickRelics(boss.id).map(relic => (
+                        <motion.button
+                          key={relic.id}
+                          onClick={() => setSelectedRelic(r => r?.id === relic.id ? null : relic)}
+                          whileHover={{ y: -2 }}
+                          whileTap={{ y: 1, scale: 0.98 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          className="p-3 text-left cursor-pointer"
+                          style={{
+                            background: selectedRelic?.id === relic.id
+                              ? `color-mix(in srgb, ${tier.color} 18%, #0a0a0e)`
+                              : `color-mix(in srgb, ${tier.color} 5%, #0a0a0e)`,
+                            border: `2px solid ${selectedRelic?.id === relic.id ? tier.color : 'rgba(255,255,255,0.15)'}`,
+                            boxShadow: selectedRelic?.id === relic.id ? `3px 3px 0 ${tier.color}` : 'none',
+                          }}
+                        >
+                          <div className="mb-2" style={{ color: selectedRelic?.id === relic.id ? tier.color : 'rgba(255,255,255,0.55)' }}>
+                            {relic.icon}
+                          </div>
+                          <div className="text-xs font-bold text-white leading-tight">{relic.name}</div>
+                          <div className="text-xs mt-1 leading-tight" style={{ color: 'rgba(255,255,255,0.72)' }}>{relic.desc}</div>
+                        </motion.button>
+                      ))}
+                    </div>
+                    {!selectedRelic && (
+                      <p className="text-xs mt-3" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                        Select a relic to get a pre-battle bonus.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* CTA */}
+                {isUnlocked ? (
+                  <motion.button
+                    onClick={startBattle}
+                    whileHover={{ y: -3 }}
+                    whileTap={{ y: 2, scale: 0.985 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="w-full py-4 font-display text-xl font-black text-white uppercase tracking-widest cursor-pointer flex items-center justify-center gap-3"
+                    style={{
+                      background: tier.color,
+                      border: '4px solid #000',
+                      boxShadow: '5px 5px 0 #000',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    <Shield className="w-5 h-5" />
+                    {selectedRelic ? `Start Battle · ${selectedRelic.name}` : 'Start Boss Battle'}
+                  </motion.button>
+                ) : (
+                  <div
+                    className="w-full py-4 text-center font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '3px solid rgba(255,255,255,0.2)',
+                      color: 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    <Lock className="w-4 h-4" /> {boss.unlockLabel}
+                  </div>
+                )}
+              </div>{/* /p-6 sm:p-8 */}
+            </div>{/* /info card */}
           </motion.div>
         )}
 
