@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
 import { useLobby } from '@/lib/multiplayer/hooks';
 import { MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
+import { subscribeSessionEvents, broadcastSessionEvent } from '@/lib/multiplayer/workoutSession';
 
 const DURATION_OPTIONS = [
   { label: '30s',  value: 30  },
@@ -46,11 +47,24 @@ function LobbyContent() {
     leave, toggleReady, changeExercise, changeDuration, triggerStart, clearError,
   } = useLobby(roomId || null);
 
-  const [copied,  setCopied]  = useState(false);
-  const [leaving, setLeaving] = useState(false);
+  const isHost = room ? room.host_user_id === user?.id : mode === 'create';
+
+  const [copied,   setCopied]   = useState(false);
+  const [leaving,  setLeaving]  = useState(false);
   const [starting, setStarting] = useState(false);
 
-  const isHost      = room ? room.host_user_id === user?.id : mode === 'create';
+  // Guest listens for the host's navigate broadcast and follows automatically
+  useEffect(() => {
+    if (!roomId || isHost) return;
+    const unsub = subscribeSessionEvents(roomId, (event) => {
+      if (event.type === 'navigate') {
+        router.push(
+          `/workout-together/session?roomId=${event.roomId}&exercise=${event.exercise}&duration=${event.duration}&mode=join`
+        );
+      }
+    });
+    return unsub;
+  }, [roomId, isHost, router]);
   const displayCode = code || room?.room_code || '------';
   const me          = players.find(p => p.user_id === user?.id);
   const allReady    = players.length >= 2 && players.every(p => p.is_ready);
@@ -72,10 +86,18 @@ function LobbyContent() {
   };
 
   const handleStart = async () => {
-    if (!canStart || starting) return;
+    if (!canStart || starting || !room) return;
     setStarting(true);
     await triggerStart();
-    router.push('/workout-together/exercise-select');
+    const exercise = room.selected_exercise ?? 'squat';
+    const duration = room.duration_seconds ?? 60;
+    // Broadcast to guest so they navigate simultaneously
+    await broadcastSessionEvent(roomId, {
+      type: 'navigate', roomId, exercise, duration, mode: 'create',
+    });
+    router.push(
+      `/workout-together/session?roomId=${roomId}&exercise=${exercise}&duration=${duration}&mode=create`
+    );
   };
 
   if (!roomId) {
