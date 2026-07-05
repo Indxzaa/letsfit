@@ -19,8 +19,6 @@ export async function dbGetFriends(userId: string): Promise<DbResult<FriendWithP
     return { data: null, error: rowsError.message };
   }
 
-  console.log('[dbGetFriends] raw rows from DB:', JSON.stringify(rows));
-
   if (!rows || rows.length === 0) return { data: [], error: null };
 
   // Step 2: batch-fetch profiles for the other user in each relationship
@@ -66,7 +64,6 @@ export async function dbGetFriends(userId: string): Promise<DbResult<FriendWithP
     };
   });
 
-  console.log('[dbGetFriends] enriched result:', JSON.stringify(enriched));
   return { data: enriched, error: null };
 }
 
@@ -122,7 +119,6 @@ export async function dbInsertFriendRequest(
     console.error('[dbInsertFriendRequest] Supabase error:', error.message, error);
     return { data: null, error: error.message };
   }
-  console.log('[dbInsertFriendRequest] inserted row:', JSON.stringify(data));
   return { data: data as FriendRow, error: null };
 }
 

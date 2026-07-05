@@ -37,7 +37,6 @@ export function useFriends(userId: string | null): UseFriendsReturn {
   const load = useCallback(async () => {
     if (!userId) return;
     const result = await getFriendsWithProfiles(userId);
-    console.log('[useFriends] load() result:', JSON.stringify(result));
     if (!result.ok) {
       setState(s => ({ ...s, loading: false, error: result.error }));
       return;
@@ -47,7 +46,6 @@ export function useFriends(userId: string | null): UseFriendsReturn {
     const pendingSent = all.filter(
       f => f.relation.status === 'pending' && f.relation.requester_id === userId,
     );
-    console.log('[useFriends] pendingSent after load:', JSON.stringify(pendingSent));
     setState({
       friends: all.filter(f => f.relation.status === 'accepted'),
       pendingReceived: all.filter(
@@ -86,7 +84,6 @@ export function useFriends(userId: string | null): UseFriendsReturn {
     if (!userId) return { ok: false, error: 'Not authenticated.' };
     console.log('[useFriends] sendRequest called, addresseeId:', addresseeId);
     const result = await sendFriendRequest(userId, addresseeId);
-    console.log('[useFriends] sendFriendRequest result:', JSON.stringify(result));
     if (result.ok) await load();
     return result.ok ? { ok: true } : { ok: false, error: result.error };
   }, [userId, load]);

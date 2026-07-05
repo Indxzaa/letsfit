@@ -31,8 +31,6 @@ export function FriendList({
   onAddFriend,
 }: FriendListProps) {
   const [tab, setTab] = useState<Tab>('friends');
-
-  console.log('[FriendList] render — friends:', friends.length, 'pendingReceived:', pendingReceived.length, 'pendingSent:', pendingSent.length, JSON.stringify(pendingSent.map(f => ({ id: f.relation.id, status: f.relation.status, requester: f.relation.requester_id }))));
   const tabStyle = (active: boolean) => ({
     flex: 1,
     padding: '10px 0',
