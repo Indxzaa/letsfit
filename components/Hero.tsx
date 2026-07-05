@@ -122,7 +122,7 @@ export default function Hero() {
                 opacity: 0.6,
               }}
             >
-              {['No equipment needed', 'Works in your dorm', '10 min / day'].map((t, i) => (
+              {['No equipment needed', 'Works in your dorm'].map((t, i) => (
                 <span key={i} className="flex items-center gap-1.5">
                   <span
                     className="w-2 h-2"
