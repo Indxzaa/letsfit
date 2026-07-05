@@ -23,6 +23,7 @@ export async function sendFriendRequest(
   addresseeId: string,
 ): Promise<ServiceResult<{ id: string }>> {
   const existing = await dbGetFriendByPair(requesterId, addresseeId);
+  console.log('[sendFriendRequest] duplicate check:', JSON.stringify(existing));
   if (existing.error) return { ok: false, error: existing.error };
   if (existing.data) {
     if (existing.data.status === 'accepted') return { ok: false, error: 'Already friends.' };
@@ -30,6 +31,7 @@ export async function sendFriendRequest(
   }
 
   const result = await dbInsertFriendRequest(requesterId, addresseeId);
+  console.log('[sendFriendRequest] insert result:', JSON.stringify(result));
   if (result.error) return { ok: false, error: result.error };
   return { ok: true, data: { id: result.data!.id } };
 }
