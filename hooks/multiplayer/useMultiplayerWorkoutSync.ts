@@ -41,14 +41,13 @@ export function useMultiplayerWorkoutSync(params: {
   roomId:    string;
   userId:    string;
   slug:      string;
-  target:    number;
-  isActive:  boolean;         // driven by session phase — only count when true
+  isActive:  boolean;
   videoRef:  React.RefObject<HTMLVideoElement | null>;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }): MultiplayerWorkoutSyncState & {
   stopDetection: () => void;
 } {
-  const { roomId, userId, slug, target, isActive, videoRef, canvasRef } = params;
+  const { roomId, userId, slug, isActive, videoRef, canvasRef } = params;
 
   const exercise = getExercise(slug);
   const isTimed  = exercise?.isTimed ?? false;
@@ -161,9 +160,9 @@ export function useMultiplayerWorkoutSync(params: {
       repCountRef.current += 1;
       setMyReps(repCountRef.current);
       maybeBroadcast(repCountRef.current, 'working');
-      if (target > 0 && repCountRef.current >= target) finishSession();
+      // No auto-finish — session is open-ended until user exits
     }
-  }, [videoRef, canvasRef, isTimed, target, maybeBroadcast, finishSession]);
+  }, [videoRef, canvasRef, isTimed, maybeBroadcast]);
 
   // ── Timed exercise tick ───────────────────────────────────────────────
 
@@ -174,9 +173,9 @@ export function useMultiplayerWorkoutSync(params: {
       elapsedSecRef.current += 1;
       setMyReps(elapsedSecRef.current);
       maybeBroadcast(elapsedSecRef.current, 'working');
-      if (target > 0 && elapsedSecRef.current >= target) finishSession();
+      // No auto-finish — open-ended session
     }, 1000);
-  }, [isTimed, target, maybeBroadcast, finishSession]);
+  }, [isTimed, maybeBroadcast]);
 
   // ── Camera setup + start ─────────────────────────────────────────────
 

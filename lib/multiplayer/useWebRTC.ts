@@ -186,17 +186,25 @@ export function useWebRTC(
   const toggleMute = useCallback(() => {
     const stream = localStreamRef.current;
     if (!stream) return;
-    const enabled = !muted;
-    stream.getAudioTracks().forEach(t => { t.enabled = enabled; });
-    setMuted(!enabled);
+    const nowMuted = !muted;
+    stream.getAudioTracks().forEach(t => { t.enabled = !nowMuted; });
+    // Also disable on the RTC sender so the remote peer stops receiving audio
+    pcRef.current?.getSenders()
+      .filter(s => s.track?.kind === 'audio')
+      .forEach(s => { if (s.track) s.track.enabled = !nowMuted; });
+    setMuted(nowMuted);
   }, [muted]);
 
   const toggleVideo = useCallback(() => {
     const stream = localStreamRef.current;
     if (!stream) return;
-    const enabled = !videoOff;
-    stream.getVideoTracks().forEach(t => { t.enabled = enabled; });
-    setVideoOff(!enabled);
+    const nowOff = !videoOff;
+    stream.getVideoTracks().forEach(t => { t.enabled = !nowOff; });
+    // Also disable on the RTC sender so the remote peer stops receiving video
+    pcRef.current?.getSenders()
+      .filter(s => s.track?.kind === 'video')
+      .forEach(s => { if (s.track) s.track.enabled = !nowOff; });
+    setVideoOff(nowOff);
   }, [videoOff]);
 
   const hangUp = useCallback(() => {

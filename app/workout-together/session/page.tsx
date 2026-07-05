@@ -227,49 +227,36 @@ function SessionContent() {
   const params   = useSearchParams();
   const roomId   = params.get('roomId')   ?? '';
   const exercise = params.get('exercise') ?? 'squat';
-  const duration = Number(params.get('duration') ?? 60);
   const mode     = params.get('mode')     ?? 'join';
   const label    = EXERCISE_LABELS[exercise] ?? exercise;
 
   const { user } = useAuth();
   const isHost   = mode === 'create';
 
-  // Refs for local MediaPipe detection
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [dismissedPartnerLeft, setDismissedPartnerLeft] = useState(false);
-  const [repFlash, setRepFlash] = useState(false);
+  const [repFlash,    setRepFlash]    = useState(false);
+  const [showExit,    setShowExit]    = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const prevRepRef = useRef(0);
 
-  // WebRTC video streams (camera panels)
   const enabled = !!(roomId && user?.id);
-  const {
-    localStream, remoteStream, peerState,
-    muted, videoOff,
-    toggleMute, toggleVideo, hangUp,
-  } = useWebRTC(roomId, user?.id ?? '', isHost, enabled);
+  const { localStream, remoteStream, peerState, muted, videoOff, toggleMute, toggleVideo, hangUp } =
+    useWebRTC(roomId, user?.id ?? '', isHost, enabled);
 
-  // Synchronized session timing (phase / countdown / timer)
-  const {
-    phase, countdown, remaining, isPaused, partnerLeft,
-    hostStartCountdown, hostPause, hostResume, broadcastLeave,
-  } = useWorkoutSession(roomId, user?.id ?? '', isHost, exercise, duration);
+  const { phase, countdown, elapsed, isPaused, partnerLeft,
+    hostStartCountdown, hostPause, hostResume, broadcastLeave } =
+    useWorkoutSession(roomId, user?.id ?? '', isHost, exercise);
 
-  // Local MediaPipe detection + rep sync
-  const {
-    myReps, partnerReps, partnerState,
-    liveFormScore, feedback, cameraReady,
-    bothFinished, stopDetection,
-  } = useMultiplayerWorkoutSync({
-    roomId,
-    userId:   user?.id ?? '',
-    slug:     exercise,
-    target:   duration,          // for timed: seconds; for rep-based: rep count
-    isActive: phase === 'active',
-    videoRef: localVideoRef,
-    canvasRef: localCanvasRef,
-  });
+  const { myReps, partnerReps, partnerState, liveFormScore, feedback, cameraReady,
+    bothFinished, stopDetection } =
+    useMultiplayerWorkoutSync({
+      roomId, userId: user?.id ?? '', slug: exercise,
+      isActive: phase === 'active',
+      videoRef: localVideoRef, canvasRef: localCanvasRef,
+    });
 
   // Host auto-starts countdown on mount
   useEffect(() => {
@@ -286,35 +273,106 @@ function SessionContent() {
     }
   }, [myReps]);
 
-  // Navigate to results when both players finish
+  // When both finish: show summary panel, keep session alive
   useEffect(() => {
-    if (bothFinished) {
-      broadcastLeave().catch(() => {});
-      hangUp();
-      router.push(
-        `/workout-together/results?exercise=${exercise}&myReps=${myReps}&friendReps=${partnerReps}`
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (bothFinished) setShowSummary(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bothFinished]);
 
-  const handleStop = async () => {
+  // Exit only via explicit confirmation
+  const handleExitConfirm = async () => {
     stopDetection();
     await broadcastLeave();
     hangUp();
-    router.push(
-      `/workout-together/results?exercise=${exercise}&myReps=${myReps}&friendReps=${partnerReps}`
-    );
+    router.push('/workout-together');
   };
 
-  const pColor    = connColor(peerState);
-  const timeLabel = (phase === 'active' || phase === 'paused')
-    ? fmt(remaining)
-    : phase === 'finished' ? '0:00' : '--:--';
+  const pColor = connColor(peerState);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--neo-black)' }}>
       <CountdownOverlay value={countdown} />
+
+      {/* Exit confirmation modal */}
+      <AnimatePresence>
+        {showExit && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style={{ background: 'rgba(0,0,0,0.8)' }}>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}
+              className="w-full max-w-sm"
+              style={{ background: '#111', border: '4px solid #dc2626', boxShadow: '6px 6px 0 #dc2626', borderRadius: 0 }}>
+              <div style={{ height: 6, background: '#dc2626' }} />
+              <div className="p-7 text-center">
+                <h3 className="font-display text-2xl font-bold text-white uppercase mb-3">Leave Workout?</h3>
+                <p className="text-sm mb-7" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                  Your session will end and your partner will be notified.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    onClick={handleExitConfirm}
+                    className="w-full py-3.5 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
+                    style={{ background: '#dc2626', border: '3px solid #000', boxShadow: '4px 4px 0 #000', borderRadius: 0 }}>
+                    Leave Workout
+                  </motion.button>
+                  <button onClick={() => setShowExit(false)}
+                    className="w-full py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                    style={{ color: 'rgba(255,255,255,0.5)', background: 'transparent', border: 'none' }}>
+                    Keep Going
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Workout summary panel — shown when both finish, session stays alive */}
+      <AnimatePresence>
+        {showSummary && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 sm:p-6"
+            style={{ background: 'rgba(0,0,0,0.7)' }}>
+            <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }} transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+              className="w-full max-w-md"
+              style={{ background: '#0a1a0a', border: '4px solid #22c55e', boxShadow: '6px 6px 0 #22c55e', borderRadius: 0 }}>
+              <div style={{ height: 6, background: '#22c55e' }} />
+              <div className="p-7">
+                <h3 className="font-display text-2xl font-bold text-white uppercase mb-5 text-center">Set Complete 🎉</h3>
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="p-4 text-center" style={{ background: 'rgba(34,197,94,0.1)', border: '2px solid #22c55e', borderRadius: 0 }}>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>You</div>
+                    <div className="font-display text-3xl font-black text-white">{myReps}</div>
+                    <div className="text-[9px] text-white/50 uppercase tracking-wider">reps</div>
+                  </div>
+                  <div className="p-4 text-center" style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid var(--neo-blue)', borderRadius: 0 }}>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Friend</div>
+                    <div className="font-display text-3xl font-black text-white">{partnerReps}</div>
+                    <div className="text-[9px] text-white/50 uppercase tracking-wider">reps</div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    onClick={() => setShowSummary(false)}
+                    className="w-full py-3.5 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
+                    style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '4px 4px 0 #000', borderRadius: 0 }}>
+                    Keep Working Out
+                  </motion.button>
+                  <button onClick={() => setShowExit(true)}
+                    className="w-full py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                    style={{ color: 'rgba(255,255,255,0.4)', background: 'transparent', border: 'none' }}>
+                    End Session
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {partnerLeft && !dismissedPartnerLeft && (
         <PartnerLeftOverlay
@@ -334,9 +392,10 @@ function SessionContent() {
           <div className="font-display text-sm font-bold text-white uppercase truncate">{label}</div>
         </div>
         <div className="text-center">
+          {/* Elapsed time — open-ended session, no countdown */}
           <div className="font-display font-black tabular-nums"
             style={{ fontSize: 'clamp(1.6rem,5vw,2.2rem)', color: isPaused ? '#d97706' : 'var(--neo-accent)' }}>
-            {timeLabel}
+            {fmt(elapsed)}
           </div>
           {isPaused && <div className="text-[9px] font-bold uppercase text-amber-400 animate-pulse">Paused</div>}
         </div>
@@ -345,22 +404,16 @@ function SessionContent() {
             <div className="w-1.5 h-1.5 rounded-full" style={{ background: pColor }} />
             <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: pColor }}>{connLabel(peerState)}</span>
           </div>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.94 }} onClick={handleStop}
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.94 }}
+            onClick={() => setShowExit(true)}
             className="flex items-center gap-1.5 px-3 py-2 font-display font-black uppercase tracking-wider text-xs cursor-pointer"
             style={{ background: '#dc2626', border: '3px solid #000', boxShadow: '3px 3px 0 #000', color: '#fff', borderRadius: 0 }}>
-            <Square className="w-3 h-3" /> Stop
+            <Square className="w-3 h-3" /> Exit
           </motion.button>
         </div>
       </div>
 
-      {/* Progress bar */}
-      {(phase === 'active' || phase === 'paused') && duration > 0 && (
-        <div style={{ height: 4, background: '#1a1a1a' }}>
-          <motion.div animate={{ width: `${((duration - remaining) / duration) * 100}%` }}
-            transition={{ duration: 0.5, ease: 'linear' }}
-            style={{ height: '100%', background: isPaused ? '#d97706' : 'var(--neo-accent)' }} />
-        </div>
-      )}
+      {/* No progress bar — open-ended session */}
 
       {/* Camera panels */}
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 sm:p-6">

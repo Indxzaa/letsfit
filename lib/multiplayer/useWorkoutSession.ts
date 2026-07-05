@@ -9,9 +9,7 @@ import {
 export interface WorkoutSessionState {
   phase:         SessionPhase;
   countdown:     number | 'GO!' | null;
-  elapsed:       number;       // seconds since start
-  duration:      number;       // total session duration in seconds
-  remaining:     number;       // duration - elapsed
+  elapsed:       number;       // seconds since start (display only)
   isPaused:      boolean;
   partnerStatus: PlayerWorkoutStatus | null;
   partnerLeft:   boolean;
@@ -20,18 +18,16 @@ export interface WorkoutSessionState {
 /**
  * Manages the synchronized workout session state for one player.
  *
- * @param roomId    Supabase room ID (broadcast channel key)
+ * @param roomId    Supabase room ID
  * @param userId    Current user's ID
  * @param isHost    Host drives timing; guests follow
  * @param exercise  Exercise slug
- * @param duration  Total workout duration in seconds
  */
 export function useWorkoutSession(
   roomId: string,
   userId: string,
   isHost: boolean,
   exercise: string,
-  duration: number,
 ): WorkoutSessionState & {
   hostStartCountdown: () => Promise<void>;
   hostPause:          () => Promise<void>;
@@ -55,17 +51,13 @@ export function useWorkoutSession(
 
   const startTick = useCallback(() => {
     if (tickRef.current) clearInterval(tickRef.current);
+    // Tick only tracks elapsed time — session never auto-ends on timer
     tickRef.current = setInterval(() => {
       const now = Date.now();
       const sec = Math.floor((now - adjustedStartAtRef.current) / 1000);
-      setElapsed(Math.min(sec, duration));
-      if (sec >= duration) {
-        clearInterval(tickRef.current!);
-        setPhase('finished');
-        broadcastSessionEvent(roomId, { type: 'finish' }).catch(() => {});
-      }
+      setElapsed(sec);
     }, 500);
-  }, [roomId, duration]);
+  }, []);
 
   const stopTick = useCallback(() => {
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
@@ -151,10 +143,10 @@ export function useWorkoutSession(
     setPhase('active');
     setIsPaused(false);
 
-    await broadcastSessionEvent(roomId, { type: 'start', startedAt, duration, exercise });
+    await broadcastSessionEvent(roomId, { type: 'start', startedAt, duration: 0, exercise });
     await broadcastSessionEvent(roomId, { type: 'status', userId, status: 'working-out' });
     startTick();
-  }, [isHost, roomId, duration, exercise, userId, startTick]);
+  }, [isHost, roomId, exercise, userId, startTick]);
 
   const hostPause = useCallback(async () => {
     if (!isHost || isPaused) return;
@@ -185,10 +177,8 @@ export function useWorkoutSession(
     await broadcastSessionEvent(roomId, { type: 'status', userId, status: 'disconnected' });
   }, [roomId, userId, stopTick]);
 
-  const remaining = Math.max(0, duration - elapsed);
-
   return {
-    phase, countdown, elapsed, duration, remaining,
+    phase, countdown, elapsed,
     isPaused, partnerStatus, partnerLeft,
     hostStartCountdown, hostPause, hostResume, broadcastLeave,
   };
