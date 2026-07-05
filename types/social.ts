@@ -67,6 +67,22 @@ export interface FriendWithPresence {
   profile: FriendProfile;
 }
 
+// ── Friend search result with relationship state ──────────────────────────────
+
+export type FriendRelationStatus =
+  | 'none'           // no relationship
+  | 'pending_sent'   // current user sent a request
+  | 'pending_received' // other user sent a request
+  | 'friends';       // already accepted
+
+export interface UserSearchResult {
+  id: string;
+  username: string;
+  avatar: string | null;
+  relation: FriendRelationStatus;
+  friendRowId: string | null; // row id — needed for accept/decline
+}
+
 // ── Invites enriched with sender info ─────────────────────────────────────────
 
 export interface InviteWithSender extends InviteRow {

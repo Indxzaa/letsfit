@@ -1,5 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
-import type { FriendRow, FriendWithPresence } from '@/types/social';
+import type { FriendRow, FriendWithPresence, FriendRelationStatus, UserSearchResult } from '@/types/social';
 
 type DbResult<T> = { data: T | null; error: string | null };
 type DbVoid = { error: string | null };
@@ -148,28 +148,58 @@ export async function dbDeleteFriend(friendRowId: string): Promise<DbVoid> {
 
 export async function dbSearchProfiles(
   query: string,
-  excludeUserId: string,
-): Promise<DbResult<Array<{ id: string; username: string; avatar: string | null }>>> {
+  currentUserId: string,
+): Promise<DbResult<UserSearchResult[]>> {
   const sb = getSupabase();
   if (!sb) return { data: null, error: 'Supabase not configured.' };
 
-  const { data, error } = await sb
+  // Step 1: search profiles
+  const { data: profiles, error: profilesError } = await sb
     .from('profiles')
     .select('id, username, data')
     .ilike('username', `%${query}%`)
-    .neq('id', excludeUserId)
+    .neq('id', currentUserId)
     .limit(10);
 
-  if (error) {
-    console.error('[dbSearchProfiles] Supabase error:', error.message, error);
-    return { data: null, error: error.message };
+  if (profilesError) {
+    console.error('[dbSearchProfiles] Supabase error:', profilesError.message, profilesError);
+    return { data: null, error: profilesError.message };
   }
 
-  const results = (data ?? []).map((p: { id: string; username: string; data: Record<string, unknown> }) => ({
-    id: p.id,
-    username: p.username ?? 'Unknown',
-    avatar: (p.data?.avatar as string | null) ?? null,
-  }));
+  if (!profiles || profiles.length === 0) return { data: [], error: null };
+
+  // Step 2: fetch all existing friend rows involving currentUser
+  const { data: friendRows } = await sb
+    .from('friends')
+    .select('id, requester_id, addressee_id, status')
+    .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`);
+
+  // Build a map: otherUserId → { relation, friendRowId }
+  type RelEntry = { relation: FriendRelationStatus; friendRowId: string };
+  const relMap = new Map<string, RelEntry>();
+
+  for (const row of (friendRows ?? []) as Array<{ id: string; requester_id: string; addressee_id: string; status: string }>) {
+    const otherId = row.requester_id === currentUserId ? row.addressee_id : row.requester_id;
+    let rel: FriendRelationStatus = 'none';
+    if (row.status === 'accepted') {
+      rel = 'friends';
+    } else if (row.status === 'pending') {
+      rel = row.requester_id === currentUserId ? 'pending_sent' : 'pending_received';
+    }
+    relMap.set(otherId, { relation: rel, friendRowId: row.id });
+  }
+
+  // Step 3: merge
+  const results: UserSearchResult[] = profiles.map((p: { id: string; username: string; data: Record<string, unknown> }) => {
+    const entry = relMap.get(p.id);
+    return {
+      id: p.id,
+      username: p.username ?? 'Unknown',
+      avatar: (p.data?.avatar as string | null) ?? null,
+      relation: entry?.relation ?? 'none',
+      friendRowId: entry?.friendRowId ?? null,
+    };
+  });
 
   return { data: results, error: null };
 }

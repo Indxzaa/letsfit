@@ -9,7 +9,7 @@ import {
   removeFriend,
   searchUsers,
 } from '@/lib/social/friends-service';
-import type { FriendWithPresence } from '@/types/social';
+import type { FriendWithPresence, UserSearchResult } from '@/types/social';
 
 export interface UseFriendsState {
   friends: FriendWithPresence[];
@@ -23,7 +23,7 @@ export interface UseFriendsReturn extends UseFriendsState {
   sendRequest: (addresseeId: string) => Promise<{ ok: boolean; error?: string }>;
   acceptRequest: (friendRowId: string) => Promise<{ ok: boolean; error?: string }>;
   removeFriend: (friendRowId: string) => Promise<void>;
-  searchUsers: (query: string) => Promise<{ data: Array<{ id: string; username: string; avatar: string | null }>; error: string | null }>;
+  searchUsers: (query: string) => Promise<{ data: UserSearchResult[]; error: string | null }>;
   clearError: () => void;
 }
 
@@ -103,7 +103,7 @@ export function useFriends(userId: string | null): UseFriendsReturn {
     await load();
   }, [load]);
 
-  const search = useCallback(async (query: string): Promise<{ data: Array<{ id: string; username: string; avatar: string | null }>; error: string | null }> => {
+  const search = useCallback(async (query: string): Promise<{ data: UserSearchResult[]; error: string | null }> => {
     if (!userId) return { data: [], error: null };
     const result = await searchUsers(query, userId);
     if (!result.ok) {

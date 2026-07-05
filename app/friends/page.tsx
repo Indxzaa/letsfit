@@ -52,6 +52,8 @@ export default function FriendsPage() {
           <AddFriendModal
             onSearch={friends.searchUsers}
             onSendRequest={async (userId) => friends.sendRequest(userId)}
+            onAcceptRequest={async (friendRowId) => friends.acceptRequest(friendRowId)}
+            onDeclineRequest={async (friendRowId) => { await friends.removeFriend(friendRowId); }}
             onClose={() => setShowAdd(false)}
           />
         )}

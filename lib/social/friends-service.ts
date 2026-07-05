@@ -6,7 +6,7 @@ import {
   dbDeleteFriend,
   dbSearchProfiles,
 } from './friends-db';
-import type { FriendWithPresence } from '@/types/social';
+import type { FriendWithPresence, UserSearchResult } from '@/types/social';
 
 type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -59,10 +59,10 @@ export async function removeFriend(friendRowId: string): Promise<ServiceResult<v
 
 export async function searchUsers(
   query: string,
-  excludeUserId: string,
-): Promise<ServiceResult<Array<{ id: string; username: string; avatar: string | null }>>> {
+  currentUserId: string,
+): Promise<ServiceResult<UserSearchResult[]>> {
   if (query.trim().length < 2) return { ok: true, data: [] };
-  const result = await dbSearchProfiles(query.trim(), excludeUserId);
+  const result = await dbSearchProfiles(query.trim(), currentUserId);
   if (result.error) return { ok: false, error: result.error };
   return { ok: true, data: result.data ?? [] };
 }
