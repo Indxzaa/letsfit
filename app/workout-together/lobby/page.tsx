@@ -1,19 +1,20 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useContext } from 'react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Crown, Copy, Check, Users, ChevronRight,
-  Loader2, AlertCircle, Wifi, WifiOff, CheckCircle2,
+  Loader2, AlertCircle, Wifi, WifiOff, CheckCircle2, UserPlus, Swords,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
 import { useLobby } from '@/lib/multiplayer/hooks';
 import { MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
 import { subscribeSessionEvents, broadcastSessionEvent } from '@/lib/multiplayer/workoutSession';
+import { SocialContext } from '@/components/social/SocialProvider';
 
 const DURATION_OPTIONS = [
   { label: '30s',  value: 30  },
@@ -42,6 +43,8 @@ function LobbyContent() {
   const mode    = params.get('mode')   ?? 'join';
 
   const { user } = useAuth();
+  const social = useContext(SocialContext);
+
   const {
     room, players, loading, error,
     leave, toggleReady, changeExercise, changeDuration, triggerStart, clearError,
@@ -49,9 +52,19 @@ function LobbyContent() {
 
   const isHost = room ? room.host_user_id === user?.id : mode === 'create';
 
-  const [copied,   setCopied]   = useState(false);
-  const [leaving,  setLeaving]  = useState(false);
-  const [starting, setStarting] = useState(false);
+  const [copied,          setCopied]          = useState(false);
+  const [leaving,         setLeaving]         = useState(false);
+  const [starting,        setStarting]        = useState(false);
+  const [showFriendPick,  setShowFriendPick]  = useState(false);
+  const [invitingSending, setInvitingSending] = useState<string | null>(null);
+
+  // Update presence for friends who have us in their list
+  useEffect(() => {
+    if (!roomId || !social) return;
+    social.presence.updateStatus('in_lobby', roomId);
+    return () => { social.presence.updateStatus('online', null); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
 
   // Guest listens for the host's navigate broadcast and follows automatically
   useEffect(() => {
@@ -280,23 +293,101 @@ function LobbyContent() {
                     );
                   })}
 
-                  {/* Empty slot */}
+                  {/* Empty slot + Invite Friends */}
                   {players.length < 2 && (
-                    <div className="flex items-center gap-3 px-5 py-4" style={{ opacity: 0.4 }}>
-                      <div className="w-11 h-11 flex items-center justify-center shrink-0"
-                        style={{ background: 'var(--neo-surface)', border: 'var(--neo-border-2)', borderRadius: 0 }}>
-                        <Users className="w-5 h-5 text-subtle" />
+                    <div>
+                      <div className="flex items-center gap-3 px-5 py-4" style={{ opacity: 0.4 }}>
+                        <div className="w-11 h-11 flex items-center justify-center shrink-0"
+                          style={{ background: 'var(--neo-surface)', border: 'var(--neo-border-2)', borderRadius: 0 }}>
+                          <Users className="w-5 h-5 text-subtle" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-display text-sm font-bold text-muted uppercase">Waiting for player…</div>
+                          <div className="text-[10px] font-semibold text-subtle uppercase tracking-wider">Guest</div>
+                        </div>
+                        <div
+                          className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 animate-pulse"
+                          style={{ border: 'var(--neo-border-2)', color: 'var(--text-subtle)', borderRadius: 0 }}
+                        >
+                          Pending
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-display text-sm font-bold text-muted uppercase">Waiting for player…</div>
-                        <div className="text-[10px] font-semibold text-subtle uppercase tracking-wider">Guest</div>
-                      </div>
-                      <div
-                        className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 animate-pulse"
-                        style={{ border: 'var(--neo-border-2)', color: 'var(--text-subtle)', borderRadius: 0 }}
-                      >
-                        Pending
-                      </div>
+
+                      {/* Invite friends — host only */}
+                      {isHost && social && social.friends.friends.length > 0 && (
+                        <div style={{ borderTop: '2px solid var(--neo-black)' }}>
+                          <button
+                            onClick={() => setShowFriendPick(o => !o)}
+                            className="w-full flex items-center justify-center gap-2 py-3 text-[11px] font-black uppercase tracking-widest cursor-pointer"
+                            style={{
+                              background: showFriendPick ? 'var(--card-bg-blue)' : 'var(--neo-surface)',
+                              border: 'none',
+                              color: 'var(--neo-black)',
+                            }}
+                          >
+                            <UserPlus size={13} strokeWidth={2.5} />
+                            Invite a Friend
+                          </button>
+
+                          <AnimatePresence>
+                            {showFriendPick && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.18 }}
+                                style={{ overflow: 'hidden', borderTop: '2px solid var(--neo-black)' }}
+                              >
+                                {social.friends.friends.map((f, i) => {
+                                  const liveStatus = social.presence.presenceMap.get(f.profile.id)?.status ?? 'offline';
+                                  const isOnline = liveStatus !== 'offline';
+                                  return (
+                                    <div
+                                      key={f.relation.id}
+                                      className="flex items-center gap-3 px-5 py-3"
+                                      style={{ borderBottom: i < social.friends.friends.length - 1 ? '2px solid var(--neo-black)' : 'none' }}
+                                    >
+                                      <div style={{ width: 28, height: 28, background: isOnline ? 'var(--neo-accent)' : 'var(--neo-surface)', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <span className="font-display text-xs font-black" style={{ color: isOnline ? '#fff' : 'var(--neo-black)' }}>
+                                          {f.profile.username[0]?.toUpperCase()}
+                                        </span>
+                                      </div>
+                                      <span className="font-display text-xs font-black uppercase flex-1 text-app">{f.profile.username}</span>
+                                      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: isOnline ? '#22c55e' : 'var(--text-subtle)' }}>
+                                        {isOnline ? liveStatus.replace('_', ' ') : 'Offline'}
+                                      </span>
+                                      {isOnline && (
+                                        <button
+                                          disabled={invitingSending === f.profile.id}
+                                          onClick={async () => {
+                                            if (!user || !roomId) return;
+                                            setInvitingSending(f.profile.id);
+                                            const senderUsername = user.user_metadata?.username ?? user.email?.split('@')[0] ?? 'User';
+                                            const senderAvatar = user.user_metadata?.avatar ?? null;
+                                            await social.invites.sendInvite(f.profile.id, roomId, senderUsername, senderAvatar);
+                                            setInvitingSending(null);
+                                          }}
+                                          className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-1.5"
+                                          style={{
+                                            background: invitingSending === f.profile.id ? 'var(--neo-surface)' : 'var(--neo-accent)',
+                                            border: '2px solid #000',
+                                            boxShadow: '2px 2px 0 #000',
+                                            color: invitingSending === f.profile.id ? 'var(--neo-black)' : '#fff',
+                                            cursor: invitingSending === f.profile.id ? 'not-allowed' : 'pointer',
+                                          }}
+                                        >
+                                          <Swords size={10} strokeWidth={2.5} />
+                                          {invitingSending === f.profile.id ? '...' : 'Invite'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>

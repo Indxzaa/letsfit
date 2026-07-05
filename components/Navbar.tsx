@@ -1,8 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Activity, Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users } from 'lucide-react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
@@ -10,6 +10,8 @@ import UserAvatar from './UserAvatar';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { getUsername, setUsername } from '@/lib/profileSync';
 import { useTheme } from './ThemeProvider';
+import { NotificationPanel } from './social/notifications/NotificationPanel';
+import { SocialContext } from './social/SocialProvider';
 
 const USERNAME_CHANGE_BASE_COST = 100;
 
@@ -24,6 +26,8 @@ function isValidUsername(u: string): boolean {
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [username, setUsernameState] = useState<string | null>(null);
   const [showUsernameForm, setShowUsernameForm] = useState(false);
@@ -34,6 +38,7 @@ export default function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
   const pathname = usePathname();
+  const social = useContext(SocialContext);
 
   useEffect(() => {
     setProgress(loadProgress());
@@ -50,6 +55,9 @@ export default function Navbar() {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
         setShowUsernameForm(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
       }
     };
     document.addEventListener('mousedown', onClick);
@@ -92,6 +100,7 @@ export default function Navbar() {
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Exercise', href: '/exercise' },
     { name: 'Adventure', href: '/adventure' },
+    { name: 'Friends', href: '/friends' },
     { name: 'Shop', href: '/shop' },
     { name: 'Progress', href: '/progress' },
   ];
@@ -193,6 +202,74 @@ export default function Navbar() {
               {mode === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
               <span>{mode === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
+            {/* Notification bell — only when authenticated and social context is available */}
+            {user && social && (
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => { setNotifOpen(o => !o); setMenuOpen(false); }}
+                  aria-label="Notifications"
+                  className="relative flex items-center justify-center cursor-pointer"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '9999px',
+                    border: '2px solid var(--neo-black)',
+                    background: 'var(--neo-surface)',
+                    color: 'var(--neo-black)',
+                    boxShadow: '2px 2px 0 var(--neo-black)',
+                    transition: 'box-shadow 0.1s ease, transform 0.1s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.boxShadow = '4px 4px 0 var(--neo-black)';
+                    e.currentTarget.style.transform = 'translate(-1px, -1px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.boxShadow = '2px 2px 0 var(--neo-black)';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                >
+                  <Bell className="w-4 h-4" />
+                  {social.notifications.unreadCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 flex items-center justify-center font-black"
+                      style={{
+                        width: 16,
+                        height: 16,
+                        background: 'var(--neo-red)',
+                        border: '2px solid #000',
+                        fontSize: 9,
+                        color: '#fff',
+                        borderRadius: '9999px',
+                      }}
+                    >
+                      {Math.min(social.notifications.unreadCount, 9)}
+                    </span>
+                  )}
+                </button>
+                <AnimatePresence>
+                  {notifOpen && (
+                    <div style={{ position: 'relative' }}>
+                      <NotificationPanel
+                        notifications={social.notifications.notifications}
+                        onAcceptFriend={async (id) => {
+                          await social.friends.acceptRequest(id);
+                          social.notifications.markAllRead();
+                        }}
+                        onDeclineFriend={async (id) => {
+                          await social.friends.removeFriend(id);
+                        }}
+                        onJoinRoom={(roomId) => {
+                          setNotifOpen(false);
+                          window.location.href = `/workout-together/lobby?roomId=${roomId}`;
+                        }}
+                        onClose={() => { setNotifOpen(false); social.notifications.markAllRead(); }}
+                      />
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
             {loading ? (
               <div className="w-24 h-9" style={{ background: 'var(--neo-surface)', border: 'var(--neo-border)' }} />
             ) : user ? (
