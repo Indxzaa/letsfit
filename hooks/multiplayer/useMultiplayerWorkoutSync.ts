@@ -248,6 +248,7 @@ export function useMultiplayerWorkoutSync(params: {
     elapsedSecRef.current = 0;
     finishedRef.current = false;
     setMyReps(0);
+    setPartnerReps(0);
     setMyState('working');
     detectorRef.current?.reset();
   }, []);

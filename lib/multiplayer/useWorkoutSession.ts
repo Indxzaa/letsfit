@@ -151,6 +151,15 @@ export function useWorkoutSession(
         stopTick();
         setPartnerLeft(true);
         setPhase('partner-left');
+        // If host is mid-round and partner leaves, auto-resolve so host isn't stuck
+        if (isHost && myFinishRef.current && !partnerFinishRef.current) {
+          const selfResult = myFinishRef.current;
+          await broadcastSessionEvent(roomId, {
+            type: 'round_complete',
+            playerA: selfResult,
+            playerB: { userId: 'partner', reps: 0 },
+          });
+        }
       }
     });
 

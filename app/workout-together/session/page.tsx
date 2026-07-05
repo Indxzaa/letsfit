@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Square, Mic, MicOff, Video, VideoOff, Pause, Play,
   Wifi, WifiOff, Loader2, AlertCircle, RefreshCw,
-  User, UserCircle2,
+  User, UserCircle2, CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { useWebRTC } from '@/lib/multiplayer/useWebRTC';
@@ -162,20 +162,57 @@ function CountdownOverlay({ value }: { value: number | 'GO!' | null }) {
   const isGo = value === 'GO!';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-      style={{ background: isGo ? 'rgba(34,197,94,0.12)' : 'rgba(0,0,0,0.55)' }}>
+      style={{ background: isGo ? 'rgba(34,197,94,0.15)' : 'rgba(0,0,0,0.72)' }}>
       <AnimatePresence mode="wait">
-        <motion.div key={String(value)}
-          initial={{ scale: 0.4, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 1.6, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-          className="font-display font-black text-white text-center"
-          style={{
-            fontSize: isGo ? 'clamp(4rem,18vw,8rem)' : 'clamp(7rem,28vw,14rem)',
-            color: isGo ? '#22c55e' : '#fff',
-            textShadow: isGo ? '0 0 40px rgba(34,197,94,0.6)' : '0 4px 16px rgba(0,0,0,0.8)',
-          }}>
-          {value}
+        <motion.div
+          key={String(value)}
+          initial={{ scale: 0.5, opacity: 0, rotate: -4 }}
+          animate={isGo
+            ? { scale: 1, opacity: 1, rotate: 0 }
+            : {
+                scale: [1, 1.06, 0.97, 1],
+                opacity: 1,
+                rotate: [-3, 3, -2, 0],
+              }
+          }
+          exit={{ scale: 1.5, opacity: 0 }}
+          transition={isGo
+            ? { type: 'spring', stiffness: 280, damping: 18 }
+            : { duration: 0.45, ease: 'easeOut' }
+          }
+          className="text-center select-none"
+        >
+          {/* Border box for numbers, plain for GO */}
+          {!isGo ? (
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 'clamp(10rem, 30vw, 16rem)',
+                height: 'clamp(10rem, 30vw, 16rem)',
+                background: '#fff',
+                border: '6px solid #000',
+                boxShadow: '8px 8px 0 #000',
+              }}
+            >
+              <span
+                className="font-display font-black leading-none"
+                style={{ fontSize: 'clamp(6rem, 20vw, 10rem)', color: '#000' }}
+              >
+                {value}
+              </span>
+            </div>
+          ) : (
+            <span
+              className="font-display font-black"
+              style={{
+                fontSize: 'clamp(5rem, 18vw, 9rem)',
+                color: '#22c55e',
+                textShadow: '4px 4px 0 #000',
+              }}
+            >
+              GO!
+            </span>
+          )}
         </motion.div>
       </AnimatePresence>
     </div>
@@ -278,14 +315,18 @@ function SessionContent() {
     }
   }, [myReps]);
 
+  const [startingRound, setStartingRound] = useState(false);
+
   const handleFinishRound = async () => {
     await signalRoundFinished(myReps);
   };
 
   const handleNextRound = async () => {
-    if (!isHost) return;
+    if (!isHost || startingRound) return;
+    setStartingRound(true);
     resetReps();
     await hostStartCountdown(selectedExercise);
+    setStartingRound(false);
   };
 
   const handleExitConfirm = async () => {
@@ -387,12 +428,17 @@ function SessionContent() {
                         </motion.button>
                       ))}
                     </div>
-                    <motion.button whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.97 }}
+                    <motion.button
+                      whileHover={!startingRound ? { y: -3 } : undefined}
+                      whileTap={!startingRound ? { y: 2, scale: 0.97 } : undefined}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                       onClick={handleNextRound}
-                      className="w-full py-4 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
-                      style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '4px 4px 0 #000', borderRadius: 0 }}>
-                      Start Next Round →
+                      disabled={startingRound}
+                      className="w-full py-4 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                      style={{ background: '#22c55e', border: '3px solid #000', boxShadow: startingRound ? 'none' : '4px 4px 0 #000', borderRadius: 0 }}>
+                      {startingRound
+                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Starting…</>
+                        : 'Start Next Round →'}
                     </motion.button>
                   </div>
                 ) : (
@@ -407,15 +453,6 @@ function SessionContent() {
       </AnimatePresence>
 
       {/* Partner left overlay */}
-      {partnerLeft && !dismissedPartnerLeft && (
-        <PartnerLeftOverlay
-          onContinue={() => setDismissedPartnerLeft(true)}
-          onLobby={async () => {
-            await broadcastLeave(); hangUp();
-            router.push(`/workout-together/lobby?roomId=${roomId}&mode=${mode}`);
-          }}
-        />
-      )}
       {partnerLeft && !dismissedPartnerLeft && (
         <PartnerLeftOverlay
           onContinue={() => setDismissedPartnerLeft(true)}
@@ -456,6 +493,49 @@ function SessionContent() {
       </div>
 
       {/* No progress bar — open-ended session */}
+
+      {/* Co-op motivational feedback strip */}
+      {phase === 'active' && (
+        <div className="px-4 sm:px-6 py-2 flex items-center justify-between"
+          style={{ background: '#0d0d0d', borderBottom: '2px solid #1a1a1a' }}>
+          <div className="flex items-center gap-2">
+            <div className="font-display text-sm font-black text-white uppercase tabular-nums">
+              {myReps}
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>you</span>
+          </div>
+          <AnimatePresence mode="wait">
+            {myReps > partnerReps + 2 ? (
+              <motion.div key="ahead" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                className="px-3 py-1 font-display text-[10px] font-black uppercase tracking-wider text-white"
+                style={{ background: '#22c55e', border: '2px solid #000', borderRadius: 0 }}>
+                You're ahead 🔥
+              </motion.div>
+            ) : partnerReps > myReps + 2 ? (
+              <motion.div key="behind" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                className="px-3 py-1 font-display text-[10px] font-black uppercase tracking-wider text-white"
+                style={{ background: '#d97706', border: '2px solid #000', borderRadius: 0 }}>
+                Keep pushing 💪
+              </motion.div>
+            ) : (
+              <motion.div key="even" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                className="px-3 py-1 font-display text-[10px] font-black uppercase tracking-wider"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)', borderRadius: 0 }}>
+                Even pace ⚡
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>partner</span>
+            <div className="font-display text-sm font-black text-white uppercase tabular-nums">
+              {partnerReps}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Camera panels */}
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 sm:p-6">
@@ -504,10 +584,15 @@ function SessionContent() {
                 Done ✓
               </motion.button>
             ) : myRoundDone ? (
-              <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider flex-shrink-0"
+              <motion.div
+                initial={{ scale: 0.9 }} animate={{ scale: [1, 1.04, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                className="px-3 py-2 text-[10px] font-black uppercase tracking-wider flex-shrink-0 flex items-center gap-1.5"
                 style={{ background: 'rgba(34,197,94,0.12)', border: '2px solid #22c55e', color: '#22c55e', borderRadius: 0 }}>
-                {partnerRoundDone ? 'Both Done!' : 'Waiting…'}
-              </div>
+                {partnerRoundDone
+                  ? <><CheckCircle2 className="w-3 h-3" /> Both Done!</>
+                  : <><Loader2 className="w-3 h-3 animate-spin" /> Waiting…</>}
+              </motion.div>
             ) : (
               <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider"
                 style={{ background: cameraReady ? 'rgba(34,197,94,0.1)' : '#1a1a1a', border: `2px solid ${cameraReady ? '#22c55e' : 'rgba(255,255,255,0.15)'}`, color: cameraReady ? '#22c55e' : 'rgba(255,255,255,0.4)', borderRadius: 0 }}>
