@@ -23,7 +23,7 @@ export interface UseFriendsReturn extends UseFriendsState {
   sendRequest: (addresseeId: string) => Promise<{ ok: boolean; error?: string }>;
   acceptRequest: (friendRowId: string) => Promise<{ ok: boolean; error?: string }>;
   removeFriend: (friendRowId: string) => Promise<void>;
-  searchUsers: (query: string) => Promise<Array<{ id: string; username: string; avatar: string | null }>>;
+  searchUsers: (query: string) => Promise<{ data: Array<{ id: string; username: string; avatar: string | null }>; error: string | null }>;
   clearError: () => void;
 }
 
@@ -98,10 +98,14 @@ export function useFriends(userId: string | null): UseFriendsReturn {
     await load();
   }, [load]);
 
-  const search = useCallback(async (query: string) => {
-    if (!userId) return [];
+  const search = useCallback(async (query: string): Promise<{ data: Array<{ id: string; username: string; avatar: string | null }>; error: string | null }> => {
+    if (!userId) return { data: [], error: null };
     const result = await searchUsers(query, userId);
-    return result.ok ? result.data : [];
+    if (!result.ok) {
+      console.error('[useFriends] searchUsers error:', result.error);
+      return { data: [], error: result.error };
+    }
+    return { data: result.data, error: null };
   }, [userId]);
 
   return {

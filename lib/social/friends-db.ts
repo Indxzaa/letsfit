@@ -111,7 +111,10 @@ export async function dbSearchProfiles(
     .neq('id', excludeUserId)
     .limit(10);
 
-  if (error) return { data: null, error: error.message };
+  if (error) {
+    console.error('[dbSearchProfiles] Supabase error:', error.message, error);
+    return { data: null, error: error.message };
+  }
 
   const results = (data ?? []).map((p: { id: string; username: string; data: Record<string, unknown> }) => ({
     id: p.id,

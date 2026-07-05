@@ -11,7 +11,7 @@ interface SearchResult {
 }
 
 interface AddFriendModalProps {
-  onSearch: (query: string) => Promise<SearchResult[]>;
+  onSearch: (query: string) => Promise<{ data: Array<{ id: string; username: string; avatar: string | null }>; error: string | null }>;
   onSendRequest: (userId: string) => Promise<{ ok: boolean; error?: string }>;
   onClose: () => void;
 }
@@ -20,15 +20,18 @@ export function AddFriendModal({ onSearch, onSendRequest, onClose }: AddFriendMo
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSearch = useCallback(async (q: string) => {
     setQuery(q);
+    setSearchError(null);
     if (q.trim().length < 2) { setResults([]); return; }
     setSearching(true);
     const res = await onSearch(q);
-    setResults(res);
+    setResults(res.data);
+    if (res.error) setSearchError(res.error);
     setSearching(false);
   }, [onSearch]);
 
@@ -100,7 +103,14 @@ export function AddFriendModal({ onSearch, onSendRequest, onClose }: AddFriendMo
                 <span className="text-xs text-subtle font-semibold uppercase tracking-wider">Searching...</span>
               </div>
             )}
-            {!searching && query.length >= 2 && results.length === 0 && (
+            {!searching && searchError && (
+              <div className="p-4 text-center">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--neo-red)' }}>
+                  Search failed — check console
+                </span>
+              </div>
+            )}
+            {!searching && !searchError && query.length >= 2 && results.length === 0 && (
               <div className="p-4 text-center">
                 <span className="text-xs text-subtle font-semibold uppercase tracking-wider">No users found</span>
               </div>
