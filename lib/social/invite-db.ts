@@ -8,20 +8,41 @@ export async function dbGetPendingInvites(userId: string): Promise<DbResult<Invi
   const sb = getSupabase();
   if (!sb) return { data: null, error: 'Supabase not configured.' };
 
-  const { data, error } = await sb
+  // Step 1: fetch invite rows — no inline join (invites.from_user refs auth.users, not profiles)
+  const { data: rows, error: rowsError } = await sb
     .from('invites')
-    .select(`
-      id, from_user, to_user, room_id, status, created_at,
-      sender:profiles!invites_from_user_fkey(username, data)
-    `)
+    .select('id, from_user, to_user, room_id, status, created_at')
     .eq('to_user', userId)
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
-  if (error) return { data: null, error: error.message };
+  if (rowsError) {
+    console.error('[dbGetPendingInvites] invites query error:', rowsError.message);
+    return { data: null, error: rowsError.message };
+  }
 
-  const enriched: InviteWithSender[] = (data ?? []).map((row: Record<string, unknown>) => {
-    const sender = row.sender as { username: string; data: Record<string, unknown> } | null;
+  if (!rows || rows.length === 0) return { data: [], error: null };
+
+  // Step 2: batch-fetch sender profiles
+  const senderIds = [...new Set(rows.map((r: Record<string, unknown>) => r.from_user as string))];
+
+  const { data: profiles, error: profilesError } = await sb
+    .from('profiles')
+    .select('id, username, data')
+    .in('id', senderIds);
+
+  if (profilesError) {
+    console.error('[dbGetPendingInvites] profiles query error:', profilesError.message);
+    return { data: null, error: profilesError.message };
+  }
+
+  const profileMap = new Map(
+    (profiles ?? []).map((p: { id: string; username: string; data: Record<string, unknown> }) => [p.id, p])
+  );
+
+  // Step 3: join in code
+  const enriched: InviteWithSender[] = rows.map((row: Record<string, unknown>) => {
+    const sender = profileMap.get(row.from_user as string);
     return {
       id: row.id as string,
       from_user: row.from_user as string,
