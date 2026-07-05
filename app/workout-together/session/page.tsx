@@ -12,7 +12,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useWebRTC } from '@/lib/multiplayer/useWebRTC';
 import { useWorkoutSession } from '@/lib/multiplayer/useWorkoutSession';
 import { useMultiplayerWorkoutSync } from '@/hooks/multiplayer/useMultiplayerWorkoutSync';
-import { EXERCISE_LABELS } from '@/lib/multiplayer/constants';
+import { EXERCISE_LABELS, MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
 import type { PeerConnectionState } from '@/lib/multiplayer/webrtc';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -223,12 +223,11 @@ function PartnerLeftOverlay({ onContinue, onLobby }: {
 // ── SessionContent ────────────────────────────────────────────────────────
 
 function SessionContent() {
-  const router   = useRouter();
-  const params   = useSearchParams();
-  const roomId   = params.get('roomId')   ?? '';
-  const exercise = params.get('exercise') ?? 'squat';
-  const mode     = params.get('mode')     ?? 'join';
-  const label    = EXERCISE_LABELS[exercise] ?? exercise;
+  const router  = useRouter();
+  const params  = useSearchParams();
+  const roomId  = params.get('roomId')   ?? '';
+  const initEx  = params.get('exercise') ?? 'squat';
+  const mode    = params.get('mode')     ?? 'join';
 
   const { user } = useAuth();
   const isHost   = mode === 'create';
@@ -236,32 +235,38 @@ function SessionContent() {
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [selectedExercise,     setSelectedExercise]     = useState(initEx);
   const [dismissedPartnerLeft, setDismissedPartnerLeft] = useState(false);
-  const [repFlash,    setRepFlash]    = useState(false);
-  const [showExit,    setShowExit]    = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
+  const [showExit,             setShowExit]             = useState(false);
+  const [repFlash,             setRepFlash]             = useState(false);
   const prevRepRef = useRef(0);
 
   const enabled = !!(roomId && user?.id);
   const { localStream, remoteStream, peerState, muted, videoOff, toggleMute, toggleVideo, hangUp } =
     useWebRTC(roomId, user?.id ?? '', isHost, enabled);
 
-  const { phase, countdown, elapsed, isPaused, partnerLeft,
-    hostStartCountdown, hostPause, hostResume, broadcastLeave } =
-    useWorkoutSession(roomId, user?.id ?? '', isHost, exercise);
+  const {
+    phase, countdown, elapsed, isPaused, currentExercise,
+    roundResults, myRoundDone, partnerRoundDone, partnerLeft,
+    hostStartCountdown, hostSelectExercise, signalRoundFinished,
+    hostPause, hostResume, broadcastLeave,
+  } = useWorkoutSession(roomId, user?.id ?? '', isHost, initEx);
 
-  const { myReps, partnerReps, partnerState, liveFormScore, feedback, cameraReady,
-    bothFinished, stopDetection } =
+  const { myReps, partnerReps, liveFormScore, feedback, cameraReady, resetReps, stopDetection } =
     useMultiplayerWorkoutSync({
-      roomId, userId: user?.id ?? '', slug: exercise,
+      roomId, userId: user?.id ?? '', slug: currentExercise,
       isActive: phase === 'active',
       videoRef: localVideoRef, canvasRef: localCanvasRef,
     });
 
-  // Host auto-starts countdown on mount
+  const label = EXERCISE_LABELS[currentExercise] ?? currentExercise;
+
+  // Host auto-triggers exercise selection on first mount
   useEffect(() => {
-    if (isHost && phase === 'idle') hostStartCountdown();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (isHost && phase === 'selecting') {
+      // Just stay in selecting state — host will manually pick
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Flash on new rep
@@ -273,13 +278,16 @@ function SessionContent() {
     }
   }, [myReps]);
 
-  // When both finish: show summary panel, keep session alive
-  useEffect(() => {
-    if (bothFinished) setShowSummary(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bothFinished]);
+  const handleFinishRound = async () => {
+    await signalRoundFinished(myReps);
+  };
 
-  // Exit only via explicit confirmation
+  const handleNextRound = async () => {
+    if (!isHost) return;
+    resetReps();
+    await hostStartCountdown(selectedExercise);
+  };
+
   const handleExitConfirm = async () => {
     stopDetection();
     await broadcastLeave();
@@ -293,12 +301,12 @@ function SessionContent() {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--neo-black)' }}>
       <CountdownOverlay value={countdown} />
 
-      {/* Exit confirmation modal */}
+      {/* Exit confirmation */}
       <AnimatePresence>
         {showExit && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-6"
-            style={{ background: 'rgba(0,0,0,0.8)' }}>
+            style={{ background: 'rgba(0,0,0,0.85)' }}>
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}
               className="w-full max-w-sm"
@@ -329,51 +337,85 @@ function SessionContent() {
         )}
       </AnimatePresence>
 
-      {/* Workout summary panel — shown when both finish, session stays alive */}
+      {/* Round Complete overlay */}
       <AnimatePresence>
-        {showSummary && (
+        {phase === 'round_complete' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 sm:p-6"
-            style={{ background: 'rgba(0,0,0,0.7)' }}>
+            style={{ background: 'rgba(0,0,0,0.75)' }}>
             <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }} transition={{ type: 'spring', stiffness: 280, damping: 24 }}
               className="w-full max-w-md"
               style={{ background: '#0a1a0a', border: '4px solid #22c55e', boxShadow: '6px 6px 0 #22c55e', borderRadius: 0 }}>
               <div style={{ height: 6, background: '#22c55e' }} />
               <div className="p-7">
-                <h3 className="font-display text-2xl font-bold text-white uppercase mb-5 text-center">Set Complete 🎉</h3>
-                <div className="grid grid-cols-2 gap-3 mb-5">
-                  <div className="p-4 text-center" style={{ background: 'rgba(34,197,94,0.1)', border: '2px solid #22c55e', borderRadius: 0 }}>
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>You</div>
-                    <div className="font-display text-3xl font-black text-white">{myReps}</div>
-                    <div className="text-[9px] text-white/50 uppercase tracking-wider">reps</div>
-                  </div>
-                  <div className="p-4 text-center" style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid var(--neo-blue)', borderRadius: 0 }}>
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Friend</div>
-                    <div className="font-display text-3xl font-black text-white">{partnerReps}</div>
-                    <div className="text-[9px] text-white/50 uppercase tracking-wider">reps</div>
-                  </div>
+                <h3 className="font-display text-3xl font-bold text-white uppercase mb-5 text-center">Round Complete 🎉</h3>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {[
+                    { label: 'You',    reps: roundResults.a?.reps ?? myReps,      color: '#22c55e', border: '#22c55e' },
+                    { label: 'Friend', reps: roundResults.b?.reps ?? partnerReps, color: 'var(--neo-blue)', border: 'var(--neo-blue)' },
+                  ].map(s => (
+                    <div key={s.label} className="p-4 text-center"
+                      style={{ background: `${s.color}10`, border: `2px solid ${s.border}`, borderRadius: 0 }}>
+                      <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{s.label}</div>
+                      <div className="font-display text-4xl font-black text-white">{s.reps}</div>
+                      <div className="text-[9px] text-white/50 uppercase tracking-wider mt-1">reps</div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    onClick={() => setShowSummary(false)}
-                    className="w-full py-3.5 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
-                    style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '4px 4px 0 #000', borderRadius: 0 }}>
-                    Keep Working Out
-                  </motion.button>
-                  <button onClick={() => setShowExit(true)}
-                    className="w-full py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
-                    style={{ color: 'rgba(255,255,255,0.4)', background: 'transparent', border: 'none' }}>
-                    End Session
-                  </button>
-                </div>
+                {isHost ? (
+                  <div className="space-y-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-center mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>Choose next exercise</div>
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {MULTIPLAYER_EXERCISES.map(ex => (
+                        <motion.button key={ex.slug}
+                          whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          onClick={() => setSelectedExercise(ex.slug)}
+                          className="flex items-center gap-2 p-2.5 cursor-pointer text-left"
+                          style={{
+                            background: selectedExercise === ex.slug ? '#22c55e' : 'rgba(255,255,255,0.06)',
+                            border: `2px solid ${selectedExercise === ex.slug ? '#000' : 'rgba(255,255,255,0.15)'}`,
+                            boxShadow: selectedExercise === ex.slug ? '3px 3px 0 #000' : 'none',
+                            borderRadius: 0,
+                          }}>
+                          <span className="text-base">{ex.emoji}</span>
+                          <span className="font-display text-xs font-bold uppercase"
+                            style={{ color: selectedExercise === ex.slug ? '#fff' : 'rgba(255,255,255,0.8)' }}>
+                            {ex.name}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </div>
+                    <motion.button whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.97 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      onClick={handleNextRound}
+                      className="w-full py-4 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
+                      style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '4px 4px 0 #000', borderRadius: 0 }}>
+                      Start Next Round →
+                    </motion.button>
+                  </div>
+                ) : (
+                  <p className="text-center text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    Waiting for host to start next round…
+                  </p>
+                )}
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Partner left overlay */}
+      {partnerLeft && !dismissedPartnerLeft && (
+        <PartnerLeftOverlay
+          onContinue={() => setDismissedPartnerLeft(true)}
+          onLobby={async () => {
+            await broadcastLeave(); hangUp();
+            router.push(`/workout-together/lobby?roomId=${roomId}&mode=${mode}`);
+          }}
+        />
+      )}
       {partnerLeft && !dismissedPartnerLeft && (
         <PartnerLeftOverlay
           onContinue={() => setDismissedPartnerLeft(true)}
@@ -452,16 +494,26 @@ function SessionContent() {
                 </div>
               )}
             </div>
-            {/* Rep status badge */}
-            <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider"
-              style={{
-                background: cameraReady ? 'rgba(34,197,94,0.1)' : '#1a1a1a',
-                border: `2px solid ${cameraReady ? '#22c55e' : 'rgba(255,255,255,0.15)'}`,
-                color: cameraReady ? '#22c55e' : 'rgba(255,255,255,0.4)',
-                borderRadius: 0,
-              }}>
-              {cameraReady ? 'AI Active' : <Loader2 className="w-3 h-3 animate-spin" />}
-            </div>
+            {/* Finish Round / AI Active */}
+            {phase === 'active' && !myRoundDone ? (
+              <motion.button whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                onClick={handleFinishRound}
+                className="px-4 py-3 font-display font-black uppercase tracking-wider text-xs cursor-pointer text-white flex-shrink-0"
+                style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '3px 3px 0 #000', borderRadius: 0 }}>
+                Done ✓
+              </motion.button>
+            ) : myRoundDone ? (
+              <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider flex-shrink-0"
+                style={{ background: 'rgba(34,197,94,0.12)', border: '2px solid #22c55e', color: '#22c55e', borderRadius: 0 }}>
+                {partnerRoundDone ? 'Both Done!' : 'Waiting…'}
+              </div>
+            ) : (
+              <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider"
+                style={{ background: cameraReady ? 'rgba(34,197,94,0.1)' : '#1a1a1a', border: `2px solid ${cameraReady ? '#22c55e' : 'rgba(255,255,255,0.15)'}`, color: cameraReady ? '#22c55e' : 'rgba(255,255,255,0.4)', borderRadius: 0 }}>
+                {cameraReady ? 'AI Active' : <Loader2 className="w-3 h-3 animate-spin" />}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -483,7 +535,7 @@ function SessionContent() {
                   {partnerReps}
                 </motion.div>
               </AnimatePresence>
-              {partnerState === 'finished' && (
+              {partnerRoundDone && (
                 <div className="text-[9px] font-bold uppercase tracking-wider mt-1" style={{ color: '#22c55e' }}>
                   Finished!
                 </div>

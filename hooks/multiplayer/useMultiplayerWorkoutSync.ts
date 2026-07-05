@@ -11,31 +11,23 @@ import {
 import { getDetectorForSlug, drawSkeleton, type Detector } from '@/lib/exerciseDetectors';
 import { getExercise } from '@/lib/exercises';
 import {
-  subscribeWorkoutSync, broadcastWorkoutState, broadcastBothFinished,
+  subscribeWorkoutSync, broadcastWorkoutState,
   type ExerciseState, type PlayerWorkoutState,
 } from '@/lib/multiplayer/workout-sync';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
 export interface MultiplayerWorkoutSyncState {
-  // Local player
-  myReps:          number;
-  myState:         ExerciseState;
-  liveFormScore:   number;
-  feedback:        string;
-  cameraReady:     boolean;
-  // Remote player
-  partnerReps:     number;
-  partnerState:    ExerciseState;
-  // Session
-  bothFinished:    boolean;
+  myReps:        number;
+  myState:       ExerciseState;
+  liveFormScore: number;
+  feedback:      string;
+  cameraReady:   boolean;
+  partnerReps:   number;
+  partnerState:  ExerciseState;
 }
 
-// ── Throttle: only broadcast when reps change or state transitions ─────────
-
-const THROTTLE_MS = 200; // minimum ms between broadcasts
-
-// ── Hook ─────────────────────────────────────────────────────────────────
+const THROTTLE_MS = 200;
 
 export function useMultiplayerWorkoutSync(params: {
   roomId:    string;
@@ -46,6 +38,7 @@ export function useMultiplayerWorkoutSync(params: {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }): MultiplayerWorkoutSyncState & {
   stopDetection: () => void;
+  resetReps:     () => void;
 } {
   const { roomId, userId, slug, isActive, videoRef, canvasRef } = params;
 
@@ -61,7 +54,6 @@ export function useMultiplayerWorkoutSync(params: {
   const [cameraReady,   setCameraReady]   = useState(false);
   const [partnerReps,   setPartnerReps]   = useState(0);
   const [partnerState,  setPartnerState]  = useState<ExerciseState>('idle');
-  const [bothFinished,  setBothFinished]  = useState(false);
 
   // ── Refs ──────────────────────────────────────────────────────────────
 
@@ -232,17 +224,7 @@ export function useMultiplayerWorkoutSync(params: {
     const unsub = subscribeWorkoutSync(roomId, (event) => {
       if (event.type === 'state_update' && event.state.userId !== userId) {
         setPartnerReps(event.state.repCount);
-        setPartnerState(event.state.exerciseState);
-        if (event.state.finishFlag) {
-          // Check if we're also finished
-          if (finishedRef.current) {
-            broadcastBothFinished(roomId).catch(() => {});
-            setBothFinished(true);
-          }
-        }
-      }
-      if (event.type === 'both_finished') {
-        setBothFinished(true);
+        // Round completion is now managed by useWorkoutSession, not here
       }
     });
     return unsub;
@@ -261,9 +243,18 @@ export function useMultiplayerWorkoutSync(params: {
     }
   }, [videoRef]);
 
+  const resetReps = useCallback(() => {
+    repCountRef.current = 0;
+    elapsedSecRef.current = 0;
+    finishedRef.current = false;
+    setMyReps(0);
+    setMyState('working');
+    detectorRef.current?.reset();
+  }, []);
+
   return {
     myReps, myState, liveFormScore, feedback, cameraReady,
-    partnerReps, partnerState, bothFinished,
-    stopDetection,
+    partnerReps, partnerState,
+    stopDetection, resetReps,
   };
 }

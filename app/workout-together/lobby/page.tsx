@@ -59,7 +59,7 @@ function LobbyContent() {
     const unsub = subscribeSessionEvents(roomId, (event) => {
       if (event.type === 'navigate') {
         router.push(
-          `/workout-together/session?roomId=${event.roomId}&exercise=${event.exercise}&duration=${event.duration}&mode=join`
+          `/workout-together/session?roomId=${event.roomId}&exercise=${event.exercise}&mode=join`
         );
       }
     });
@@ -90,14 +90,8 @@ function LobbyContent() {
     setStarting(true);
     await triggerStart();
     const exercise = room.selected_exercise ?? 'squat';
-    const duration = room.duration_seconds ?? 60;
-    // Broadcast to guest so they navigate simultaneously
-    await broadcastSessionEvent(roomId, {
-      type: 'navigate', roomId, exercise, duration, mode: 'create',
-    });
-    router.push(
-      `/workout-together/session?roomId=${roomId}&exercise=${exercise}&duration=${duration}&mode=create`
-    );
+    await broadcastSessionEvent(roomId, { type: 'navigate', roomId, exercise, mode: 'create' });
+    router.push(`/workout-together/session?roomId=${roomId}&exercise=${exercise}&mode=create`);
   };
 
   if (!roomId) {

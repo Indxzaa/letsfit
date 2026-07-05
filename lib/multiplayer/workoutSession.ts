@@ -1,35 +1,36 @@
-// Session event types + broadcast helpers for Phase 5 synchronized workout.
-// Uses the same Supabase Realtime broadcast pattern as signaling.ts.
-// Timekeeping is host-authoritative: host embeds startedAt timestamps;
-// both players compute remaining time from Date.now() - startedAt.
+// Session event types + broadcast helpers — Round-Based Co-op Workout System.
+// Uses Supabase Realtime broadcast; no data is written to the database.
 
 import { getSupabase } from '@/lib/supabase';
 
 // ── Event types ───────────────────────────────────────────────────────────
 
 export type WorkoutSessionEvent =
-  | { type: 'navigate';  roomId: string; exercise: string; duration: number; mode: string }
-  | { type: 'countdown'; value: number | 'GO!' }
-  | { type: 'start';     startedAt: number; duration: number; exercise: string }
-  | { type: 'pause';     pausedAt: number }
-  | { type: 'resume';    resumedAt: number; adjustedStartAt: number }
-  | { type: 'finish' }
-  | { type: 'status';    userId: string; status: PlayerWorkoutStatus }
-  | { type: 'leave';     userId: string };
+  | { type: 'navigate';         roomId: string; exercise: string; mode: string }
+  | { type: 'countdown';        value: number | 'GO!' }
+  | { type: 'start';            startedAt: number; exercise: string }
+  | { type: 'round_finish';     userId: string; reps: number }
+  | { type: 'round_complete';   playerA: { userId: string; reps: number }; playerB: { userId: string; reps: number } }
+  | { type: 'exercise_selected'; exercise: string }
+  | { type: 'pause';            pausedAt: number }
+  | { type: 'resume';           resumedAt: number; adjustedStartAt: number }
+  | { type: 'status';           userId: string; status: PlayerWorkoutStatus }
+  | { type: 'leave';            userId: string };
 
 export type PlayerWorkoutStatus =
   | 'preparing'
   | 'working-out'
+  | 'round-finished'
   | 'paused'
-  | 'finished'
   | 'disconnected';
 
 export type SessionPhase =
   | 'idle'
-  | 'countdown'
-  | 'active'
+  | 'selecting'       // between rounds — choosing next exercise
+  | 'countdown'       // 3-2-1-GO
+  | 'active'          // round in progress
   | 'paused'
-  | 'finished'
+  | 'round_complete'  // both players finished this round
   | 'partner-left';
 
 // ── Channel helpers ───────────────────────────────────────────────────────
