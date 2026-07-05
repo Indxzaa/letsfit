@@ -18,6 +18,7 @@ interface NotificationPanelProps {
   notifications: SocialNotification[];
   onAcceptFriend: (friendRowId: string) => void;
   onDeclineFriend: (friendRowId: string) => void;
+  onOpenFriends: () => void;
   onJoinRoom: (roomId: string) => void;
   onClose: () => void;
 }
@@ -26,6 +27,7 @@ export function NotificationPanel({
   notifications,
   onAcceptFriend,
   onDeclineFriend,
+  onOpenFriends,
   onJoinRoom,
   onClose,
 }: NotificationPanelProps) {
@@ -84,6 +86,7 @@ export function NotificationPanel({
                 isLast={i === notifications.length - 1}
                 onAcceptFriend={onAcceptFriend}
                 onDeclineFriend={onDeclineFriend}
+                onOpenFriends={onOpenFriends}
                 onJoinRoom={onJoinRoom}
               />
             ))
@@ -99,12 +102,14 @@ function NotifRow({
   isLast,
   onAcceptFriend,
   onDeclineFriend,
+  onOpenFriends,
   onJoinRoom,
 }: {
   notification: SocialNotification;
   isLast: boolean;
   onAcceptFriend: (id: string) => void;
   onDeclineFriend: (id: string) => void;
+  onOpenFriends: () => void;
   onJoinRoom: (roomId: string) => void;
 }) {
   const { data } = notification;
@@ -164,28 +169,18 @@ function NotifRow({
       {data.type === 'friend_request' && (
         <div className="flex gap-2 pl-9">
           <button
-            onClick={() => onAcceptFriend(data.friendRowId)}
+            onClick={() => { onAcceptFriend(data.friendRowId); }}
             className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
-            style={{
-              background: 'var(--neo-accent)',
-              border: '2px solid #000',
-              boxShadow: '2px 2px 0 #000',
-              color: '#fff',
-              cursor: 'pointer',
-            }}
+            style={{ background: 'var(--neo-accent)', border: '2px solid #000', boxShadow: '2px 2px 0 #000', color: '#fff', cursor: 'pointer' }}
           >
             <Check size={11} strokeWidth={3} /> Accept
           </button>
           <button
-            onClick={() => onDeclineFriend(data.friendRowId)}
+            onClick={onOpenFriends}
             className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
-            style={{
-              background: 'var(--neo-surface)',
-              border: '2px solid #000',
-              cursor: 'pointer',
-            }}
+            style={{ background: 'var(--neo-surface)', border: '2px solid #000', cursor: 'pointer' }}
           >
-            <X size={11} strokeWidth={3} /> Decline
+            View
           </button>
         </div>
       )}

@@ -108,7 +108,7 @@ function CameraPanel({ label, stream, isLocal, accent, peerState, controls, dete
           </div>
         )}
       </div>
-      <div className="relative flex-1 min-h-44 bg-black">
+      <div className="relative flex-1 min-h-0 bg-black" style={{ minHeight: '240px' }}>
         {hasVideo ? (
           <>
             <VideoEl stream={stream} muted={isLocal} mirror={isLocal} />
@@ -527,7 +527,7 @@ function SessionContent() {
       )}
 
       {/* Camera panels */}
-      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 sm:p-6">
+      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 p-2 sm:p-3" style={{ minHeight: 0 }}>
         {/* You — detection canvas overlaid on WebRTC video */}
         <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.35 }} className="flex flex-col">

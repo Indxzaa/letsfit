@@ -16,7 +16,8 @@ interface NotificationToastLayerProps {
 
 export function NotificationToastLayer({ notifications }: NotificationToastLayerProps) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const seenRef = useRef<Set<string>>(new Set());
+  const seenRef   = useRef<Set<string>>(new Set());
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     const newOnes = notifications.filter(n => !n.read && !seenRef.current.has(n.id));
@@ -24,19 +25,18 @@ export function NotificationToastLayer({ notifications }: NotificationToastLayer
 
     for (const n of newOnes) seenRef.current.add(n.id);
 
-    // Only surface the latest one as a toast (avoid spam on first load)
     const latest = newOnes[0];
     if (!latest) return;
 
     const item: ToastItem = { notification: latest, id: `toast-${latest.id}-${Date.now()}` };
     setToasts(prev => [item, ...prev].slice(0, 3));
 
+    // Timer stored in ref so cleanup doesn't cancel it when notifications re-renders
     const timer = setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== item.id));
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  // Intentionally run only when notifications array reference changes
+      timersRef.current.delete(item.id);
+    }, 2800);
+    timersRef.current.set(item.id, timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notifications]);
 

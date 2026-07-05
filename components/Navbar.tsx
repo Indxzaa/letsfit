@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users } from 'lucide-react';
 import { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
@@ -38,6 +38,7 @@ export default function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
   const pathname = usePathname();
+  const router   = useRouter();
   const social = useContext(SocialContext);
 
   useEffect(() => {
@@ -257,6 +258,11 @@ export default function Navbar() {
                         }}
                         onDeclineFriend={async (id) => {
                           await social.friends.removeFriend(id);
+                        }}
+                        onOpenFriends={() => {
+                          setNotifOpen(false);
+                          social.notifications.markAllRead();
+                          router.push('/friends');
                         }}
                         onJoinRoom={(roomId) => {
                           setNotifOpen(false);
