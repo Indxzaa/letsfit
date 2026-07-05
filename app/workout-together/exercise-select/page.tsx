@@ -6,15 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-
-const EXERCISES = [
-  { slug: 'pushup',          name: 'Push Ups',          emoji: '💪', color: 'var(--card-bg-green)'  },
-  { slug: 'squat',           name: 'Squats',             emoji: '🦵', color: 'var(--card-bg-blue)'   },
-  { slug: 'jumping-jack',    name: 'Jumping Jacks',      emoji: '⭐', color: 'var(--card-bg-amber)'  },
-  { slug: 'mountain-climber',name: 'Mountain Climbers',  emoji: '🏔️', color: 'var(--card-bg-purple)' },
-  { slug: 'high-knees',      name: 'High Knees',         emoji: '🏃', color: 'var(--card-bg-green)'  },
-  { slug: 'slow-burpee',     name: 'Burpees',            emoji: '🔥', color: 'var(--card-bg-amber)'  },
-];
+import { MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
 
 export default function ExerciseSelectPage() {
   const router = useRouter();
@@ -45,7 +37,7 @@ export default function ExerciseSelectPage() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {EXERCISES.map((ex, i) => {
+            {MULTIPLAYER_EXERCISES.map((ex, i) => {
               const isSelected = selected === ex.slug;
               return (
                 <motion.button
@@ -58,7 +50,7 @@ export default function ExerciseSelectPage() {
                   onClick={() => setSelected(ex.slug)}
                   className="neo-card p-6 text-left cursor-pointer flex flex-col gap-3"
                   style={{
-                    background: isSelected ? 'var(--neo-accent)' : ex.color,
+                    background: isSelected ? 'var(--neo-accent)' : ex.cardBg,
                     borderRadius: 0,
                     borderColor: isSelected ? 'var(--neo-black)' : undefined,
                     boxShadow: isSelected ? 'var(--neo-shadow-lg)' : 'var(--neo-shadow)',

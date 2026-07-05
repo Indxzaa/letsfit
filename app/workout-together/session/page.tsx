@@ -4,11 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Square, Camera, Wifi, User, UserCircle2, Plus } from 'lucide-react';
-
-const EXERCISE_LABELS: Record<string, string> = {
-  pushup: 'Push Ups', squat: 'Squats', 'jumping-jack': 'Jumping Jacks',
-  'mountain-climber': 'Mountain Climbers', 'high-knees': 'High Knees', 'slow-burpee': 'Burpees',
-};
+import { EXERCISE_LABELS, MOCK_FRIEND_REP_INTERVAL_MS } from '@/lib/multiplayer/constants';
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -65,7 +61,7 @@ function SessionContent() {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(() => setFriendReps(r => r + 1), 2800);
+    const id = setInterval(() => setFriendReps(r => r + 1), MOCK_FRIEND_REP_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
 

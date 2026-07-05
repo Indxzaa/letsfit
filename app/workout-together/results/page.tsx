@@ -5,11 +5,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Trophy, Zap, Coins, ArrowRight, RotateCcw, Crown, Medal } from 'lucide-react';
-
-const EXERCISE_LABELS: Record<string, string> = {
-  pushup: 'Push Ups', squat: 'Squats', 'jumping-jack': 'Jumping Jacks',
-  'mountain-climber': 'Mountain Climbers', 'high-knees': 'High Knees', 'slow-burpee': 'Burpees',
-};
+import { EXERCISE_LABELS } from '@/lib/multiplayer/constants';
+import { computeResult } from '@/lib/multiplayer/mock';
 
 // Fixed confetti — no hydration mismatch
 const CONFETTI = Array.from({ length: 24 }, (_, i) => ({
@@ -51,10 +48,9 @@ function ResultsContent() {
   const exercise   = params.get('exercise') ?? 'squat';
   const myReps     = Number(params.get('myReps') ?? 24);
   const friendReps = Number(params.get('friendReps') ?? 20);
-  const xp    = Math.round(myReps * 5);
-  const coins = Math.round(myReps * 2);
+  const result = computeResult(exercise, myReps, friendReps, 0);
+  const { xpEarned: xp, coinsEarned: coins, won } = result;
   const label = EXERCISE_LABELS[exercise] ?? exercise;
-  const won   = myReps >= friendReps;
   const diff  = Math.abs(myReps - friendReps);
 
   return (
