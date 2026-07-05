@@ -44,7 +44,7 @@ export default function ExerciseSelectPage() {
             Choose your mission.
           </h1>
           <p className="text-xl text-muted max-w-xl">
-            Pick an exercise, set a target, start a session. Every rep earns XP.
+            Pick an exercise, set a target, start a session. Every rep earns XP and Fitcoins.
           </p>
         </div>
 

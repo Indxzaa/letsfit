@@ -81,8 +81,7 @@ export default function Hero() {
                 marginBottom: '2.5rem',
               }}
             >
-              Real-time AI posture analysis, immersive gamified workouts, Adventure Mode,
-              achievements, and daily challenges — making fitness more engaging every day.
+              Real time AI posture analysis, immersive gamified workout making fitness more engaging every day. ของเเทร่
             </motion.p>
 
             <motion.div

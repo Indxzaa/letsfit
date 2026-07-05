@@ -130,7 +130,7 @@ export default function WorkoutTogetherPage() {
             <div className="flex-1">
               <h2 className="font-display text-3xl font-bold text-app uppercase mb-3">Create Room</h2>
               <p className="text-muted text-sm leading-relaxed">
-                Become the host. A unique room code is generated instantly — share it with your friend.
+                Become the host. A unique room code is generated instantly share it with your friend.
               </p>
               {createError && (
                 <p className="text-xs font-semibold mt-3" style={{ color: 'var(--neo-red)' }}>{createError}</p>
