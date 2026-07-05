@@ -132,3 +132,44 @@ export async function dbRemovePlayer(
     .eq('user_id', userId);
   return { error: error?.message ?? null };
 }
+
+export async function dbUpdatePlayerReady(
+  roomId: string,
+  userId: string,
+  isReady: boolean,
+): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Supabase not configured.' };
+  const { error } = await sb
+    .from('room_players')
+    .update({ is_ready: isReady })
+    .eq('room_id', roomId)
+    .eq('user_id', userId);
+  return { error: error?.message ?? null };
+}
+
+export async function dbUpdateRoomSettings(
+  roomId: string,
+  settings: { selected_exercise?: string | null; duration_seconds?: number },
+): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Supabase not configured.' };
+  const { error } = await sb
+    .from('rooms')
+    .update(settings)
+    .eq('id', roomId);
+  return { error: error?.message ?? null };
+}
+
+export async function dbUpdateRoomStatus(
+  roomId: string,
+  status: string,
+): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Supabase not configured.' };
+  const { error } = await sb
+    .from('rooms')
+    .update({ status })
+    .eq('id', roomId);
+  return { error: error?.message ?? null };
+}

@@ -4,6 +4,7 @@
 import {
   dbInsertRoom, dbGetRoomByCode, dbGetRoomById, dbGetRoomPlayers,
   dbInsertPlayer, dbRemovePlayer, dbUpdateRoomHost, dbDeleteRoom,
+  dbUpdatePlayerReady, dbUpdateRoomSettings, dbUpdateRoomStatus,
   type RoomRow, type RoomPlayerRow,
 } from './db';
 import { MAX_PLAYERS, ROOM_CODE_LENGTH } from './constants';
@@ -126,4 +127,35 @@ export async function getRoomWithPlayers(
   if (playersErr) return { ok: false, error: playersErr };
 
   return { ok: true, data: { room, players } };
+}
+
+// ── Ready system ──────────────────────────────────────────────────────────
+
+export async function setReady(
+  roomId: string,
+  userId: string,
+  isReady: boolean,
+): Promise<ServiceResult<void>> {
+  const { error } = await dbUpdatePlayerReady(roomId, userId, isReady);
+  if (error) return { ok: false, error };
+  return { ok: true, data: undefined };
+}
+
+// ── Room settings (host only) ─────────────────────────────────────────────
+
+export async function updateRoomSettings(
+  roomId: string,
+  settings: { selected_exercise?: string | null; duration_seconds?: number },
+): Promise<ServiceResult<void>> {
+  const { error } = await dbUpdateRoomSettings(roomId, settings);
+  if (error) return { ok: false, error };
+  return { ok: true, data: undefined };
+}
+
+export async function startWorkout(
+  roomId: string,
+): Promise<ServiceResult<void>> {
+  const { error } = await dbUpdateRoomStatus(roomId, 'exercise_select');
+  if (error) return { ok: false, error };
+  return { ok: true, data: undefined };
 }

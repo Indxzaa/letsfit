@@ -1,11 +1,8 @@
-// React hooks for the Workout Together room system.
-// Handles loading, Realtime subscriptions, and leave-on-unmount cleanup.
-
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { getRoomWithPlayers, leaveRoom } from './service';
+import { getRoomWithPlayers, leaveRoom, setReady, updateRoomSettings, startWorkout } from './service';
 import type { RoomRow, RoomPlayerRow } from './db';
 
 export interface UseLobbyState {
@@ -15,28 +12,32 @@ export interface UseLobbyState {
   error: string | null;
 }
 
-/**
- * Loads a room by ID and subscribes to Realtime changes on room_players.
- * Automatically refreshes when a player joins or leaves.
- * Call `leave(userId)` to remove the current user and unsubscribe.
- */
 export function useLobby(roomId: string | null): UseLobbyState & {
-  leave: (userId: string) => Promise<void>;
-  clearError: () => void;
+  leave:              (userId: string) => Promise<void>;
+  toggleReady:        (userId: string, current: boolean) => Promise<void>;
+  changeExercise:     (exercise: string) => Promise<void>;
+  changeDuration:     (seconds: number) => Promise<void>;
+  triggerStart:       () => Promise<void>;
+  clearError:         () => void;
 } {
   const [state, setState] = useState<UseLobbyState>({
-    room: null,
-    players: [],
-    loading: true,
-    error: null,
+    room: null, players: [], loading: true, error: null,
   });
-  const channelRef = useRef<ReturnType<NonNullable<ReturnType<typeof getSupabase>>['channel']> | null>(null);
+  const channelRef = useRef<ReturnType<
+    NonNullable<ReturnType<typeof getSupabase>>['channel']
+  > | null>(null);
 
   const load = useCallback(async () => {
     if (!roomId) return;
     const result = await getRoomWithPlayers(roomId);
     if (result.ok) {
-      setState(s => ({ ...s, room: result.data.room, players: result.data.players, loading: false, error: null }));
+      setState(s => ({
+        ...s,
+        room: result.data.room,
+        players: result.data.players,
+        loading: false,
+        error: null,
+      }));
     } else {
       setState(s => ({ ...s, loading: false, error: result.error }));
     }
@@ -50,30 +51,21 @@ export function useLobby(roomId: string | null): UseLobbyState & {
     const sb = getSupabase();
     if (!sb) return;
 
-    // Subscribe to room_players changes for this room only
+    // Single channel — listens to both tables filtered by roomId
     const channel = sb
-      .channel(`room_players:${roomId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'room_players',
-          filter: `room_id=eq.${roomId}`,
-        },
-        () => {
-          // Re-fetch the full player list on any change (join/leave)
-          load();
-        },
-      )
+      .channel(`lobby:${roomId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'room_players',
+        filter: `room_id=eq.${roomId}`,
+      }, () => load())
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'rooms',
+        filter: `id=eq.${roomId}`,
+      }, () => load())
       .subscribe();
 
     channelRef.current = channel;
-
-    return () => {
-      sb.removeChannel(channel);
-      channelRef.current = null;
-    };
+    return () => { sb.removeChannel(channel); channelRef.current = null; };
   }, [roomId, load]);
 
   const leave = useCallback(async (userId: string) => {
@@ -86,9 +78,31 @@ export function useLobby(roomId: string | null): UseLobbyState & {
     await leaveRoom(roomId, userId);
   }, [roomId]);
 
-  const clearError = useCallback(() => {
-    setState(s => ({ ...s, error: null }));
-  }, []);
+  const toggleReady = useCallback(async (userId: string, current: boolean) => {
+    if (!roomId) return;
+    const result = await setReady(roomId, userId, !current);
+    if (!result.ok) setState(s => ({ ...s, error: result.error }));
+  }, [roomId]);
 
-  return { ...state, leave, clearError };
+  const changeExercise = useCallback(async (exercise: string) => {
+    if (!roomId) return;
+    const result = await updateRoomSettings(roomId, { selected_exercise: exercise });
+    if (!result.ok) setState(s => ({ ...s, error: result.error }));
+  }, [roomId]);
+
+  const changeDuration = useCallback(async (seconds: number) => {
+    if (!roomId) return;
+    const result = await updateRoomSettings(roomId, { duration_seconds: seconds });
+    if (!result.ok) setState(s => ({ ...s, error: result.error }));
+  }, [roomId]);
+
+  const triggerStart = useCallback(async () => {
+    if (!roomId) return;
+    const result = await startWorkout(roomId);
+    if (!result.ok) setState(s => ({ ...s, error: result.error }));
+  }, [roomId]);
+
+  const clearError = useCallback(() => setState(s => ({ ...s, error: null })), []);
+
+  return { ...state, leave, toggleReady, changeExercise, changeDuration, triggerStart, clearError };
 }
