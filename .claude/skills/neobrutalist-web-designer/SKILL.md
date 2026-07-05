@@ -698,6 +698,7 @@ Despite its boldness, neobrutalism can be highly accessible:
 
 Design research based on:
 - [NN/G: Neobrutalism Definition and Best Practices](https://www.nngroup.com/articles/neobrutalism/)
+
 - [Bejamas: Neubrutalism Web Design Trend](https://bejamas.com/blog/neubrutalism-web-design-trend)
 - [Onething Design: Neo Brutalism UI Trend](https://www.onething.design/post/neo-brutalism-ui-design-trend)
 - [Nestify: Principles of Neo Brutalism](https://nestify.io/blog/neo-brutalism-in-design/)
