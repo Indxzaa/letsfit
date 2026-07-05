@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { joinRoom } from '@/lib/multiplayer/service';
+import { joinRoomById } from '@/lib/multiplayer/service';
 import {
   getPendingInvites,
   sendInvite,
@@ -100,7 +100,7 @@ export function useInvites(userId: string | null): UseInvitesReturn {
     const result = await acceptInvite(inviteId);
     if (!result.ok) return { ok: false, error: result.error };
 
-    const joinResult = await joinRoom(result.data.roomId, userId, username);
+    const joinResult = await joinRoomById(result.data.roomId, userId, username);
     if (!joinResult.ok) return { ok: false, error: joinResult.error };
 
     setPendingInvites(prev => prev.filter(i => i.id !== inviteId));

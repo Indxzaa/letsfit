@@ -6,11 +6,13 @@ import { getSupabase } from '@/lib/supabase';
 // ── Event types ───────────────────────────────────────────────────────────
 
 export type WorkoutSessionEvent =
-  | { type: 'navigate';         roomId: string; exercise: string; mode: string }
+  | { type: 'navigate';         roomId: string; exercise: string; mode: string; gameMode: 'freestyle' | 'battle'; battleRounds?: number; repGoal: number }
   | { type: 'countdown';        value: number | 'GO!' }
-  | { type: 'start';            startedAt: number; exercise: string }
-  | { type: 'round_finish';     userId: string; reps: number }
-  | { type: 'round_complete';   playerA: { userId: string; reps: number }; playerB: { userId: string; reps: number } }
+  | { type: 'start';            startedAt: number; exercise: string; repGoal: number }
+  | { type: 'round_finish';     userId: string; reps: number; completionTimeMs: number }
+  | { type: 'round_complete';   playerA: { userId: string; reps: number; completionTimeMs: number }; playerB: { userId: string; reps: number; completionTimeMs: number }; winnerId: string | null }
+  | { type: 'exercise_change';  exercise: string; repGoal: number; roundIndex: number }
+  | { type: 'battle_result';    winnerId: string | null; playerA: { userId: string; wins: number; totalMs: number }; playerB: { userId: string; wins: number; totalMs: number } }
   | { type: 'exercise_selected'; exercise: string }
   | { type: 'pause';            pausedAt: number }
   | { type: 'resume';           resumedAt: number; adjustedStartAt: number }

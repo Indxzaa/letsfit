@@ -12,6 +12,8 @@ export interface RoomRow {
   status: string;
   selected_exercise: string | null;
   duration_seconds: number;
+  game_mode: 'freestyle' | 'battle';
+  battle_rounds: number;
   created_at: string;
   updated_at: string;
 }
@@ -150,7 +152,12 @@ export async function dbUpdatePlayerReady(
 
 export async function dbUpdateRoomSettings(
   roomId: string,
-  settings: { selected_exercise?: string | null; duration_seconds?: number },
+  settings: {
+    selected_exercise?: string | null;
+    duration_seconds?: number;
+    game_mode?: 'freestyle' | 'battle';
+    battle_rounds?: number;
+  },
 ): Promise<{ error: string | null }> {
   const sb = getSupabase();
   if (!sb) return { error: 'Supabase not configured.' };

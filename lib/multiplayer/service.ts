@@ -62,6 +62,31 @@ export async function createRoom(
   }
 }
 
+// ── Join room by ID (used by invite accept — no code needed) ─────────────────
+
+export async function joinRoomById(
+  roomId: string,
+  userId: string,
+  username: string,
+): Promise<ServiceResult<{ room: RoomRow }>> {
+  const { data: room, error: findErr } = await dbGetRoomById(roomId);
+  if (findErr) return { ok: false, error: findErr };
+  if (!room) return { ok: false, error: 'Room not found.' };
+
+  if (room.status !== 'lobby') return { ok: false, error: 'This room has already started.' };
+
+  const { data: players } = await dbGetRoomPlayers(room.id);
+  const alreadyJoined = players.some(p => p.user_id === userId);
+  if (alreadyJoined) return { ok: true, data: { room } };
+
+  if (players.length >= MAX_PLAYERS) return { ok: false, error: 'This room is full.' };
+
+  const { error: insertErr } = await dbInsertPlayer(room.id, userId, username);
+  if (insertErr) return { ok: false, error: insertErr };
+
+  return { ok: true, data: { room } };
+}
+
 // ── Join room ─────────────────────────────────────────────────────────────
 
 export async function joinRoom(
@@ -145,7 +170,12 @@ export async function setReady(
 
 export async function updateRoomSettings(
   roomId: string,
-  settings: { selected_exercise?: string | null; duration_seconds?: number },
+  settings: {
+    selected_exercise?: string | null;
+    duration_seconds?: number;
+    game_mode?: 'freestyle' | 'battle';
+    battle_rounds?: number;
+  },
 ): Promise<ServiceResult<void>> {
   const { error } = await dbUpdateRoomSettings(roomId, settings);
   if (error) return { ok: false, error };

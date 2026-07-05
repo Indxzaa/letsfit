@@ -13,12 +13,13 @@ export interface UseLobbyState {
 }
 
 export function useLobby(roomId: string | null): UseLobbyState & {
-  leave:              (userId: string) => Promise<void>;
-  toggleReady:        (userId: string, current: boolean) => Promise<void>;
-  changeExercise:     (exercise: string) => Promise<void>;
-  changeDuration:     (seconds: number) => Promise<void>;
-  triggerStart:       () => Promise<void>;
-  clearError:         () => void;
+  leave:             (userId: string) => Promise<void>;
+  toggleReady:       (userId: string, current: boolean) => Promise<void>;
+  changeExercise:    (exercise: string) => Promise<void>;
+  changeGameMode:    (mode: 'freestyle' | 'battle') => Promise<void>;
+  changeBattleRounds:(rounds: number) => Promise<void>;
+  triggerStart:      () => Promise<void>;
+  clearError:        () => void;
 } {
   const [state, setState] = useState<UseLobbyState>({
     room: null, players: [], loading: true, error: null,
@@ -51,7 +52,6 @@ export function useLobby(roomId: string | null): UseLobbyState & {
     const sb = getSupabase();
     if (!sb) return;
 
-    // Single channel — listens to both tables filtered by roomId
     const channel = sb
       .channel(`lobby:${roomId}`)
       .on('postgres_changes', {
@@ -90,9 +90,15 @@ export function useLobby(roomId: string | null): UseLobbyState & {
     if (!result.ok) setState(s => ({ ...s, error: result.error }));
   }, [roomId]);
 
-  const changeDuration = useCallback(async (seconds: number) => {
+  const changeGameMode = useCallback(async (mode: 'freestyle' | 'battle') => {
     if (!roomId) return;
-    const result = await updateRoomSettings(roomId, { duration_seconds: seconds });
+    const result = await updateRoomSettings(roomId, { game_mode: mode });
+    if (!result.ok) setState(s => ({ ...s, error: result.error }));
+  }, [roomId]);
+
+  const changeBattleRounds = useCallback(async (rounds: number) => {
+    if (!roomId) return;
+    const result = await updateRoomSettings(roomId, { battle_rounds: rounds });
     if (!result.ok) setState(s => ({ ...s, error: result.error }));
   }, [roomId]);
 
@@ -104,5 +110,10 @@ export function useLobby(roomId: string | null): UseLobbyState & {
 
   const clearError = useCallback(() => setState(s => ({ ...s, error: null })), []);
 
-  return { ...state, leave, toggleReady, changeExercise, changeDuration, triggerStart, clearError };
+  return {
+    ...state,
+    leave, toggleReady, changeExercise,
+    changeGameMode, changeBattleRounds,
+    triggerStart, clearError,
+  };
 }
