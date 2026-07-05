@@ -15,7 +15,7 @@ export function applyDevAccount(p: Progress): Progress {
   return {
     ...p,
     xp: 500000,
-    fitCoins: 676767,
+    fitCoins: 6767676767,
     totalSessions: 6767,
     totalReps: 6767,
     currentStreak: 67,

@@ -81,7 +81,7 @@ CREATE POLICY "presence_select" ON public.presence
   FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY "presence_insert" ON public.presence
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id)  ;
 
 CREATE POLICY "presence_update" ON public.presence
   FOR UPDATE USING (auth.uid() = user_id);
