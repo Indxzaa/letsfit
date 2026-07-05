@@ -7,15 +7,15 @@ export default function Footer() {
         <div
           className="flex flex-col sm:flex-row items-center justify-between gap-3"
         >
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
-            © 2026 LetsFit. Built by Mintra Cholatan (Team Leader &amp; Web Developer), Korawich Borisut (Helper), and Thapana Wongthep (Helper).
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'rgb(255, 255, 255)', lineHeight: 1.6 }}>
+            © 2026 LetsFit. Built by Mintra Cholatan (Team Leader &amp; Web Developer), Korawich Borisut (Collaborator), and Thapana Wongthep (Collaborator).
           </p>
           <div className="flex items-center gap-5 shrink-0">
             {['Privacy', 'Terms'].map(l => (
               <a
                 key={l}
                 href="#"
-                style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)' }}
+                style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'rgb(255, 255, 255)' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
               >

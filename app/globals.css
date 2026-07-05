@@ -113,7 +113,7 @@
 }
 
 .neo-btn-ghost:hover {
-  background: var(--neo-surface);
+  background: var(--neo-cream);
   color: var(--neo-black);
   box-shadow: var(--neo-shadow-sm);
   transform: translate(-1px, -1px);
