@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Users, UserPlus, ArrowRight, Zap, Trophy, Wifi } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, ArrowRight, Zap, Trophy, Wifi, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/components/AuthProvider';
+import { createRoom, joinRoom } from '@/lib/multiplayer/service';
 
 const FEATURES = [
   { icon: <Zap className="w-4 h-4" />,    text: 'Real-time rep sync' },
@@ -15,23 +17,43 @@ const FEATURES = [
 
 export default function WorkoutTogetherPage() {
   const router = useRouter();
-  const [joinCode, setJoinCode] = useState('');
-  const [joinError, setJoinError] = useState('');
+  const { user } = useAuth();
 
-  const handleCreate = () => router.push('/workout-together/lobby?mode=create');
+  const [joinCode, setJoinCode]     = useState('');
+  const [joinError, setJoinError]   = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
+  const [joinLoading, setJoinLoading]     = useState(false);
+  const [createError, setCreateError]     = useState('');
 
-  const handleJoin = () => {
+  const username = (user?.user_metadata?.username as string | undefined) ?? user?.email ?? 'Player';
+
+  const handleCreate = async () => {
+    if (!user) { setCreateError('Sign in to create a room.'); return; }
+    setCreateLoading(true);
+    setCreateError('');
+    const result = await createRoom(user.id, username);
+    setCreateLoading(false);
+    if (!result.ok) { setCreateError(result.error); return; }
+    router.push(`/workout-together/lobby?mode=create&roomId=${result.data.room.id}&code=${result.data.code}`);
+  };
+
+  const handleJoin = async () => {
     const code = joinCode.trim().toUpperCase();
     if (!code) { setJoinError('Enter a room code to join.'); return; }
+    if (!user) { setJoinError('Sign in to join a room.'); return; }
+    setJoinLoading(true);
     setJoinError('');
-    router.push(`/workout-together/lobby?mode=join&code=${code}`);
+    const result = await joinRoom(code, user.id, username);
+    setJoinLoading(false);
+    if (!result.ok) { setJoinError(result.error); return; }
+    router.push(`/workout-together/lobby?mode=join&roomId=${result.data.room.id}&code=${code}`);
   };
 
   return (
     <div className="min-h-screen page-bg">
       <Navbar />
 
-      {/* Subtle dot-grid decoration */}
+      {/* Dot-grid decoration */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -54,7 +76,7 @@ export default function WorkoutTogetherPage() {
           transition={{ duration: 0.4 }}
           className="mb-14 text-center"
         >
-          <div className="neo-badge mb-6 mx-auto w-fit">Multiplayer · Phase 1</div>
+          <div className="neo-badge mb-6 mx-auto w-fit">Multiplayer · Phase 2</div>
           <h1
             className="font-display font-bold text-app uppercase leading-none mb-5"
             style={{ fontSize: 'clamp(3rem, 9vw, 6rem)', letterSpacing: '-0.02em' }}
@@ -64,8 +86,6 @@ export default function WorkoutTogetherPage() {
           <p className="text-lg text-muted max-w-sm mx-auto leading-relaxed mb-8">
             Pick an exercise. Invite a friend. Race to the finish.
           </p>
-
-          {/* Feature pills */}
           <div className="flex flex-wrap items-center justify-center gap-3">
             {FEATURES.map(f => (
               <div
@@ -87,49 +107,43 @@ export default function WorkoutTogetherPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            whileHover={{ y: -6, boxShadow: '8px 8px 0 var(--neo-black)' }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            style={{ transition: 'none' }}
+            whileHover={{ y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            className="neo-card p-8 cursor-pointer flex flex-col gap-6"
+            style={{ background: 'var(--card-bg-green)', borderRadius: 0 }}
+            onClick={!createLoading ? handleCreate : undefined}
           >
-            <motion.div
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              onClick={handleCreate}
-              className="neo-card p-8 cursor-pointer flex flex-col gap-6 h-full"
-              style={{ background: 'var(--card-bg-green)', borderRadius: 0 }}
-            >
-              {/* Icon */}
-              <div className="flex items-start justify-between">
-                <div
-                  className="w-16 h-16 flex items-center justify-center neo-card-accent"
-                  style={{ borderRadius: 0 }}
-                >
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div
-                  className="text-[10px] font-black uppercase tracking-widest px-2 py-1"
-                  style={{ background: 'var(--neo-accent)', border: '2px solid #000', color: '#fff', borderRadius: 0 }}
-                >
-                  Host
-                </div>
+            <div className="flex items-start justify-between">
+              <div className="w-16 h-16 flex items-center justify-center neo-card-accent" style={{ borderRadius: 0 }}>
+                {createLoading
+                  ? <Loader2 className="w-8 h-8 text-white animate-spin" />
+                  : <Users className="w-8 h-8 text-white" />}
               </div>
-
-              <div className="flex-1">
-                <h2 className="font-display text-3xl font-bold text-app uppercase mb-3">
-                  Create Room
-                </h2>
-                <p className="text-muted text-sm leading-relaxed">
-                  Become the host. A room code is generated instantly — share it with your friend and start training together.
-                </p>
-              </div>
-
               <div
-                className="w-full py-3.5 neo-btn neo-btn-primary flex items-center justify-center gap-2 font-black text-sm uppercase tracking-wider"
-                style={{ borderRadius: 0 }}
+                className="text-[10px] font-black uppercase tracking-widest px-2 py-1"
+                style={{ background: 'var(--neo-accent)', border: '2px solid #000', color: '#fff', borderRadius: 0 }}
               >
-                Create a Room <ArrowRight className="w-4 h-4" />
+                Host
               </div>
-            </motion.div>
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-3xl font-bold text-app uppercase mb-3">Create Room</h2>
+              <p className="text-muted text-sm leading-relaxed">
+                Become the host. A unique room code is generated instantly — share it with your friend.
+              </p>
+              {createError && (
+                <p className="text-xs font-semibold mt-3" style={{ color: 'var(--neo-red)' }}>{createError}</p>
+              )}
+            </div>
+            <div
+              className="w-full py-3.5 neo-btn neo-btn-primary flex items-center justify-center gap-2 font-black text-sm uppercase tracking-wider pointer-events-none"
+              style={{ borderRadius: 0, opacity: createLoading ? 0.7 : 1 }}
+            >
+              {createLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {createLoading ? 'Creating…' : 'Create a Room'}
+              {!createLoading && <ArrowRight className="w-4 h-4" />}
+            </div>
           </motion.div>
 
           {/* Join Room */}
@@ -137,80 +151,67 @@ export default function WorkoutTogetherPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.18 }}
-            whileHover={{ y: -6, boxShadow: '8px 8px 0 var(--neo-black)' }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            style={{ transition: 'none' }}
+            className="neo-card p-8 flex flex-col gap-6"
+            style={{ background: 'var(--card-bg-blue)', borderRadius: 0 }}
           >
-            <motion.div
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="neo-card p-8 flex flex-col gap-6 h-full"
-              style={{ background: 'var(--card-bg-blue)', borderRadius: 0 }}
-            >
-              <div className="flex items-start justify-between">
-                <div
-                  className="w-16 h-16 flex items-center justify-center"
-                  style={{
-                    background: 'var(--neo-blue)',
-                    border: 'var(--neo-border)',
-                    boxShadow: 'var(--neo-shadow)',
-                    borderRadius: 0,
-                  }}
-                >
-                  <UserPlus className="w-8 h-8 text-white" />
-                </div>
-                <div
-                  className="text-[10px] font-black uppercase tracking-widest px-2 py-1"
-                  style={{ border: '2px solid var(--neo-blue)', color: 'var(--neo-blue)', borderRadius: 0 }}
-                >
-                  Guest
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <h2 className="font-display text-3xl font-bold text-app uppercase mb-3">
-                  Join Room
-                </h2>
-                <p className="text-muted text-sm leading-relaxed mb-5">
-                  Got a code? Enter it below to join a friend's session and start competing immediately.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <input
-                    className="neo-input text-sm uppercase tracking-[0.3em] font-black"
-                    placeholder="Enter code (e.g. LFIT42)"
-                    value={joinCode}
-                    onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
-                    onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                    maxLength={8}
-                    style={{ borderRadius: 0 }}
-                  />
-                  {joinError && (
-                    <p className="text-xs font-semibold" style={{ color: 'var(--neo-red)' }}>{joinError}</p>
-                  )}
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.97, y: 1 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                onClick={handleJoin}
-                className="w-full py-3.5 font-display font-black uppercase tracking-wider text-sm cursor-pointer flex items-center justify-center gap-2"
-                style={{
-                  background: 'var(--neo-blue)',
-                  border: 'var(--neo-border)',
-                  boxShadow: 'var(--neo-shadow)',
-                  color: '#fff',
-                  borderRadius: 0,
-                }}
+            <div className="flex items-start justify-between">
+              <div
+                className="w-16 h-16 flex items-center justify-center"
+                style={{ background: 'var(--neo-blue)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)', borderRadius: 0 }}
               >
-                Join Room <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </motion.div>
+                <UserPlus className="w-8 h-8 text-white" />
+              </div>
+              <div
+                className="text-[10px] font-black uppercase tracking-widest px-2 py-1"
+                style={{ border: '2px solid var(--neo-blue)', color: 'var(--neo-blue)', borderRadius: 0 }}
+              >
+                Guest
+              </div>
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-3xl font-bold text-app uppercase mb-3">Join Room</h2>
+              <p className="text-muted text-sm leading-relaxed mb-5">
+                Got a code? Enter it below to join a friend's session and start competing immediately.
+              </p>
+              <div className="flex flex-col gap-2">
+                <input
+                  className="neo-input text-sm uppercase tracking-[0.3em] font-black"
+                  placeholder="Enter code (e.g. AB7KQ2)"
+                  value={joinCode}
+                  onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                  maxLength={8}
+                  style={{ borderRadius: 0 }}
+                />
+                {joinError && (
+                  <p className="text-xs font-semibold" style={{ color: 'var(--neo-red)' }}>{joinError}</p>
+                )}
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97, y: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              onClick={handleJoin}
+              disabled={joinLoading}
+              className="w-full py-3.5 font-display font-black uppercase tracking-wider text-sm cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+              style={{
+                background: 'var(--neo-blue)',
+                border: 'var(--neo-border)',
+                boxShadow: 'var(--neo-shadow)',
+                color: '#fff',
+                borderRadius: 0,
+              }}
+            >
+              {joinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {joinLoading ? 'Joining…' : 'Join Room'}
+              {!joinLoading && <ArrowRight className="w-4 h-4" />}
+            </motion.button>
           </motion.div>
         </div>
 
         <p className="text-center text-xs text-subtle font-semibold uppercase tracking-widest">
-          Phase 1 Preview · Real-time sync in Phase 2
+          Live rooms · Real Supabase backend
         </p>
       </div>
     </div>
