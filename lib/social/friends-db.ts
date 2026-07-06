@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
+import { getAvatarPublicUrl } from '@/lib/profilePicture';
 import type { FriendRow, FriendWithPresence, FriendRelationStatus, UserSearchResult } from '@/types/social';
 
 type DbResult<T> = { data: T | null; error: string | null };
@@ -59,7 +60,7 @@ export async function dbGetFriends(userId: string): Promise<DbResult<FriendWithP
       profile: {
         id: otherId,
         username: profile?.username ?? 'Unknown',
-        avatar: (profile?.data?.avatar as string | null) ?? null,
+        avatar: getAvatarPublicUrl(otherId),
       },
     };
   });
@@ -191,7 +192,7 @@ export async function dbSearchProfiles(
     return {
       id: p.id,
       username: p.username ?? 'Unknown',
-      avatar: (p.data?.avatar as string | null) ?? null,
+      avatar: getAvatarPublicUrl(p.id),
       relation: entry?.relation ?? 'none',
       friendRowId: entry?.friendRowId ?? null,
     };

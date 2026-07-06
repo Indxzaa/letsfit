@@ -46,6 +46,7 @@ export type Progress = {
   calendarClaimedDays: number[];
   calendarMonth: string;
   calendarLastClaimDate: string;
+  hasAvatar?: boolean; // true once the user has uploaded a profile picture
 };
 
 const DEFAULT_PROGRESS: Progress = {

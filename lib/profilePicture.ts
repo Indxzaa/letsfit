@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
+import { loadProgress, saveProgress } from '@/lib/progress';
 
 const BUCKET = 'avatars';
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -14,7 +15,12 @@ export function validateAvatarFile(file: File): string | null {
   return null;
 }
 
-/** Upload a pre-cropped blob (already 256×256 WebP) from the crop modal */
+/**
+ * Upload a pre-cropped blob to Supabase Storage.
+ * The avatar URL is derived deterministically from userId, so we only need
+ * to record a `hasAvatar: true` flag in the user's Progress (which profileSync
+ * already syncs to profiles.data). No separate DB column is required.
+ */
 export async function uploadAvatarBlob(userId: string, blob: Blob): Promise<UploadResult> {
   const sb = getSupabase();
   if (!sb) return { ok: false, error: 'Supabase not configured.' };
@@ -26,46 +32,47 @@ export async function uploadAvatarBlob(userId: string, blob: Blob): Promise<Uplo
 
   if (error) return { ok: false, error: error.message };
 
+  // Mark in progress so the flag survives refresh via profileSync
+  saveProgress({ ...loadProgress(), hasAvatar: true });
+
   const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+  // Cache-bust so the new image loads immediately in this session
   const url = `${data.publicUrl}?t=${Date.now()}`;
-
-  // Write to dedicated avatar_url column — NOT inside profiles.data.
-  // profileSync.pushRemote writes profiles.data (the progress JSONB) and
-  // would silently overwrite any avatarUrl stored there. The avatar_url
-  // column is never touched by profileSync, so it persists across syncs.
-  const { error: updateErr } = await sb
-    .from('profiles')
-    .update({ avatar_url: url })
-    .eq('id', userId);
-
-  if (updateErr) {
-    // Non-fatal — Storage upload succeeded; log and continue
-    console.error('[uploadAvatarBlob] Failed to persist avatar_url:', updateErr.message);
-  }
-
   return { ok: true, url };
 }
 
-/** Load the persisted avatar URL from the dedicated column */
-export async function loadAvatarUrlFromProfile(userId: string): Promise<string | null> {
-  const sb = getSupabase();
-  if (!sb) return null;
-  try {
-    const { data: profile } = await sb
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', userId)
-      .single();
-    return (profile?.avatar_url as string | null) ?? null;
-  } catch {
-    return null;
+/**
+ * Returns the avatar URL for userId.
+ * For the current user: checks progress.hasAvatar (synced by profileSync).
+ * For other users: always returns the deterministic storage URL so UserAvatar
+ * can attempt to load it; onError fallback shows the letter avatar if missing.
+ */
+export function getAvatarUrl(userId: string, isCurrentUser = false): string | null {
+  if (isCurrentUser) {
+    if (typeof window === 'undefined') return null;
+    const p = loadProgress();
+    if (!p.hasAvatar) return null;
   }
+  return getAvatarPublicUrl(userId);
 }
 
-/** Synchronous public storage URL — use only as a last-resort fallback */
+/** Synchronous public storage URL builder — does NOT verify the file exists */
 export function getAvatarPublicUrl(userId: string): string {
   const sb = getSupabase();
   if (!sb) return '';
   const { data } = sb.storage.from(BUCKET).getPublicUrl(`${userId}/avatar.webp`);
   return data.publicUrl;
+}
+
+// Keep for backwards-compat with any remaining callers
+export async function loadAvatarUrlFromProfile(userId: string): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    const { loadProgress: lp } = await import('@/lib/progress');
+    const p = lp();
+    if (!p.hasAvatar) return null;
+    return getAvatarPublicUrl(userId);
+  } catch {
+    return null;
+  }
 }

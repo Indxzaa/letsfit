@@ -5,7 +5,6 @@ import { PresenceDot } from '@/components/social/presence/PresenceDot';
 import { ACTIVITY_LABELS } from '@/types/social';
 import type { FriendWithPresence, PresencePayload } from '@/types/social';
 import UserAvatar from '@/components/UserAvatar';
-import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface FriendCardProps {
   friend: FriendWithPresence;
@@ -18,11 +17,13 @@ interface FriendCardProps {
 export function FriendCard({ friend, livePresence, onInvite, canInvite = false, isLast = false }: FriendCardProps) {
   const { profile } = friend;
   const status = livePresence?.status ?? 'offline';
-  const { avatarUrl } = useAvatarUrl(profile.id);
+  // avatar comes from friends-db which sets getAvatarPublicUrl(id);
+  // UserAvatar.onError handles missing files and shows letter fallback
+  const photoUrl = profile.avatar ?? null;
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: isLast ? 'none' : '2px solid var(--neo-black)' }}>
-      <UserAvatar photoUrl={avatarUrl} letter={profile.username} size="sm" />
+      <UserAvatar photoUrl={photoUrl} letter={profile.username} size="sm" />
       <div className="flex-1 min-w-0">
         <p className="font-display text-sm font-black uppercase tracking-wide text-app truncate">{profile.username}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
