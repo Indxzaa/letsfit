@@ -48,7 +48,7 @@ function VideoEl({ stream, muted = false, mirror = false }: {
   }, [stream]);
   return (
     <video ref={ref} autoPlay playsInline muted={muted}
-      className="w-full h-full object-cover"
+      className="absolute inset-0 w-full h-full object-cover"
       style={{ transform: mirror ? 'scaleX(-1)' : undefined }} />
   );
 }
