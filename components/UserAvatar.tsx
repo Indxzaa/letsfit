@@ -1,23 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
+import { getShopItem } from '@/lib/shop';
+import type { Progress } from '@/lib/progress';
 
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
-const DIMS: Record<Size, { px: number; text: string }> = {
-  sm: { px: 28,  text: 'text-xs' },
-  md: { px: 40,  text: 'text-base' },
-  lg: { px: 64,  text: 'text-2xl' },
-  xl: { px: 96,  text: 'text-4xl' },
+const DIMS: Record<Size, { px: number; text: string; pad: string; aura: string }> = {
+  sm: { px: 28,  text: 'text-xs',   pad: 'p-[2px]', aura: '-inset-1.5 blur-sm' },
+  md: { px: 40,  text: 'text-base', pad: 'p-[2px]', aura: '-inset-2 blur-md' },
+  lg: { px: 64,  text: 'text-2xl',  pad: 'p-[3px]', aura: '-inset-3 blur-lg' },
+  xl: { px: 96,  text: 'text-4xl',  pad: 'p-[4px]', aura: '-inset-4 blur-xl' },
+};
+
+const BORDER_MAP: Record<string, string> = {
+  neon: 'ba-neon', crystal: 'ba-crystal', royal: 'ba-royal',
+  flame: 'ba-flame', galaxy: 'ba-galaxy', electric: 'ba-electric', floral: 'ba-floral',
 };
 
 interface UserAvatarProps {
-  /** URL from Supabase Storage (null shows letter fallback) */
   photoUrl?: string | null;
-  /** Fallback letter — first char of username or email */
   letter?: string;
   size?: Size;
-  /** Extra className on the outer wrapper */
+  progress?: Progress | null;
   className?: string;
 }
 
@@ -25,12 +31,25 @@ export default function UserAvatar({
   photoUrl,
   letter = '?',
   size = 'md',
+  progress,
   className = '',
 }: UserAvatarProps) {
-  const { px, text } = DIMS[size];
-  const dim = `${px}px`;
+  const [imgError, setImgError] = useState(false);
 
-  const sharedStyle: React.CSSProperties = {
+  const equipped   = progress?.equippedItems ?? {};
+  const borderItem = getShopItem(equipped.border ?? 'border-none');
+  const auraItem   = getShopItem(equipped.aura   ?? 'aura-none');
+
+  const borderValue = borderItem?.value ?? 'none';
+  const auraValue   = auraItem?.value   ?? '';
+  const hasBorder   = !!BORDER_MAP[borderValue];
+  const borderClass = hasBorder ? `${DIMS[size].pad} rounded-full ${BORDER_MAP[borderValue]}` : '';
+
+  const { px, text, aura } = DIMS[size];
+  const dim = `${px}px`;
+  const showPhoto = !!(photoUrl && !imgError);
+
+  const circleStyle: React.CSSProperties = {
     width: dim,
     height: dim,
     borderRadius: '50%',
@@ -41,29 +60,38 @@ export default function UserAvatar({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: photoUrl ? '#000' : 'var(--neo-accent)',
+    background: showPhoto ? '#000' : 'var(--neo-accent)',
   };
 
-  return (
-    <div className={`inline-flex ${className}`} style={sharedStyle}>
-      {photoUrl ? (
+  const inner = (
+    <div style={circleStyle}>
+      {showPhoto ? (
         <Image
-          src={photoUrl}
+          src={photoUrl!}
           alt="Profile"
           width={px}
           height={px}
           className="w-full h-full object-cover"
           style={{ borderRadius: '50%' }}
           unoptimized
+          onError={() => setImgError(true)}
         />
       ) : (
-        <span
-          className={`font-display font-black text-white uppercase select-none ${text}`}
-          aria-hidden
-        >
+        <span className={`font-display font-black text-white uppercase select-none ${text}`} aria-hidden>
           {letter.charAt(0)}
         </span>
       )}
+    </div>
+  );
+
+  return (
+    <div className={`inline-flex relative ${className}`}>
+      {/* Aura (hidden at sm) */}
+      {auraValue && size !== 'sm' && (
+        <div className={`absolute ${aura} rounded-full aura-${auraValue} pointer-events-none`} aria-hidden />
+      )}
+      {/* Border wrapper or bare circle */}
+      {hasBorder ? <div className={borderClass}>{inner}</div> : inner}
     </div>
   );
 }

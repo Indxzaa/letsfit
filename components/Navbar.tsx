@@ -8,7 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
 import { ProfilePictureModal } from './ProfilePictureModal';
-import { getAvatarPublicUrl } from '@/lib/profilePicture';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { getUsername, setUsername } from '@/lib/profileSync';
 import { useTheme } from './ThemeProvider';
@@ -37,7 +37,7 @@ export default function Navbar() {
   const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const { avatarUrl: photoUrl, setAvatarUrl: setPhotoUrl } = useAvatarUrl(user?.id ?? null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
@@ -54,12 +54,6 @@ export default function Navbar() {
     });
     return unsub;
   }, []);
-
-  // Load avatar photo URL when user signs in
-  useEffect(() => {
-    if (user?.id) setPhotoUrl(getAvatarPublicUrl(user.id) || null);
-    else setPhotoUrl(null);
-  }, [user?.id]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {

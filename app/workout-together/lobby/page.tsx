@@ -9,6 +9,8 @@ import {
   Loader2, AlertCircle, Wifi, WifiOff, CheckCircle2, UserPlus, Swords, Zap, Trophy,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import UserAvatar from '@/components/UserAvatar';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useAuth } from '@/components/AuthProvider';
 import { useLobby } from '@/lib/multiplayer/hooks';
 import { MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
@@ -28,6 +30,39 @@ function lobbyStatusColor(playerCount: number, allReady: boolean): string {
   if (playerCount < 2) return 'var(--text-subtle)';
   if (!allReady)       return '#d97706';
   return '#22c55e';
+}
+
+function LobbyPlayerRow({ player, isThisHost, isMe, isReady, hasDivider }: {
+  player: { id: string; user_id: string; username: string; is_ready: boolean };
+  isThisHost: boolean; isMe: boolean; isReady: boolean; hasDivider: boolean;
+}) {
+  const { avatarUrl } = useAvatarUrl(player.user_id);
+  return (
+    <div className="flex items-center gap-3 px-5 py-4"
+      style={{ borderBottom: hasDivider ? '2px solid var(--neo-black)' : undefined }}>
+      <UserAvatar photoUrl={avatarUrl} letter={player.username} size="md" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-display text-sm font-bold text-app uppercase truncate">{player.username}{isMe ? ' (You)' : ''}</span>
+          {isThisHost && (
+            <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5"
+              style={{ background: 'var(--neo-accent)', border: '1px solid #000', color: '#fff', borderRadius: 0 }}>Host</span>
+          )}
+        </div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-subtle mt-0.5">{isThisHost ? 'Room creator' : 'Guest'}</div>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div key={isReady ? 'ready' : 'waiting'}
+          initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 600, damping: 28 }}
+          className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
+          style={{ background: isReady ? '#22c55e' : 'var(--neo-surface)', border: isReady ? '2px solid #000' : 'var(--neo-border-2)', boxShadow: isReady ? '2px 2px 0 #000' : 'none', color: isReady ? '#fff' : 'var(--neo-black)', borderRadius: 0 }}>
+          {isReady && <CheckCircle2 className="w-3 h-3" />}
+          {isReady ? 'Ready' : 'Waiting'}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
 }
 
 function LobbyContent() {
@@ -375,41 +410,14 @@ function LobbyContent() {
                     const isThisHost = p.user_id === room?.host_user_id;
                     const isMe = p.user_id === user?.id;
                     return (
-                      <div key={p.id} className="flex items-center gap-3 px-5 py-4"
-                        style={{ borderBottom: i < players.length - 1 ? '2px solid var(--neo-black)' : undefined }}>
-                        <div className="w-11 h-11 flex items-center justify-center shrink-0"
-                          style={{ background: isThisHost ? 'var(--neo-accent)' : 'var(--neo-blue)', border: '3px solid #000', boxShadow: '2px 2px 0 #000', borderRadius: 0, color: '#fff' }}>
-                          {isThisHost ? <Crown className="w-5 h-5" /> : <Users className="w-5 h-5" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-display text-sm font-bold text-app uppercase truncate">{p.username}{isMe ? ' (You)' : ''}</span>
-                            {isThisHost && (
-                              <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5"
-                                style={{ background: 'var(--neo-accent)', border: '1px solid #000', color: '#fff', borderRadius: 0 }}>Host</span>
-                            )}
-                          </div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-subtle mt-0.5">{isThisHost ? 'Room creator' : 'Guest'}</div>
-                        </div>
-                        <AnimatePresence mode="wait">
-                          <motion.div
-                            key={p.is_ready ? 'ready' : 'waiting'}
-                            initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }}
-                            transition={{ type: 'spring', stiffness: 600, damping: 28 }}
-                            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
-                            style={{
-                              background: p.is_ready ? '#22c55e' : 'var(--neo-surface)',
-                              border: p.is_ready ? '2px solid #000' : 'var(--neo-border-2)',
-                              boxShadow: p.is_ready ? '2px 2px 0 #000' : 'none',
-                              color: p.is_ready ? '#fff' : 'var(--neo-black)',
-                              borderRadius: 0,
-                            }}
-                          >
-                            {p.is_ready && <CheckCircle2 className="w-3 h-3" />}
-                            {p.is_ready ? 'Ready' : 'Waiting'}
-                          </motion.div>
-                        </AnimatePresence>
-                      </div>
+                      <LobbyPlayerRow
+                        key={p.id}
+                        player={p}
+                        isThisHost={isThisHost}
+                        isMe={isMe}
+                        isReady={p.is_ready}
+                        hasDivider={i < players.length - 1}
+                      />
                     );
                   })}
 
