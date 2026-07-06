@@ -82,10 +82,13 @@ function MediaDeniedGate({ error, onRetry }: { error: string; onRetry: () => voi
 }
 
 // CameraPanel now accepts an optional detectionCanvas ref to overlay on the local feed
-function CameraPanel({ label, stream, isLocal, accent, peerState, controls, detectionCanvasRef }: {
+function CameraPanel({ label, stream, isLocal, accent, peerState, controls, detectionCanvasRef, repCount, repGoal, repFlash, formScore, formFeedback, statusBadge }: {
   label: string; stream: MediaStream | null; isLocal: boolean;
   accent: string; peerState?: PeerConnectionState; controls?: React.ReactNode;
   detectionCanvasRef?: React.RefObject<HTMLCanvasElement | null>;
+  repCount?: number; repGoal?: number; repFlash?: boolean;
+  formScore?: number; formFeedback?: string;
+  statusBadge?: React.ReactNode;
 }) {
   const hasVideo = !!stream && stream.getVideoTracks().some(t => t.enabled);
   const color = peerState ? connColor(peerState) : accent;
@@ -108,11 +111,10 @@ function CameraPanel({ label, stream, isLocal, accent, peerState, controls, dete
           </div>
         )}
       </div>
-      <div className="relative flex-1 min-h-0 bg-black" style={{ minHeight: '240px' }}>
+      <div className="relative flex-1 min-h-0 bg-black" style={{ minHeight: 0, aspectRatio: '16/9' }}>
         {hasVideo ? (
           <>
             <VideoEl stream={stream} muted={isLocal} mirror={isLocal} />
-            {/* AI skeleton overlay — only for local panel */}
             {detectionCanvasRef && (
               <canvas
                 ref={detectionCanvasRef}
@@ -134,8 +136,47 @@ function CameraPanel({ label, stream, isLocal, accent, peerState, controls, dete
             </span>
           </div>
         )}
+
+        {/* Rep counter overlay — bottom-left */}
+        {repCount !== undefined && (
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between px-3 py-2"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 100%)' }}>
+            <div>
+              <motion.div key={repCount}
+                initial={{ scale: repFlash ? 1.25 : 1 }} animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+                className="font-display font-black tabular-nums leading-none"
+                style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', color: repFlash ? accent : '#fff' }}>
+                {repCount}
+              </motion.div>
+              <div className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                {isLocal ? 'Your Reps' : "Friend's Reps"}
+                {repGoal ? ` / ${repGoal}` : ''}
+              </div>
+              {repGoal && repGoal > 0 && (
+                <div className="mt-1 w-24 h-1" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.min(100, (repCount / repGoal) * 100)}%`,
+                    background: repCount >= repGoal ? '#22c55e' : accent,
+                    transition: 'width 0.3s ease',
+                  }} />
+                </div>
+              )}
+              {formScore !== undefined && formScore > 0 && (
+                <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5"
+                  style={{ color: formScore >= 80 ? '#22c55e' : formScore >= 50 ? '#d97706' : '#ef4444' }}>
+                  {formScore}% · {formFeedback}
+                </div>
+              )}
+            </div>
+            {statusBadge && <div className="flex-shrink-0">{statusBadge}</div>}
+          </div>
+        )}
+
+        {/* Camera controls — bottom-right */}
         {controls && (
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2">{controls}</div>
+          <div className="absolute bottom-3 right-3 flex gap-1.5">{controls}</div>
         )}
       </div>
     </div>
@@ -527,13 +568,39 @@ function SessionContent() {
         </div>
       )}
 
-      {/* Camera panels */}
+      {/* Camera panels — flex-1 fills remaining screen, cameras have 16:9 aspect ratio */}
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 p-2 sm:p-3" style={{ minHeight: 0 }}>
-        {/* You — detection canvas overlaid on WebRTC video */}
+        {/* You */}
         <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.35 }} className="flex flex-col">
-          <CameraPanel label="You" stream={localStream} isLocal accent="var(--neo-accent)"
+          transition={{ duration: 0.35 }} className="flex flex-col min-h-0">
+          <CameraPanel
+            label="You" stream={localStream} isLocal accent="var(--neo-accent)"
             detectionCanvasRef={localCanvasRef}
+            repCount={myReps} repGoal={repGoal} repFlash={repFlash}
+            formScore={liveFormScore} formFeedback={feedback}
+            statusBadge={
+              phase === 'active' && !myRoundDone && gameMode === 'battle' ? (
+                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  onClick={handleFinishRound}
+                  className="px-3 py-2 font-display font-black uppercase tracking-wider text-xs cursor-pointer text-white"
+                  style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '3px 3px 0 #000', borderRadius: 0 }}>
+                  Done ✓
+                </motion.button>
+              ) : myRoundDone ? (
+                <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"
+                  style={{ background: 'rgba(34,197,94,0.18)', border: '2px solid #22c55e', color: '#22c55e', borderRadius: 0 }}>
+                  {partnerRoundDone
+                    ? <><CheckCircle2 className="w-3 h-3" /> Both Done!</>
+                    : <><Loader2 className="w-3 h-3 animate-spin" /> Waiting…</>}
+                </div>
+              ) : (
+                <div className="px-2 py-1.5 text-[9px] font-black uppercase tracking-wider"
+                  style={{ background: cameraReady ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.05)', border: `2px solid ${cameraReady ? '#22c55e' : 'rgba(255,255,255,0.15)'}`, color: cameraReady ? '#22c55e' : 'rgba(255,255,255,0.4)', borderRadius: 0 }}>
+                  {cameraReady ? 'AI Active' : <Loader2 className="w-3 h-3 animate-spin" />}
+                </div>
+              )
+            }
             controls={
               <>
                 <CtrlBtn on={!muted}    icon={<Mic className="w-4 h-4" />}   offIcon={<MicOff className="w-4 h-4" />}   onToggle={toggleMute}  label="Mute" />
@@ -545,91 +612,25 @@ function SessionContent() {
               </>
             }
           />
-          <div className="flex items-center justify-between px-4 py-3"
-            style={{ background: '#111', border: '3px solid #000', borderTop: 'none' }}>
-            <div className="flex-1">
-              <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Your Reps</div>
-              <motion.div key={myReps}
-                initial={{ scale: repFlash ? 1.3 : 1 }} animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-                className="font-display font-black tabular-nums"
-                style={{ fontSize: '2.4rem', color: repFlash ? 'var(--neo-accent)' : '#fff', lineHeight: 1 }}>
-                {myReps}
-              </motion.div>
-              {repGoal > 0 && (
-                <div className="mt-0.5 w-full h-1.5" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 0 }}>
-                  <div style={{ height: '100%', width: `${Math.min(100, (myReps / repGoal) * 100)}%`, background: myReps >= repGoal ? '#22c55e' : 'var(--neo-accent)', transition: 'width 0.3s ease' }} />
-                </div>
-              )}
-              {liveFormScore > 0 && (
-                <div className="mt-1 text-[9px] font-bold uppercase tracking-wider"
-                  style={{ color: liveFormScore >= 80 ? '#22c55e' : liveFormScore >= 50 ? '#d97706' : '#ef4444' }}>
-                  Form {liveFormScore}% · {feedback}
-                </div>
-              )}
-            </div>
-            {phase === 'active' && !myRoundDone && gameMode === 'battle' ? (
-              <motion.button whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                onClick={handleFinishRound}
-                className="px-4 py-3 font-display font-black uppercase tracking-wider text-xs cursor-pointer text-white flex-shrink-0"
-                style={{ background: '#22c55e', border: '3px solid #000', boxShadow: '3px 3px 0 #000', borderRadius: 0 }}>
-                Done ✓
-              </motion.button>
-            ) : myRoundDone ? (
-              <motion.div
-                initial={{ scale: 0.9 }} animate={{ scale: [1, 1.04, 1] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                className="px-3 py-2 text-[10px] font-black uppercase tracking-wider flex-shrink-0 flex items-center gap-1.5"
-                style={{ background: 'rgba(34,197,94,0.12)', border: '2px solid #22c55e', color: '#22c55e', borderRadius: 0 }}>
-                {partnerRoundDone
-                  ? <><CheckCircle2 className="w-3 h-3" /> Both Done!</>
-                  : <><Loader2 className="w-3 h-3 animate-spin" /> Waiting…</>}
-              </motion.div>
-            ) : (
-              <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider"
-                style={{ background: cameraReady ? 'rgba(34,197,94,0.1)' : '#1a1a1a', border: `2px solid ${cameraReady ? '#22c55e' : 'rgba(255,255,255,0.15)'}`, color: cameraReady ? '#22c55e' : 'rgba(255,255,255,0.4)', borderRadius: 0 }}>
-                {cameraReady ? 'AI Active' : <Loader2 className="w-3 h-3 animate-spin" />}
-              </div>
-            )}
-          </div>
         </motion.div>
 
         {/* Friend */}
         <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.35, delay: 0.08 }} className="flex flex-col">
-          <CameraPanel label="Friend" stream={remoteStream} isLocal={false}
-            accent="var(--neo-blue)" peerState={peerState} />
-          <div className="flex items-center justify-between px-4 py-3"
-            style={{ background: '#111', border: '3px solid #000', borderTop: 'none' }}>
-            <div>
-              <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Friend&apos;s Reps</div>
-              <AnimatePresence mode="wait">
-                <motion.div key={partnerReps}
-                  initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="font-display font-black tabular-nums"
-                  style={{ fontSize: '2.4rem', color: '#fff', lineHeight: 1 }}>
-                  {partnerReps}
-                </motion.div>
-              </AnimatePresence>
-              {repGoal > 0 && (
-                <div className="mt-0.5 w-32 h-1.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                  <div style={{ height: '100%', width: `${Math.min(100, (partnerReps / repGoal) * 100)}%`, background: partnerReps >= repGoal ? '#22c55e' : 'var(--neo-blue)', transition: 'width 0.3s ease' }} />
-                </div>
-              )}
-              {partnerRoundDone && (
-                <div className="text-[9px] font-bold uppercase tracking-wider mt-1" style={{ color: '#22c55e' }}>Finished!</div>
-              )}
-            </div>
-            <div className="px-3 py-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider"
-              style={{ background: '#1a1a2a', border: `2px solid ${pColor}`, color: pColor, borderRadius: 0 }}>
-              {peerState === 'connected'
-                ? <Wifi className="w-3.5 h-3.5" />
-                : <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {connLabel(peerState)}
-            </div>
-          </div>
+          transition={{ duration: 0.35, delay: 0.08 }} className="flex flex-col min-h-0">
+          <CameraPanel
+            label="Friend" stream={remoteStream} isLocal={false}
+            accent="var(--neo-blue)" peerState={peerState}
+            repCount={partnerReps} repGoal={repGoal}
+            statusBadge={
+              <div className="px-2 py-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider"
+                style={{ background: '#1a1a2a', border: `2px solid ${pColor}`, color: pColor, borderRadius: 0 }}>
+                {peerState === 'connected'
+                  ? <Wifi className="w-3 h-3" />
+                  : <Loader2 className="w-3 h-3 animate-spin" />}
+                {connLabel(peerState)}
+              </div>
+            }
+          />
         </motion.div>
       </div>
 
