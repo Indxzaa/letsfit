@@ -16,8 +16,11 @@ import { DashboardSkeleton } from '@/components/Skeleton';
 import Navbar from '@/components/Navbar';
 import UserAvatar from '@/components/UserAvatar';
 import LoginCalendarModal from '@/components/LoginCalendarModal';
+import { useAuth } from '@/components/AuthProvider';
+import { getAvatarPublicUrl } from '@/lib/profilePicture';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [progress, setProgress] = useState<Progress | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isFirstOpen, setIsFirstOpen] = useState(false);
@@ -69,7 +72,11 @@ export default function DashboardPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap mb-12">
           <div className="flex items-center gap-4">
-            <UserAvatar progress={progress} size="lg" />
+            <UserAvatar
+              photoUrl={user?.id ? getAvatarPublicUrl(user.id) : null}
+              letter={(getUsername() ?? user?.email ?? '?').charAt(0)}
+              size="lg"
+            />
             <div>
               <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--neo-accent)' }}>
                 Mission Control

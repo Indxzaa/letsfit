@@ -10,16 +10,6 @@ export const RARITY_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
-  // Avatars
-  { id: 'avatar-default', name: 'Default', description: 'Standard avatar.',       type: 'avatar', cost: 0,    value: '🙂', rarity: 'common' },
-  { id: 'avatar-flex',    name: 'Flex',    description: 'Show off the gains.',     type: 'avatar', cost: 60,   value: '💪', rarity: 'common' },
-  { id: 'avatar-rocket',  name: 'Rocket',  description: 'For the goal-chasers.',   type: 'avatar', cost: 100,  value: '🚀', rarity: 'rare' },
-  { id: 'avatar-fire',    name: 'Fire',    description: 'On a streak.',            type: 'avatar', cost: 100,  value: '🔥', rarity: 'rare' },
-  { id: 'avatar-star',    name: 'Star',    description: 'Top performer.',          type: 'avatar', cost: 200,  value: '⭐', rarity: 'epic' },
-  { id: 'avatar-trophy',  name: 'Trophy',  description: 'For the champions.',      type: 'avatar', cost: 300,  value: '🏆', rarity: 'epic' },
-  { id: 'avatar-crown',   name: 'Crown',   description: 'Royalty only.',           type: 'avatar', cost: 600,  value: '👑', rarity: 'legendary' },
-  { id: 'avatar-diamond', name: 'Diamond', description: 'The hardest grind.',      type: 'avatar', cost: 1200, value: '💎', rarity: 'mythic' },
-
   // Borders
   { id: 'border-none',     name: 'No Border',    description: 'Clean look.',                 type: 'border', cost: 0,    value: 'none',     rarity: 'common' },
   { id: 'border-neon',     name: 'Neon Pulse',   description: 'Flickering cyan neon ring.',  type: 'border', cost: 90,   value: 'neon',     rarity: 'common' },
@@ -44,10 +34,9 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'aura-solar',     name: 'Solar',     description: 'Golden solar flare burst.',    type: 'aura', cost: 3500, value: 'solar',     rarity: 'mythic' },
 ];
 
-export const FREE_DEFAULTS = ['avatar-default', 'border-none', 'aura-none'];
+export const FREE_DEFAULTS = ['border-none', 'aura-none'];
 
 export const DEFAULT_EQUIPPED: Record<string, string> = {
-  avatar: 'avatar-default',
   border: 'border-none',
   aura:   'aura-none',
 };

@@ -21,23 +21,21 @@ import { applyNewAchievements } from '@/lib/achievements';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
-type TabType = 'avatar' | 'border' | 'aura';
+type TabType = 'border' | 'aura';
 
 const TABS: { id: TabType; label: string }[] = [
-  { id: 'avatar', label: 'Avatars' },
   { id: 'border', label: 'Borders' },
   { id: 'aura',   label: 'Auras' },
 ];
 
 const CARD_COLORS: Record<TabType, string> = {
-  avatar: 'var(--card-bg-green)',
   border: 'var(--card-bg-blue)',
   aura:   'var(--card-bg-purple)',
 };
 
 export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [tab, setTab] = useState<TabType>('avatar');
+  const [tab, setTab] = useState<TabType>('border');
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
   const { user } = useAuth();
   const isDev = user?.email === DEV_EMAIL;

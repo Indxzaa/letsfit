@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import UserAvatar from './UserAvatar';
+import { ProfilePictureModal } from './ProfilePictureModal';
+import { getAvatarPublicUrl } from '@/lib/profilePicture';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { getUsername, setUsername } from '@/lib/profileSync';
 import { useTheme } from './ThemeProvider';
@@ -34,6 +36,8 @@ export default function Navbar() {
   const [newUsername, setNewUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
   const { mode, toggleMode } = useTheme();
@@ -50,6 +54,12 @@ export default function Navbar() {
     });
     return unsub;
   }, []);
+
+  // Load avatar photo URL when user signs in
+  useEffect(() => {
+    if (user?.id) setPhotoUrl(getAvatarPublicUrl(user.id) || null);
+    else setPhotoUrl(null);
+  }, [user?.id]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -306,7 +316,7 @@ export default function Navbar() {
                   }}
                   aria-label="User menu"
                 >
-                  <UserAvatar progress={progress} size="sm" />
+                  <UserAvatar photoUrl={photoUrl} letter={displayName.charAt(0)} size="sm" />
                   <span className="max-w-[120px] truncate">{displayName}</span>
                 </button>
 
@@ -322,7 +332,7 @@ export default function Navbar() {
                     >
                       {/* User info */}
                       <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: '2px solid var(--neo-black)' }}>
-                        <UserAvatar progress={progress} size="md" />
+                        <UserAvatar photoUrl={photoUrl} letter={displayName.charAt(0)} size="md" />
                         <div className="min-w-0">
                           <div className="text-xs font-semibold uppercase" style={{ color: 'var(--neo-black)', opacity: 0.5, fontFamily: 'var(--font-display)' }}>Signed in as</div>
                           <div className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}>{displayName}</div>
@@ -388,17 +398,16 @@ export default function Navbar() {
                         )}
                       </div>
 
-                      <Link
-                        href="/shop"
-                        onClick={() => setMenuOpen(false)}
+                      <button
+                        onClick={() => { setMenuOpen(false); setShowPhotoModal(true); }}
                         className="w-full flex items-center gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
-                        style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', borderBottom: '2px solid var(--neo-black)', display: 'flex' }}
+                        style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', borderBottom: '2px solid var(--neo-black)' }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <Coins className="w-4 h-4" style={{ color: 'var(--neo-accent)' }} />
-                        Customize profile
-                      </Link>
+                        Profile Picture
+                      </button>
 
                       <button
                         onClick={async () => { setMenuOpen(false); await signOut(); }}
@@ -531,6 +540,15 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+      {showPhotoModal && user && (
+        <ProfilePictureModal
+          userId={user.id}
+          currentPhotoUrl={photoUrl}
+          letter={displayName.charAt(0)}
+          onSave={url => setPhotoUrl(url)}
+          onClose={() => setShowPhotoModal(false)}
+        />
+      )}
     </div>
   );
 }
