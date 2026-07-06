@@ -17,10 +17,11 @@ import Navbar from '@/components/Navbar';
 import UserAvatar from '@/components/UserAvatar';
 import LoginCalendarModal from '@/components/LoginCalendarModal';
 import { useAuth } from '@/components/AuthProvider';
-import { getAvatarPublicUrl } from '@/lib/profilePicture';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { avatarUrl } = useAvatarUrl(user?.id ?? null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isFirstOpen, setIsFirstOpen] = useState(false);
@@ -73,7 +74,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between gap-4 flex-wrap mb-12">
           <div className="flex items-center gap-4">
             <UserAvatar
-              photoUrl={user?.id ? getAvatarPublicUrl(user.id) : null}
+              photoUrl={avatarUrl}
               letter={(getUsername() ?? user?.email ?? '?').charAt(0)}
               size="lg"
             />
