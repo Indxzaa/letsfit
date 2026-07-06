@@ -74,6 +74,12 @@ export function useMultiplayerWorkoutSync(params: {
   // Keep isActive ref in sync
   useEffect(() => { isActiveRef.current = isActive; }, [isActive]);
 
+  // Swap detector when exercise changes between rounds
+  useEffect(() => {
+    if (!detectorRef.current) return; // not initialized yet — ensureLandmarker handles first load
+    detectorRef.current = getDetectorForSlug(slug);
+  }, [slug]);
+
   // ── Broadcast helper — throttled, only on meaningful change ──────────
 
   const maybeBroadcast = useCallback((reps: number, state: ExerciseState, force = false) => {
