@@ -37,11 +37,12 @@ export function useMultiplayerWorkoutSync(params: {
   isActive:  boolean;
   videoRef:  React.RefObject<HTMLVideoElement | null>;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  stream?:   MediaStream | null;
 }): MultiplayerWorkoutSyncState & {
   stopDetection: () => void;
   resetReps:     () => void;
 } {
-  const { roomId, userId, slug, isActive, videoRef, canvasRef } = params;
+  const { roomId, userId, slug, isActive, videoRef, canvasRef, stream } = params;
 
   const exercise = getExercise(slug);
   const isTimed  = exercise?.isTimed ?? false;
@@ -175,12 +176,17 @@ export function useMultiplayerWorkoutSync(params: {
 
       if (!video.srcObject) {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({
+          // Use provided WebRTC stream if available — avoids a second getUserMedia call
+          // and ensures detection runs on the same frames the user sees.
+          const src = stream ?? await navigator.mediaDevices.getUserMedia({
             video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
             audio: false,
           });
-          if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
-          video.srcObject = stream;
+          if (cancelled) {
+            if (!stream) src.getTracks().forEach(t => t.stop());
+            return;
+          }
+          video.srcObject = src;
           await new Promise<void>((res, rej) => {
             video.onloadedmetadata = () => video.play().then(res).catch(rej);
           });
@@ -203,7 +209,10 @@ export function useMultiplayerWorkoutSync(params: {
       landmarkerRef.current?.close(); landmarkerRef.current = null;
       const video = videoRef.current;
       if (video?.srcObject) {
-        (video.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+        // Only stop tracks if we opened our own stream — never stop the WebRTC stream
+        if (!stream) {
+          (video.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+        }
         video.srcObject = null;
       }
     };

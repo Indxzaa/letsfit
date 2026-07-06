@@ -117,7 +117,7 @@ function CameraPanel({ label, stream, isLocal, accent, peerState, controls, dete
               <canvas
                 ref={detectionCanvasRef}
                 className="absolute inset-0 w-full h-full"
-                style={{ pointerEvents: 'none' }}
+                style={{ pointerEvents: 'none', transform: 'scaleX(-1)' }}
               />
             )}
           </>
@@ -266,6 +266,7 @@ function SessionContent() {
       roomId, userId: user?.id ?? '', slug: currentExercise,
       isActive: phase === 'active',
       videoRef: localVideoRef, canvasRef: localCanvasRef,
+      stream: localStream,
     });
 
   const label = EXERCISE_LABELS[currentExercise] ?? currentExercise;
@@ -632,8 +633,10 @@ function SessionContent() {
         </motion.div>
       </div>
 
-      {/* Hidden video — MediaPipe reads from this, canvas overlay shows on CameraPanel */}
-      <video ref={localVideoRef} className="hidden" playsInline muted />
+      {/* Detection video — must NOT be display:none or MediaPipe can't read frames.
+          Positioned off-screen so it doesn't affect layout but remains active. */}
+      <video ref={localVideoRef} playsInline muted
+        style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
     </div>
   );
 }
