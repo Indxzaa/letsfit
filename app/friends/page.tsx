@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { FriendList } from '@/components/social/friends/FriendList';
@@ -10,25 +10,30 @@ import { useAuth } from '@/components/AuthProvider';
 
 export default function FriendsPage() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { friends, presence, invites } = useSocialContext();
+  const { user, loading } = useAuth();
+  const { friends, presence } = useSocialContext();
   const [showAdd, setShowAdd] = useState(false);
 
-  if (!user) {
-    router.replace('/signin');
-    return null;
-  }
+  // Move redirect into an effect so it never fires during render.
+  // Also wait until auth has finished loading — on refresh, user is
+  // null for a moment while Supabase restores the session.
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/signin');
+    }
+  }, [loading, user, router]);
+
+  // Show nothing while auth is loading or while we're about to redirect
+  if (loading || !user) return null;
 
   const username = (user.user_metadata?.username as string | undefined)
     ?? user.email?.split('@')[0]
     ?? 'User';
-  const avatar = (user.user_metadata?.avatar as string | null) ?? null;
 
   return (
     <div className="min-h-screen page-bg">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-28 pb-20">
-        {/* Page title */}
         <div className="mb-6">
           <h1 className="font-display text-3xl font-black uppercase tracking-tight text-app">
             Friends
