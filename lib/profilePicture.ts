@@ -29,30 +29,40 @@ export async function uploadAvatarBlob(userId: string, blob: Blob): Promise<Uplo
   const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
   const url = `${data.publicUrl}?t=${Date.now()}`;
 
-  // Persist URL to profiles.data so it survives refresh / logout
-  try {
-    const { data: profile } = await sb.from('profiles').select('data').eq('id', userId).single();
-    const existingData = (profile?.data as Record<string, unknown>) ?? {};
-    await sb.from('profiles').update({ data: { ...existingData, avatarUrl: url } }).eq('id', userId);
-  } catch { /* non-fatal — Storage upload already succeeded */ }
+  // Write to dedicated avatar_url column — NOT inside profiles.data.
+  // profileSync.pushRemote writes profiles.data (the progress JSONB) and
+  // would silently overwrite any avatarUrl stored there. The avatar_url
+  // column is never touched by profileSync, so it persists across syncs.
+  const { error: updateErr } = await sb
+    .from('profiles')
+    .update({ avatar_url: url })
+    .eq('id', userId);
+
+  if (updateErr) {
+    // Non-fatal — Storage upload succeeded; log and continue
+    console.error('[uploadAvatarBlob] Failed to persist avatar_url:', updateErr.message);
+  }
 
   return { ok: true, url };
 }
 
-/** Load the persisted avatar URL from profiles.data (survives refresh) */
+/** Load the persisted avatar URL from the dedicated column */
 export async function loadAvatarUrlFromProfile(userId: string): Promise<string | null> {
   const sb = getSupabase();
   if (!sb) return null;
   try {
-    const { data: profile } = await sb.from('profiles').select('data').eq('id', userId).single();
-    const d = profile?.data as Record<string, unknown> | null;
-    return (d?.avatarUrl as string | null) ?? null;
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', userId)
+      .single();
+    return (profile?.avatar_url as string | null) ?? null;
   } catch {
     return null;
   }
 }
 
-/** Fallback: derive the public storage URL without a DB lookup */
+/** Synchronous public storage URL — use only as a last-resort fallback */
 export function getAvatarPublicUrl(userId: string): string {
   const sb = getSupabase();
   if (!sb) return '';

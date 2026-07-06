@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { getUsername } from '@/lib/profileSync';
 import { usePresence, type UsePresenceReturn } from '@/hooks/social/usePresence';
 import { useFriends, type UseFriendsReturn } from '@/hooks/social/useFriends';
 import { useInvites, type UseInvitesReturn } from '@/hooks/social/useInvites';
@@ -29,8 +30,8 @@ export function useSocialContext(): SocialContextValue {
 export function SocialProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const username = (user?.user_metadata?.username as string | undefined) ?? user?.email?.split('@')[0] ?? 'User';
-  const avatar = (user?.user_metadata?.avatar as string | null) ?? null;
+  const username = getUsername() ?? user?.email?.split('@')[0] ?? 'User';
+  const avatar = null; // avatar is provided via useAvatarUrl, not from auth metadata
 
   const presence = usePresence(userId);
   const friends = useFriends(userId);
