@@ -5,9 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PoseLandmarker,
-  FilesetResolver,
   type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
+import { createPoseLandmarker } from '@/lib/ai/mediapipe';
 import { Camera, Pause, Play, Square, ArrowLeft, Sparkles, Activity, Target, Clock } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -93,18 +93,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
   // ---- camera + model ----
   const ensureLandmarker = useCallback(async (): Promise<PoseLandmarker> => {
     if (landmarkerRef.current) return landmarkerRef.current;
-    const vision = await FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm'
-    );
-    const lm = await PoseLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath:
-          'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
-        delegate: 'GPU',
-      },
-      runningMode: 'VIDEO',
-      numPoses: 1,
-    });
+    const lm = await createPoseLandmarker();
     landmarkerRef.current = lm;
     return lm;
   }, []);

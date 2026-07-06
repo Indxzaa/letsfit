@@ -6,8 +6,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  PoseLandmarker, FilesetResolver, type PoseLandmarkerResult,
+  PoseLandmarker, type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
+import { createPoseLandmarker } from '@/lib/ai/mediapipe';
 import { getDetectorForSlug, drawSkeleton, type Detector } from '@/lib/exerciseDetectors';
 import { getExercise } from '@/lib/exercises';
 import {
@@ -105,18 +106,7 @@ export function useMultiplayerWorkoutSync(params: {
 
   const ensureLandmarker = useCallback(async () => {
     if (landmarkerRef.current) return;
-    const vision = await FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm',
-    );
-    landmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath:
-          'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-        delegate: 'GPU',
-      },
-      runningMode: 'VIDEO',
-      numPoses: 1,
-    });
+    landmarkerRef.current = await createPoseLandmarker();
     detectorRef.current = getDetectorForSlug(slug);
   }, [slug]);
 
@@ -138,6 +128,9 @@ export function useMultiplayerWorkoutSync(params: {
 
     const ctx = canvas.getContext('2d');
     if (ctx) {
+      // Keep canvas dimensions in sync with video so skeleton scales correctly
+      if (canvas.width !== video.videoWidth)  canvas.width  = video.videoWidth;
+      if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (result.landmarks[0]) drawSkeleton(ctx, result.landmarks[0]);
     }
