@@ -345,6 +345,15 @@ function SessionContent() {
     setStartingRound(false);
   };
 
+  // Guarantee camera + WebRTC cleanup on any unmount (back, route change, tab close)
+  useEffect(() => {
+    return () => {
+      stopDetection();
+      hangUp();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleExitConfirm = async () => {
     stopDetection();
     await broadcastLeave();

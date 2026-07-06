@@ -56,6 +56,7 @@ function LobbyContent() {
   const [invitingSending, setInvitingSending] = useState<string | null>(null);
   // Initial exercise picker for the first round (host only, shown before start)
   const [pickedExercise,  setPickedExercise]  = useState<string>(room?.selected_exercise ?? MULTIPLAYER_EXERCISES[0].slug);
+  const [pickedRepGoal,   setPickedRepGoal]   = useState<number | null>(null);
 
   // Sync picked exercise when room loads
   useEffect(() => {
@@ -115,6 +116,7 @@ function LobbyContent() {
     const exercise = pickedExercise;
     const gMode    = gameMode;
     const bRounds  = battleRounds;
+    const rGoal    = pickedRepGoal ?? 0;
     await broadcastSessionEvent(roomId, {
       type: 'navigate',
       roomId,
@@ -122,10 +124,10 @@ function LobbyContent() {
       mode: 'create',
       gameMode: gMode,
       battleRounds: bRounds,
-      repGoal: DEFAULT_REP_GOAL,
+      repGoal: rGoal,
     });
     router.push(
-      `/workout-together/session?roomId=${roomId}&exercise=${exercise}&mode=create&gameMode=${gMode}&battleRounds=${bRounds}&repGoal=${DEFAULT_REP_GOAL}`
+      `/workout-together/session?roomId=${roomId}&exercise=${exercise}&mode=create&gameMode=${gMode}&battleRounds=${bRounds}&repGoal=${rGoal}`
     );
   };
 
@@ -284,13 +286,13 @@ function LobbyContent() {
               </div>
             </div>
 
-            {/* ── Starting Exercise (host picks before start) ── */}
             {isHost && (
               <div className="neo-card overflow-hidden" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
                 <div className="px-5 pt-4 pb-3" style={{ borderBottom: '3px solid var(--neo-black)' }}>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-subtle">Starting Exercise</span>
                 </div>
-                <div className="p-4">
+                <div className="p-4 space-y-4">
+                  {/* Exercise grid */}
                   <div className="grid grid-cols-2 gap-2">
                     {MULTIPLAYER_EXERCISES.map(ex => {
                       const selected = pickedExercise === ex.slug;
@@ -312,6 +314,39 @@ function LobbyContent() {
                         </motion.button>
                       );
                     })}
+                  </div>
+
+                  {/* Optional rep goal */}
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-subtle mb-2">Rep Goal (optional)</div>
+                    <div className="flex flex-wrap gap-2">
+                      {[null, 10, 20, 30, 50].map(n => {
+                        const sel = pickedRepGoal === n;
+                        return (
+                          <motion.button
+                            key={n ?? 'unlimited'}
+                            whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            onClick={() => setPickedRepGoal(n)}
+                            className="px-3 py-2 font-display font-black text-xs uppercase cursor-pointer"
+                            style={{
+                              background: sel ? 'var(--neo-black)' : 'var(--neo-white)',
+                              border: sel ? '3px solid #000' : 'var(--neo-border-2)',
+                              boxShadow: sel ? '3px 3px 0 #000' : 'none',
+                              color: sel ? 'var(--neo-white)' : 'var(--neo-black)',
+                              borderRadius: 0,
+                            }}
+                          >
+                            {n === null ? 'Unlimited' : `${n} reps`}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    {pickedRepGoal === null && (
+                      <p className="text-[10px] text-subtle mt-1.5 font-semibold uppercase tracking-wider">
+                        No target — continue until you choose to stop
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
