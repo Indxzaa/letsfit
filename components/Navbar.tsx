@@ -37,9 +37,9 @@ export default function Navbar() {
   const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const { avatarUrl: photoUrl, setAvatarUrl: setPhotoUrl } = useAvatarUrl(user?.id ?? null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
+  const { avatarUrl: photoUrl, setAvatarUrl: setPhotoUrl } = useAvatarUrl(user?.id ?? null);
   const { mode, toggleMode } = useTheme();
   const pathname = usePathname();
   const router   = useRouter();
