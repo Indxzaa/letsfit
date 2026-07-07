@@ -578,21 +578,29 @@ export default function BossPage() {
         </AnimatePresence>
 
         {/* BOTTOM */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-4 flex items-end justify-between gap-4"
-            style={attackPhase === 'warning' ? { border: `1px solid ${attackColor}88` } : undefined}>
+        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5">
+          <div className="flex items-end justify-between gap-4"
+            style={{
+              background: 'rgba(10,10,10,0.92)',
+              border: `3px solid ${attackPhase === 'warning' ? attackColor : tier.color}`,
+              boxShadow: `4px 4px 0 ${attackPhase === 'warning' ? attackColor : '#000'}`,
+              padding: '14px 18px',
+              borderRadius: 0,
+            }}>
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: tier.color }}>
+              <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: tier.color }}>
                 Round {roundIndex + 1} / {boss.rounds.length} · {isTimed ? 'Hold' : 'Reps'}
               </div>
               <div className="font-display text-xl sm:text-2xl font-bold text-white mb-1">{round.label}</div>
-              <div className="text-white/50 text-sm">
+              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 {isTimed ? `${formatTime(roundSeconds)} elapsed · goal ${formatTime(target)}` : `${reps} / ${target} · AI counting via camera`}
               </div>
             </div>
             <AnimatePresence mode="wait">
-              <motion.div key={isTimed ? roundSeconds : reps} initial={{ scale: 1.2, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }}
-                className="font-display text-8xl sm:text-9xl font-bold tabular-nums shrink-0" style={{ color: tier.color }}>
+              <motion.div key={isTimed ? roundSeconds : reps}
+                initial={{ scale: 1.2, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }}
+                className="font-display font-bold tabular-nums shrink-0"
+                style={{ fontSize: 'clamp(4rem, 12vw, 7rem)', color: tier.color, lineHeight: 1 }}>
                 {isTimed ? formatTime(roundSeconds) : reps}
               </motion.div>
             </AnimatePresence>
@@ -812,8 +820,7 @@ export default function BossPage() {
         )}
 
         {phase === 'victory' && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}
-            className="text-center py-8 relative">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             {!alreadyDefeated && (
               <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 {[...Array(24)].map((_, i) => (
@@ -824,78 +831,109 @@ export default function BossPage() {
                 ))}
               </div>
             )}
-            <div className="flex items-center justify-center mb-4">
-              {alreadyDefeated
-                ? <Dumbbell className="w-20 h-20" style={{ color: tier.color }} />
-                : <Trophy className="w-20 h-20 text-yellow-400" />}
-            </div>
-            <h2 className="font-display text-5xl font-bold text-app mb-4">
-              {alreadyDefeated ? 'Still a champ.' : worldComplete ? `${worldTheme.name} Cleared!` : 'Boss defeated!'}
-            </h2>
-            <p className="text-muted mb-6">{alreadyDefeated ? 'Great practice run.' : boss.flavour}</p>
 
-            {worldComplete && !alreadyDefeated && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl mb-6 font-bold text-sm"
-                style={{ background: `${worldTheme.primary}25`, border: `1px solid ${worldTheme.primary}55`, color: worldTheme.primary }}>
-                <Star className="w-4 h-4" /> {worldTheme.name} Badge Earned · +500 XP Bonus
-              </motion.div>
-            )}
+            {/* Victory card */}
+            <div style={{ border: `4px solid ${tier.color}`, boxShadow: `6px 6px 0 ${tier.color}`, background: `color-mix(in srgb, ${tier.color} 8%, #0a0a0e)` }}>
+              <div style={{ height: 6, background: tier.color }} />
+              <div className="p-6 sm:p-8 text-center">
+                <div className="flex items-center justify-center mb-4">
+                  {alreadyDefeated
+                    ? <Dumbbell className="w-16 h-16" style={{ color: tier.color }} />
+                    : <Trophy className="w-16 h-16 text-yellow-400" />}
+                </div>
+                <h2 className="font-display text-4xl sm:text-5xl font-bold text-white uppercase mb-3" style={{ letterSpacing: '-0.01em' }}>
+                  {alreadyDefeated ? 'Still a champ.' : worldComplete ? `${worldTheme.name} Cleared!` : 'Boss Defeated!'}
+                </h2>
+                <p className="mb-6" style={{ color: 'rgba(255,255,255,0.72)' }}>
+                  {alreadyDefeated ? 'Great practice run.' : boss.flavour}
+                </p>
 
-            {selectedRelic && !alreadyDefeated && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-6 text-sm"
-                style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)', color: tier.color }}>
-                {selectedRelic.icon} Relic used: <strong>{selectedRelic.name}</strong>
-              </div>
-            )}
-            {bossResult && !alreadyDefeated && (
-              <div className="flex items-center justify-center gap-6 mb-10">
-                <div className="p-6 rounded-2xl" style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                  <div className="text-xs text-subtle mb-2">XP Earned</div>
-                  <div className="font-display text-3xl font-bold" style={{ color: tier.color }}>+{bossResult.xp}</div>
-                </div>
-                <div className="p-6 rounded-2xl" style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                  <div className="text-xs text-subtle mb-2">FitCoins</div>
-                  <div className="font-display text-3xl font-bold" style={{ color: tier.color }}>+{bossResult.coins}</div>
-                </div>
-                {bossResult.leveledUp && (
-                  <div className="p-6 rounded-2xl" style={{ background: tier.bg, border: `1px solid ${tier.color}44` }}>
-                    <div className="text-xs font-bold mb-2" style={{ color: tier.color }}>LEVEL UP!</div>
-                    <div className="font-display text-3xl font-bold flex items-center justify-center" style={{ color: tier.color }}><ArrowUp className="w-8 h-8" /></div>
+                {worldComplete && !alreadyDefeated && (
+                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
+                    className="inline-flex items-center gap-2 px-4 py-2 mb-6 font-bold text-sm text-white"
+                    style={{ background: worldTheme.primary, border: '3px solid #000', boxShadow: '3px 3px 0 #000' }}>
+                    <Star className="w-4 h-4" /> {worldTheme.name} Badge Earned · +500 XP Bonus
+                  </motion.div>
+                )}
+
+                {selectedRelic && !alreadyDefeated && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm"
+                    style={{ background: `color-mix(in srgb, ${tier.color} 12%, #0a0a0e)`, border: `2px solid ${tier.color}`, color: tier.color }}>
+                    {selectedRelic.icon} Relic used: <strong>{selectedRelic.name}</strong>
                   </div>
                 )}
+
+                {bossResult && !alreadyDefeated && (
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                    {[
+                      { label: 'XP Earned', value: `+${bossResult.xp}` },
+                      { label: 'FitCoins', value: `+${bossResult.coins}` },
+                    ].map(s => (
+                      <div key={s.label} style={{ background: `color-mix(in srgb, ${tier.color} 10%, #0a0a0e)`, border: `2px solid ${tier.color}`, boxShadow: `3px 3px 0 ${tier.color}`, padding: '16px' }}>
+                        <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{s.label}</div>
+                        <div className="font-display text-3xl font-bold text-white">{s.value}</div>
+                      </div>
+                    ))}
+                    {bossResult.leveledUp && (
+                      <div className="col-span-2 flex items-center gap-3 px-5 py-4"
+                        style={{ background: `color-mix(in srgb, ${tier.color} 14%, #0a0a0e)`, border: `3px solid ${tier.color}`, boxShadow: `4px 4px 0 ${tier.color}` }}>
+                        <ArrowUp className="w-8 h-8" style={{ color: tier.color }} />
+                        <span className="font-display text-xl font-black uppercase text-white tracking-widest">Level Up!</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <motion.button
+                    onClick={() => { setPhase('intro'); setRoundIndex(0); setReps(0); setRoundSeconds(0); setBossResult(null); setBossHp(100); }}
+                    whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.985 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex-1 py-3.5 font-display text-base font-black text-white uppercase tracking-widest cursor-pointer"
+                    style={{ background: tier.color, border: '3px solid #000', boxShadow: '4px 4px 0 #000' }}>
+                    Play Again
+                  </motion.button>
+                  <Link href="/adventure"
+                    className="flex-1 py-3.5 font-display text-base font-black uppercase tracking-widest text-white text-center"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '3px solid rgba(255,255,255,0.3)', boxShadow: 'none' }}>
+                    Back to Adventure
+                  </Link>
+                </div>
               </div>
-            )}
-            <div className="flex gap-3 justify-center">
-              <button onClick={() => { setPhase('intro'); setRoundIndex(0); setReps(0); setRoundSeconds(0); setBossResult(null); setBossHp(100); }}
-                className="px-6 py-3 rounded-2xl font-semibold text-white cursor-pointer" style={{ background: tier.color }}>
-                Play again
-              </button>
-              <Link href="/adventure" className="px-6 py-3 rounded-2xl font-semibold text-app"
-                style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                Back to adventure
-              </Link>
             </div>
           </motion.div>
         )}
 
         {phase === 'defeat' && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}
-            className="text-center py-8">
-            <div className="flex items-center justify-center mb-4">
-              <Clock className="w-20 h-20 text-red-400" />
-            </div>
-            <h2 className="font-display text-5xl font-bold text-app mb-2">Time&apos;s up.</h2>
-            <p className="text-muted mb-10">You completed {roundIndex}/{boss.rounds.length} rounds. Train more and try again.</p>
-            <div className="flex gap-3 justify-center">
-              <button onClick={() => { stopTimers(); setPhase('intro'); setRoundIndex(0); setReps(0); setRoundSeconds(0); setTimeLeft(0); }}
-                className="px-6 py-3 rounded-2xl font-semibold text-white cursor-pointer" style={{ background: tier.color }}>
-                Try again
-              </button>
-              <Link href="/adventure" className="px-6 py-3 rounded-2xl font-semibold text-app"
-                style={{ background: 'var(--surface-solid)', border: '1px solid var(--border)' }}>
-                Back
-              </Link>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div style={{ border: '4px solid #ef4444', boxShadow: '6px 6px 0 #ef4444', background: 'color-mix(in srgb, #ef4444 8%, #0a0a0e)' }}>
+              <div style={{ height: 6, background: '#ef4444' }} />
+              <div className="p-6 sm:p-8 text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <Clock className="w-16 h-16 text-red-400" />
+                </div>
+                <h2 className="font-display text-4xl sm:text-5xl font-bold text-white uppercase mb-3" style={{ letterSpacing: '-0.01em' }}>
+                  Time&apos;s Up.
+                </h2>
+                <p className="mb-8" style={{ color: 'rgba(255,255,255,0.72)' }}>
+                  You completed {roundIndex}/{boss.rounds.length} rounds. Train more and try again.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <motion.button
+                    onClick={() => { stopTimers(); setPhase('intro'); setRoundIndex(0); setReps(0); setRoundSeconds(0); setTimeLeft(0); }}
+                    whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.985 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex-1 py-3.5 font-display text-base font-black text-white uppercase tracking-widest cursor-pointer"
+                    style={{ background: '#ef4444', border: '3px solid #000', boxShadow: '4px 4px 0 #000' }}>
+                    Try Again
+                  </motion.button>
+                  <Link href="/adventure"
+                    className="flex-1 py-3.5 font-display text-base font-black uppercase tracking-widest text-white text-center"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '3px solid rgba(255,255,255,0.3)' }}>
+                    Back to Adventure
+                  </Link>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

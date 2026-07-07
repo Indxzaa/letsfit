@@ -64,7 +64,7 @@ export function BossHealthBar({ bossName, world, tierLabel, tierColor, bossHp, b
           className="boss-hpbar-fill"
           animate={{ width: `${bossHp}%` }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          style={{ background: `linear-gradient(90deg, ${hpColor}bb, ${hpColor}, ${hpColor}dd)` }}
+          style={{ background: hpColor }}
         />
         {[25, 50, 75].map(p => (
           <div key={p} className="boss-hpbar-seg" style={{ left: `${p}%` }} />
