@@ -275,7 +275,6 @@ function SessionContent() {
   const mode       = params.get('mode')        ?? 'join';
   const gameMode   = (params.get('gameMode')   ?? 'freestyle') as 'freestyle' | 'battle';
   const battleRounds = parseInt(params.get('battleRounds') ?? '3', 10);
-  const initRepGoal  = parseInt(params.get('repGoal')      ?? '10', 10);
 
   const { user } = useAuth();
   const isHost = mode === 'create';
@@ -300,7 +299,7 @@ function SessionContent() {
     myScore, partnerScore, battleFinished, battleWinnerId,
     hostStartCountdown, hostSelectExercise, signalRoundFinished,
     hostPause, hostResume, broadcastLeave,
-  } = useWorkoutSession(roomId, user?.id ?? '', isHost, initEx, initRepGoal, gameMode, battleRounds);
+  } = useWorkoutSession(roomId, user?.id ?? '', isHost, initEx, 0, gameMode, battleRounds);
 
   const { myReps, partnerReps, liveFormScore, feedback, cameraReady, resetReps, stopDetection } =
     useMultiplayerWorkoutSync({
@@ -341,7 +340,7 @@ function SessionContent() {
     if (!isHost || startingRound) return;
     setStartingRound(true);
     resetReps();
-    await hostStartCountdown(selectedExercise, repGoal);
+    await hostStartCountdown(selectedExercise, 0);
     setStartingRound(false);
   };
 
@@ -400,9 +399,9 @@ function SessionContent() {
         )}
       </AnimatePresence>
 
-      {/* Round Complete / Battle Finished overlay */}
+      {/* Exercise picker — shown on first load (selecting) and between rounds (round_complete) */}
       <AnimatePresence>
-        {phase === 'round_complete' && (
+        {(phase === 'round_complete' || phase === 'selecting') && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 sm:p-6"
             style={{ background: 'rgba(0,0,0,0.75)' }}>
@@ -415,7 +414,9 @@ function SessionContent() {
                 <h3 className="font-display text-3xl font-bold text-white uppercase mb-5 text-center">
                   {battleFinished
                     ? (battleWinnerId === user?.id ? '🏆 You Win!' : '💪 Good Game!')
-                    : gameMode === 'battle' ? `Round ${roundIndex} Complete` : 'Exercise Complete 🎉'}
+                    : phase === 'selecting'
+                      ? 'Choose Exercise'
+                      : gameMode === 'battle' ? `Round ${roundIndex} Complete` : 'Exercise Complete 🎉'}
                 </h3>
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   {[
@@ -477,7 +478,9 @@ function SessionContent() {
                       style={{ background: '#22c55e', border: '3px solid #000', boxShadow: startingRound ? 'none' : '4px 4px 0 #000', borderRadius: 0 }}>
                       {startingRound
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Starting…</>
-                        : gameMode === 'freestyle' ? 'Next Exercise →' : `Start Round ${roundIndex + 1} →`}
+                        : phase === 'selecting'
+                          ? 'Start Workout →'
+                          : gameMode === 'freestyle' ? 'Next Exercise →' : `Start Round ${roundIndex + 1} →`}
                     </motion.button>
                   </div>
                 ) : (

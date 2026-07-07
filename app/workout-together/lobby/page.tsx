@@ -112,7 +112,7 @@ function LobbyContent() {
     const unsub = subscribeSessionEvents(roomId, (event) => {
       if (event.type === 'navigate') {
         router.push(
-          `/workout-together/session?roomId=${event.roomId}&exercise=${event.exercise}&mode=join&gameMode=${event.gameMode}&battleRounds=${event.battleRounds ?? 3}&repGoal=${event.repGoal}`
+          `/workout-together/session?roomId=${event.roomId}&exercise=${event.exercise}&mode=join&gameMode=${event.gameMode}&battleRounds=${event.battleRounds ?? 3}`
         );
       }
     });
@@ -151,7 +151,6 @@ function LobbyContent() {
     const exercise = pickedExercise;
     const gMode    = gameMode;
     const bRounds  = battleRounds;
-    const rGoal    = pickedRepGoal ?? 0;
     await broadcastSessionEvent(roomId, {
       type: 'navigate',
       roomId,
@@ -159,10 +158,10 @@ function LobbyContent() {
       mode: 'create',
       gameMode: gMode,
       battleRounds: bRounds,
-      repGoal: rGoal,
+      repGoal: 0,
     });
     router.push(
-      `/workout-together/session?roomId=${roomId}&exercise=${exercise}&mode=create&gameMode=${gMode}&battleRounds=${bRounds}&repGoal=${rGoal}`
+      `/workout-together/session?roomId=${roomId}&exercise=${exercise}&mode=create&gameMode=${gMode}&battleRounds=${bRounds}`
     );
   };
 
