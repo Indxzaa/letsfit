@@ -596,8 +596,10 @@ export default function WorldPage() {
 
                 {/* Buttons */}
                 <div className="flex flex-col gap-3">
-                  <button
+                  <motion.button
                     onClick={() => router.push('/progress')}
+                    whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     className="w-full py-3 text-sm font-black uppercase tracking-widest text-white cursor-pointer"
                     style={{
                       background: '#000',
@@ -606,23 +608,26 @@ export default function WorldPage() {
                     }}
                   >
                     Leave Adventure
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={() => {
                       localStorage.removeItem('letsfit:lastWorld');
                       router.push('/adventure');
                     }}
+                    whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     className="w-full py-3 text-sm font-bold uppercase tracking-widest cursor-pointer text-app"
                     style={{
                       background: 'transparent',
                       border: '3px solid #000',
+                      boxShadow: '3px 3px 0 #000',
                     }}
                   >
                     Back to World Map
-                  </button>
+                  </motion.button>
                   <button
                     onClick={() => setShowExit(false)}
-                    className="w-full py-2.5 text-sm font-semibold cursor-pointer"
+                    className="w-full py-2.5 text-sm font-semibold cursor-pointer hover:opacity-70 transition-opacity"
                     style={{ color: 'var(--text-muted)', background: 'transparent', border: 'none' }}
                   >
                     Stay

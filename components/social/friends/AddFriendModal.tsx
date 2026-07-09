@@ -64,9 +64,12 @@ function RelationBadge({
   if (relation === 'pending_received') {
     return (
       <div className="flex items-center gap-1.5">
-        <button
+        <motion.button
           onClick={onAccept}
           disabled={busy}
+          whileHover={!busy ? { y: -1 } : undefined}
+          whileTap={!busy ? { y: 1, scale: 0.95 } : undefined}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
           style={{
             background: busy ? 'var(--neo-surface)' : 'var(--neo-accent)',
@@ -78,10 +81,13 @@ function RelationBadge({
         >
           <Check size={10} strokeWidth={3} />
           Accept
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={onDecline}
           disabled={busy}
+          whileHover={!busy ? { y: -1 } : undefined}
+          whileTap={!busy ? { y: 1, scale: 0.95 } : undefined}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
           style={{
             background: busy ? 'var(--neo-surface)' : '#FEE2E2',
@@ -92,16 +98,19 @@ function RelationBadge({
         >
           <X size={10} strokeWidth={3} />
           Decline
-        </button>
+        </motion.button>
       </div>
     );
   }
 
   // relation === 'none'
   return (
-    <button
+    <motion.button
       onClick={onSend}
       disabled={busy}
+      whileHover={!busy ? { y: -1 } : undefined}
+      whileTap={!busy ? { y: 1, scale: 0.95 } : undefined}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5"
       style={{
         background: busy ? 'var(--neo-surface)' : 'var(--neo-blue)',
@@ -113,7 +122,7 @@ function RelationBadge({
     >
       <UserPlus size={10} strokeWidth={3} />
       {busy ? '...' : 'Add'}
-    </button>
+    </motion.button>
   );
 }
 

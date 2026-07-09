@@ -214,7 +214,7 @@ function LobbyContent() {
                   style={{ fontSize: 'clamp(1.6rem,5vw,2.2rem)', background: 'var(--neo-white)', border: 'var(--neo-border)' }}
                 >{displayCode}</div>
                 <motion.button
-                  whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}
+                  whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   onClick={handleCopy}
                   className="flex flex-col items-center gap-1 px-4 py-3 text-xs font-black uppercase tracking-wider cursor-pointer min-w-[68px]"
@@ -242,7 +242,7 @@ function LobbyContent() {
                     <div className="grid grid-cols-2 gap-3">
                       {/* Freestyle */}
                       <motion.button
-                        whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                        whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         onClick={() => changeGameMode('freestyle')}
                         className="flex flex-col items-center gap-2 p-4 cursor-pointer"
@@ -259,7 +259,7 @@ function LobbyContent() {
                       </motion.button>
                       {/* 1v1 Battle */}
                       <motion.button
-                        whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                        whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         onClick={() => changeGameMode('battle')}
                         className="flex flex-col items-center gap-2 p-4 cursor-pointer"
@@ -282,7 +282,7 @@ function LobbyContent() {
                           <div className="text-[10px] font-bold uppercase tracking-widest text-subtle mb-2 mt-1">Number of Rounds</div>
                           <div className="flex gap-2">
                             {BATTLE_ROUNDS_OPTIONS.map(n => (
-                              <motion.button key={n} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                              <motion.button key={n} whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                                 onClick={() => changeBattleRounds(n)}
                                 className="flex-1 py-2.5 font-display font-black text-sm uppercase cursor-pointer"
@@ -329,7 +329,7 @@ function LobbyContent() {
                       const selected = pickedExercise === ex.slug;
                       return (
                         <motion.button
-                          key={ex.slug} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                          key={ex.slug} whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           onClick={() => handlePickExercise(ex.slug)}
                           className="flex items-center gap-2.5 p-3 text-left cursor-pointer"

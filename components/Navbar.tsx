@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users } from 'lucide-react';
+import { Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users } from 'lucide-react';
+import Logo from './Logo';
 import { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -125,10 +126,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div
-              className="w-9 h-9 flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center overflow-hidden"
               style={{ background: 'var(--neo-accent)', border: 'var(--neo-border)' }}
             >
-              <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
+              <Logo size={24} />
             </div>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-black)', letterSpacing: '-0.01em' }}>
               LETSFIT

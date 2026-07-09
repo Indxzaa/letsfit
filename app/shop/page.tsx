@@ -136,17 +136,20 @@ export default function ShopPage() {
         {/* Tabs */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {TABS.map((t) => (
-            <button
+            <motion.button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className="px-5 py-2 text-sm font-bold uppercase tracking-wider cursor-pointer transition-all duration-100"
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 2, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="px-5 py-2 text-sm font-bold uppercase tracking-wider cursor-pointer"
               style={tab === t.id
                 ? { background: 'var(--neo-accent)', color: '#fff', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)' }
                 : { background: 'var(--neo-white)', color: 'var(--neo-black)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-sm)' }
               }
             >
               {t.label}
-            </button>
+            </motion.button>
           ))}
         </div>
 
@@ -246,16 +249,18 @@ export default function ShopPage() {
                         Clear a world to unlock
                       </button>
                     ) : (
-                      <button
+                      <motion.button
                         onClick={() => handlePurchase(item.id, item.cost)}
                         disabled={!canAfford}
+                        whileHover={canAfford ? { y: -2 } : undefined}
+                        whileTap={canAfford ? { y: 2, scale: 0.97 } : undefined}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{
                           background: canAfford ? 'var(--neo-white)' : 'var(--neo-white)',
                           border: 'var(--neo-border)',
                           color: canAfford ? 'var(--neo-black)' : 'var(--text-subtle)',
                           boxShadow: canAfford ? 'var(--neo-shadow-sm)' : 'none',
-                          transition: 'box-shadow 0.1s, transform 0.1s',
                         }}
                       >
                         {canAfford ? (
@@ -269,7 +274,7 @@ export default function ShopPage() {
                             <span>Need {item.cost.toLocaleString()}</span>
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     )}
                   </div>
                 </div>

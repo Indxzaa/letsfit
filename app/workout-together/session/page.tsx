@@ -188,7 +188,7 @@ function CtrlBtn({ on, icon, offIcon, onToggle, label }: {
   onToggle: () => void; label: string;
 }) {
   return (
-    <motion.button whileTap={{ scale: 0.9 }} onClick={onToggle} title={label}
+    <motion.button whileHover={{ y: -1 }} whileTap={{ y: 1, scale: 0.9 }} onClick={onToggle} title={label}
       className="flex items-center justify-center w-9 h-9 cursor-pointer"
       style={{ background: on ? 'rgba(0,0,0,0.65)' : '#ef4444', border: '2px solid rgba(255,255,255,0.3)', borderRadius: 0, color: '#fff' }}>
       {on ? icon : offIcon}
@@ -246,7 +246,7 @@ function PartnerLeftOverlay({ onContinue, onLobby }: { onContinue: () => void; o
             Your workout partner disconnected.
           </p>
           <div className="flex flex-col gap-3">
-            <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+            <motion.button whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               onClick={onContinue}
               className="w-full py-3.5 font-display font-black uppercase tracking-widest text-sm cursor-pointer"
@@ -380,7 +380,7 @@ function SessionContent() {
                   Your session will end and your partner will be notified.
                 </p>
                 <div className="flex flex-col gap-3">
-                  <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                  <motion.button whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     onClick={handleExitConfirm}
                     className="w-full py-3.5 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
@@ -447,7 +447,7 @@ function SessionContent() {
                   </div>
                 )}
                 {battleFinished ? (
-                  <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                  <motion.button whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     onClick={handleExitConfirm}
                     className="w-full py-4 font-display font-black uppercase tracking-widest text-sm cursor-pointer text-white"
@@ -461,7 +461,7 @@ function SessionContent() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       {MULTIPLAYER_EXERCISES.map(ex => (
-                        <motion.button key={ex.slug} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                        <motion.button key={ex.slug} whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           onClick={() => setSelectedExercise(ex.slug)}
                           className="flex items-center gap-2 p-2.5 cursor-pointer text-left"
@@ -592,7 +592,7 @@ function SessionContent() {
             formScore={liveFormScore} formFeedback={feedback}
             statusBadge={
               phase === 'active' && !myRoundDone && gameMode === 'battle' ? (
-                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}
+                <motion.button whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   onClick={handleFinishRound}
                   className="px-3 py-2 font-display font-black uppercase tracking-wider text-xs cursor-pointer text-white"

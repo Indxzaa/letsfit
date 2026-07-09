@@ -922,11 +922,15 @@ export default function BossPage() {
                     style={{ background: tier.color, border: '3px solid #000', boxShadow: '4px 4px 0 #000' }}>
                     Play Again
                   </motion.button>
-                  <Link href="/adventure"
+                  <motion.button
+                    whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     className="flex-1 py-3.5 font-display text-base font-black uppercase tracking-widest text-white text-center"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '3px solid rgba(255,255,255,0.3)', boxShadow: 'none' }}>
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '3px solid rgba(255,255,255,0.3)', boxShadow: '4px 4px 0 rgba(255,255,255,0.15)', cursor: 'pointer' }}
+                    onClick={() => window.location.href = '/adventure'}
+                  >
                     Back to Adventure
-                  </Link>
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -956,11 +960,15 @@ export default function BossPage() {
                     style={{ background: '#ef4444', border: '3px solid #000', boxShadow: '4px 4px 0 #000' }}>
                     Try Again
                   </motion.button>
-                  <Link href="/adventure"
+                  <motion.button
+                    whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.97 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     className="flex-1 py-3.5 font-display text-base font-black uppercase tracking-widest text-white text-center"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: '3px solid rgba(255,255,255,0.3)' }}>
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '3px solid rgba(255,255,255,0.3)', boxShadow: '4px 4px 0 rgba(255,255,255,0.15)', cursor: 'pointer' }}
+                    onClick={() => window.location.href = '/adventure'}
+                  >
                     Back to Adventure
-                  </Link>
+                  </motion.button>
                 </div>
               </div>
             </div>

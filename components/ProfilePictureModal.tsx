@@ -173,24 +173,34 @@ export function ProfilePictureModal({ userId, currentPhotoUrl, letter, onSave, o
 
                 {/* Zoom controls */}
                 <div className="flex items-center gap-3 w-full">
-                  <button onClick={() => setCrop(c => ({ ...c, zoom: Math.max(0.5, c.zoom - 0.1) }))}
-                    className="flex items-center justify-center"
-                    style={{ width: 32, height: 32, border: '2px solid var(--neo-black)', background: 'var(--neo-surface)', cursor: 'pointer', boxShadow: '2px 2px 0 var(--neo-black)' }}>
+                  <motion.button
+                    onClick={() => setCrop(c => ({ ...c, zoom: Math.max(0.5, c.zoom - 0.1) }))}
+                    whileHover={{ y: -1 }} whileTap={{ y: 1, scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex items-center justify-center cursor-pointer"
+                    style={{ width: 32, height: 32, border: '2px solid var(--neo-black)', background: 'var(--neo-surface)', boxShadow: '2px 2px 0 var(--neo-black)' }}>
                     <ZoomOut size={14} strokeWidth={2.5} />
-                  </button>
+                  </motion.button>
                   <input type="range" min={0.5} max={3} step={0.05} value={crop.zoom}
                     onChange={e => setCrop(c => ({ ...c, zoom: parseFloat(e.target.value) }))}
                     className="flex-1" />
-                  <button onClick={() => setCrop(c => ({ ...c, zoom: Math.min(3, c.zoom + 0.1) }))}
-                    className="flex items-center justify-center"
-                    style={{ width: 32, height: 32, border: '2px solid var(--neo-black)', background: 'var(--neo-surface)', cursor: 'pointer', boxShadow: '2px 2px 0 var(--neo-black)' }}>
+                  <motion.button
+                    onClick={() => setCrop(c => ({ ...c, zoom: Math.min(3, c.zoom + 0.1) }))}
+                    whileHover={{ y: -1 }} whileTap={{ y: 1, scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex items-center justify-center cursor-pointer"
+                    style={{ width: 32, height: 32, border: '2px solid var(--neo-black)', background: 'var(--neo-surface)', boxShadow: '2px 2px 0 var(--neo-black)' }}>
                     <ZoomIn size={14} strokeWidth={2.5} />
-                  </button>
-                  <button onClick={() => { setCrop({ x: 0, y: 0, zoom: 1 }); }}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => { setCrop({ x: 0, y: 0, zoom: 1 }); }}
                     title="Reset"
-                    style={{ width: 32, height: 32, border: '2px solid var(--neo-black)', background: 'var(--neo-surface)', cursor: 'pointer', boxShadow: '2px 2px 0 var(--neo-black)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    whileHover={{ y: -1 }} whileTap={{ y: 1, scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex items-center justify-center cursor-pointer"
+                    style={{ width: 32, height: 32, border: '2px solid var(--neo-black)', background: 'var(--neo-surface)', boxShadow: '2px 2px 0 var(--neo-black)' }}>
                     <RotateCcw size={13} strokeWidth={2.5} />
-                  </button>
+                  </motion.button>
                 </div>
 
                 <button onClick={() => { setImageSrc(null); imgRef.current = null; }}
@@ -207,17 +217,25 @@ export function ProfilePictureModal({ userId, currentPhotoUrl, letter, onSave, o
 
           {/* Actions */}
           <div style={{ padding: '0 16px 16px', display: 'flex', gap: 8 }}>
-            <button onClick={handleSave} disabled={!imageSrc || uploading || saved}
-              className="flex-1 flex items-center justify-center gap-2 py-3 font-display font-black uppercase tracking-widest text-xs cursor-pointer"
+            <motion.button
+              onClick={handleSave} disabled={!imageSrc || uploading || saved}
+              whileHover={imageSrc && !uploading && !saved ? { y: -2 } : undefined}
+              whileTap={imageSrc && !uploading && !saved ? { y: 2, scale: 0.97 } : undefined}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="flex-1 flex items-center justify-center gap-2 py-3 font-display font-black uppercase tracking-widest text-xs"
               style={{ background: saved ? '#22c55e' : 'var(--neo-accent)', border: '3px solid #000', boxShadow: (!imageSrc || uploading || saved) ? 'none' : '3px 3px 0 #000', color: '#fff', borderRadius: 0, opacity: (!imageSrc || uploading) && !saved ? 0.5 : 1, cursor: !imageSrc || uploading || saved ? 'not-allowed' : 'pointer' }}>
               {uploading ? <><Loader2 size={13} className="animate-spin" /> Uploading…</> :
                saved    ? <><Check size={13} strokeWidth={3} /> Saved!</> :
                           <><Upload size={13} /> Save</>}
-            </button>
-            <button onClick={onClose} className="flex-1 py-3 font-display font-black uppercase tracking-widest text-xs cursor-pointer"
-              style={{ background: 'var(--neo-surface)', border: '3px solid #000', borderRadius: 0 }}>
+            </motion.button>
+            <motion.button
+              onClick={onClose}
+              whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="flex-1 py-3 font-display font-black uppercase tracking-widest text-xs cursor-pointer"
+              style={{ background: 'var(--neo-surface)', border: '3px solid #000', boxShadow: '3px 3px 0 #000', borderRadius: 0 }}>
               Cancel
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       </motion.div>

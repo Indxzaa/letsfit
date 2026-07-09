@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Activity, Eye, EyeOff, Mail, Lock, User as UserIcon,
+  ArrowLeft, Eye, EyeOff, Mail, Lock, User as UserIcon,
   Loader2, CheckCircle2, AlertCircle, Zap, Target, Flame,
 } from 'lucide-react';
+import Logo from './Logo';
 import { useAuth } from '@/components/AuthProvider';
 
 type Mode = 'signin' | 'signup';
@@ -94,10 +95,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <div className="py-10 lg:py-0">
           <div className="flex items-center gap-3 mb-10">
             <div
-              className="w-11 h-11 flex items-center justify-center bg-white"
+              className="w-11 h-11 flex items-center justify-center bg-white overflow-hidden"
               style={{ border: '3px solid var(--neo-black)', boxShadow: '3px 3px 0 var(--neo-black)' }}
             >
-              <Activity className="w-5 h-5" style={{ color: 'var(--accent)' }} strokeWidth={2.5} />
+              <Logo size={24} />
             </div>
             <span className="font-display text-xl font-bold text-white uppercase tracking-widest">
               LetsFit
@@ -147,10 +148,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <div className="lg:hidden flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
               <div
-                className="w-8 h-8 flex items-center justify-center"
+                className="w-8 h-8 flex items-center justify-center overflow-hidden"
                 style={{ background: 'var(--accent)', border: '2px solid var(--neo-black)', boxShadow: '2px 2px 0 var(--neo-black)' }}
               >
-                <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
+                <Logo size={20} />
               </div>
               <span className="font-display text-base font-bold text-app uppercase tracking-widest">
                 LetsFit

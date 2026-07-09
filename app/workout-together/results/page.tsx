@@ -3,8 +3,8 @@
 import { Suspense } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { Trophy, Zap, Coins, ArrowRight, RotateCcw, Crown, Medal } from 'lucide-react';
+import Link from 'next/link';
 import { EXERCISE_LABELS } from '@/lib/multiplayer/constants';
 import { computeResult } from '@/lib/multiplayer/mock';
 
@@ -200,9 +200,10 @@ function ResultsContent() {
             transition={{ delay: 0.42 }}
             className="flex flex-col sm:flex-row gap-3 pt-1"
           >
+            <motion.div className="flex-1" whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.97 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}>
             <Link
               href="/workout-together/lobby?mode=create"
-              className="flex-1 py-3.5 font-display font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2"
+              className="w-full py-3.5 font-display font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2"
               style={{
                 background: 'var(--neo-white)',
                 border: 'var(--neo-border)',
@@ -210,13 +211,16 @@ function ResultsContent() {
                 color: 'var(--neo-black)',
                 textDecoration: 'none',
                 borderRadius: 0,
+                display: 'flex',
               }}
             >
               <RotateCcw className="w-4 h-4" /> Play Again
             </Link>
+            </motion.div>
+            <motion.div className="flex-1" whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.97 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}>
             <Link
               href="/dashboard"
-              className="flex-1 py-3.5 font-display font-black uppercase tracking-wider text-sm flex items-center justify-center gap-2"
+              className="w-full py-3.5 font-display font-black uppercase tracking-wider text-sm flex items-center justify-center gap-2"
               style={{
                 background: 'var(--neo-accent)',
                 border: 'var(--neo-border)',
@@ -224,10 +228,12 @@ function ResultsContent() {
                 color: '#fff',
                 textDecoration: 'none',
                 borderRadius: 0,
+                display: 'flex',
               }}
             >
               Dashboard <ArrowRight className="w-4 h-4" />
             </Link>
+            </motion.div>
           </motion.div>
 
         </motion.div>
