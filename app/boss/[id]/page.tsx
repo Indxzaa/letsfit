@@ -468,38 +468,72 @@ export default function BossPage() {
           </div>
         )}
 
-        {/* TOP bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex flex-col gap-3">
+        {/* TOP HUD — RPG overlay, no card/container */}
+        <div className="absolute top-0 left-0 right-0 px-4 pt-4 pb-2 flex flex-col gap-2">
+          {/* Exit + Timer row */}
           <div className="flex items-center justify-between">
             <Link href="/adventure" onClick={() => { stopTimers(); stopCamera(); stopAnimation(); }}
-              className="flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors">
+              className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-white/80 hover:text-white transition-colors">
               <ArrowLeft className="w-4 h-4" /> Exit
             </Link>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-white/60" />
-              <span className={`font-display text-2xl font-bold tabular-nums ${timeWarning ? 'text-red-400' : 'text-white'}`}>
-                {formatTime(timeLeft)}
-              </span>
-            </div>
+            <span className={`font-display text-2xl font-black tabular-nums ${timeWarning ? 'text-red-400' : 'text-white'}`}
+              style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.8)' }}>
+              <Clock className="inline w-4 h-4 mr-1 opacity-60" />
+              {formatTime(timeLeft)}
+            </span>
           </div>
 
+          {/* Boss HP — no box, just label + bar */}
           {cfg && (
-            <BossHealthBar
-              bossName={boss.name}
-              world={boss.world}
-              tierLabel={tier.label}
-              tierColor={tier.color}
-              bossHp={bossHp}
-              bossPhase={bossPhase}
-              bossIsHit={bossIsHit}
-              combo={combo}
-              imageSrc={cfg.image}
-            />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-display text-sm font-black text-white uppercase tracking-wide"
+                  style={{ textShadow: '1px 1px 0 rgba(0,0,0,0.9)' }}>
+                  {boss.name}
+                  <span className="ml-2 text-[10px] font-bold tracking-widest opacity-70">{tier.label}</span>
+                </span>
+                <span className="font-display text-sm font-black tabular-nums"
+                  style={{ color: hpColor, textShadow: '1px 1px 0 rgba(0,0,0,0.9)' }}>
+                  {Math.round(bossHp)}%
+                  {combo >= 3 && (
+                    <motion.span key={combo} initial={{ scale: 1.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      className="ml-2 text-[10px] font-black uppercase px-1.5 py-0.5"
+                      style={{ background: combo >= 10 ? '#f59e0b' : combo >= 5 ? '#8b5cf6' : tier.color, color: '#000', border: '2px solid #000' }}>
+                      ×{combo}
+                    </motion.span>
+                  )}
+                </span>
+              </div>
+              {/* Health track */}
+              <div className="relative h-3" style={{ background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(255,255,255,0.25)' }}>
+                {/* Ghost bar */}
+                <div className="absolute inset-y-0 left-0 transition-all duration-500"
+                  style={{ width: `${bossHp}%`, background: 'rgba(255,255,255,0.18)' }} />
+                {/* Fill */}
+                <motion.div className="absolute inset-y-0 left-0"
+                  animate={{ width: `${bossHp}%` }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  style={{ background: hpColor }} />
+                {/* Segment markers */}
+                {[25, 50, 75].map(p => (
+                  <div key={p} className="absolute top-0 bottom-0 w-px"
+                    style={{ left: `${p}%`, background: 'rgba(0,0,0,0.5)' }} />
+                ))}
+              </div>
+              {bossPhase !== 'normal' && (
+                <motion.span key={bossPhase} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  className="text-[10px] font-black uppercase tracking-widest"
+                  style={{ color: hpColor, textShadow: '1px 1px 0 rgba(0,0,0,0.8)' }}>
+                  {bossPhase === 'enraged' ? '⚡ ENRAGED' : '💀 DESPERATE'}
+                </motion.span>
+              )}
+            </div>
           )}
 
-          <div className="flex gap-2">
+          {/* Round dots */}
+          <div className="flex gap-1.5">
             {boss.rounds.map((_, i) => (
-              <div key={i} className="h-1.5 flex-1 rounded-full"
+              <div key={i} className="h-1 flex-1"
                 style={{ background: i < roundIndex ? tier.color : i === roundIndex ? `${tier.color}99` : 'rgba(255,255,255,0.2)' }} />
             ))}
           </div>
@@ -578,32 +612,32 @@ export default function BossPage() {
         </AnimatePresence>
 
         {/* BOTTOM */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5">
-          <div className="flex items-end justify-between gap-4"
-            style={{
-              background: 'rgba(10,10,10,0.92)',
-              border: `3px solid ${attackPhase === 'warning' ? attackColor : tier.color}`,
-              boxShadow: `4px 4px 0 ${attackPhase === 'warning' ? attackColor : '#000'}`,
-              padding: '14px 18px',
-              borderRadius: 0,
-            }}>
+        {/* BOTTOM HUD — single line, no card */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+          <div className="flex items-center justify-between gap-4"
+            style={{ background: 'rgba(0,0,0,0.55)', padding: '10px 16px' }}>
             <div>
-              <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: tier.color }}>
-                Round {roundIndex + 1} / {boss.rounds.length} · {isTimed ? 'Hold' : 'Reps'}
+              <div className="font-display text-lg sm:text-2xl font-black text-white uppercase tracking-wide"
+                style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.9)' }}>
+                {round.label}
               </div>
-              <div className="font-display text-xl sm:text-2xl font-bold text-white mb-1">{round.label}</div>
-              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                {isTimed ? `${formatTime(roundSeconds)} elapsed · goal ${formatTime(target)}` : `${reps} / ${target} · AI counting via camera`}
+              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                Round {roundIndex + 1}/{boss.rounds.length}
               </div>
             </div>
-            <AnimatePresence mode="wait">
-              <motion.div key={isTimed ? roundSeconds : reps}
-                initial={{ scale: 1.2, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }}
-                className="font-display font-bold tabular-nums shrink-0"
-                style={{ fontSize: 'clamp(4rem, 12vw, 7rem)', color: tier.color, lineHeight: 1 }}>
-                {isTimed ? formatTime(roundSeconds) : reps}
-              </motion.div>
-            </AnimatePresence>
+            <div className="text-right">
+              <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: tier.color }}>
+                {isTimed ? 'Time' : 'Reps'}
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.div key={isTimed ? roundSeconds : reps}
+                  initial={{ scale: 1.15, opacity: 0.7 }} animate={{ scale: 1, opacity: 1 }}
+                  className="font-display font-black tabular-nums"
+                  style={{ fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', color: tier.color, lineHeight: 1, textShadow: '2px 2px 0 rgba(0,0,0,0.8)' }}>
+                  {isTimed ? formatTime(roundSeconds) : reps}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
