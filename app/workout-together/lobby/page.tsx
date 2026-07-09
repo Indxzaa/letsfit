@@ -18,7 +18,6 @@ import { subscribeSessionEvents, broadcastSessionEvent } from '@/lib/multiplayer
 import { SocialContext } from '@/components/social/SocialProvider';
 
 const BATTLE_ROUNDS_OPTIONS = [3, 5, 10] as const;
-const DEFAULT_REP_GOAL = 10;
 
 function lobbyStatus(playerCount: number, allReady: boolean): string {
   if (playerCount < 2) return 'Waiting for another player…';
@@ -91,7 +90,6 @@ function LobbyContent() {
   const [invitingSending, setInvitingSending] = useState<string | null>(null);
   // Initial exercise picker for the first round (host only, shown before start)
   const [pickedExercise,  setPickedExercise]  = useState<string>(room?.selected_exercise ?? MULTIPLAYER_EXERCISES[0].slug);
-  const [pickedRepGoal,   setPickedRepGoal]   = useState<number | null>(null);
 
   // Sync picked exercise when room loads
   useEffect(() => {
@@ -122,7 +120,7 @@ function LobbyContent() {
   const displayCode = code || room?.room_code || '------';
   const me          = players.find(p => p.user_id === user?.id);
   const allReady    = players.length >= 2 && players.every(p => p.is_ready);
-  const canStart    = isHost && allReady && !!pickedExercise;
+  const canStart    = isHost && allReady && (gameMode === 'freestyle' || !!pickedExercise);
   const statusText  = lobbyStatus(players.length, allReady);
   const statusColor = lobbyStatusColor(players.length, allReady);
 
@@ -148,7 +146,7 @@ function LobbyContent() {
     if (!canStart || starting || !room) return;
     setStarting(true);
     await triggerStart();
-    const exercise = pickedExercise;
+    const exercise = gameMode === 'freestyle' ? MULTIPLAYER_EXERCISES[0].slug : pickedExercise;
     const gMode    = gameMode;
     const bRounds  = battleRounds;
     await broadcastSessionEvent(roomId, {
@@ -320,13 +318,12 @@ function LobbyContent() {
               </div>
             </div>
 
-            {isHost && (
+            {isHost && gameMode === 'battle' && (
               <div className="neo-card overflow-hidden" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
                 <div className="px-5 pt-4 pb-3" style={{ borderBottom: '3px solid var(--neo-black)' }}>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-subtle">Starting Exercise</span>
                 </div>
-                <div className="p-4 space-y-4">
-                  {/* Exercise grid */}
+                <div className="p-4">
                   <div className="grid grid-cols-2 gap-2">
                     {MULTIPLAYER_EXERCISES.map(ex => {
                       const selected = pickedExercise === ex.slug;
@@ -348,39 +345,6 @@ function LobbyContent() {
                         </motion.button>
                       );
                     })}
-                  </div>
-
-                  {/* Optional rep goal */}
-                  <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-subtle mb-2">Rep Goal (optional)</div>
-                    <div className="flex flex-wrap gap-2">
-                      {[null, 10, 20, 30, 50].map(n => {
-                        const sel = pickedRepGoal === n;
-                        return (
-                          <motion.button
-                            key={n ?? 'unlimited'}
-                            whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                            onClick={() => setPickedRepGoal(n)}
-                            className="px-3 py-2 font-display font-black text-xs uppercase cursor-pointer"
-                            style={{
-                              background: sel ? 'var(--neo-black)' : 'var(--neo-white)',
-                              border: sel ? '3px solid #000' : 'var(--neo-border-2)',
-                              boxShadow: sel ? '3px 3px 0 #000' : 'none',
-                              color: sel ? 'var(--neo-white)' : 'var(--neo-black)',
-                              borderRadius: 0,
-                            }}
-                          >
-                            {n === null ? 'Unlimited' : `${n} reps`}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                    {pickedRepGoal === null && (
-                      <p className="text-[10px] text-subtle mt-1.5 font-semibold uppercase tracking-wider">
-                        No target — continue until you choose to stop
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
