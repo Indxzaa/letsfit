@@ -614,30 +614,25 @@ export default function BossPage() {
         {/* BOTTOM */}
         {/* BOTTOM HUD — single line, no card */}
         <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-          <div className="flex items-center justify-between gap-4"
+          <div className="flex items-center gap-3"
             style={{ background: 'rgba(0,0,0,0.55)', padding: '10px 16px' }}>
-            <div>
-              <div className="font-display text-lg sm:text-2xl font-black text-white uppercase tracking-wide"
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className="font-display text-lg sm:text-2xl font-black text-white uppercase tracking-wide truncate"
                 style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.9)' }}>
                 {round.label}
-              </div>
-              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                Round {roundIndex + 1}/{boss.rounds.length}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: tier.color }}>
-                {isTimed ? 'Time' : 'Reps'}
-              </div>
+              </span>
               <AnimatePresence mode="wait">
-                <motion.div key={isTimed ? roundSeconds : reps}
-                  initial={{ scale: 1.15, opacity: 0.7 }} animate={{ scale: 1, opacity: 1 }}
-                  className="font-display font-black tabular-nums"
-                  style={{ fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', color: tier.color, lineHeight: 1, textShadow: '2px 2px 0 rgba(0,0,0,0.8)' }}>
-                  {isTimed ? formatTime(roundSeconds) : reps}
-                </motion.div>
+                <motion.span key={isTimed ? roundSeconds : reps}
+                  initial={{ scale: 1.2, opacity: 0.7 }} animate={{ scale: 1, opacity: 1 }}
+                  className="font-display font-black tabular-nums shrink-0"
+                  style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: tier.color, lineHeight: 1, textShadow: '2px 2px 0 rgba(0,0,0,0.8)' }}>
+                  ·{isTimed ? formatTime(roundSeconds) : reps}
+                </motion.span>
               </AnimatePresence>
             </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest shrink-0 ml-auto" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              R{roundIndex + 1}/{boss.rounds.length}
+            </span>
           </div>
         </div>
       </div>
