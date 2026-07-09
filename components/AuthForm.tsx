@@ -94,12 +94,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         {/* Brand + Headline */}
         <div className="py-10 lg:py-0">
           <div className="flex items-center gap-3 mb-10">
-            <div
-              className="w-11 h-11 flex items-center justify-center bg-white overflow-hidden"
-              style={{ border: '3px solid var(--neo-black)', boxShadow: '3px 3px 0 var(--neo-black)' }}
-            >
-              <Logo size={24} />
-            </div>
+            <Logo size={44} />
             <span className="font-display text-xl font-bold text-white uppercase tracking-widest">
               LetsFit
             </span>
@@ -147,12 +142,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {/* Mobile-only back + logo */}
           <div className="lg:hidden flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 flex items-center justify-center overflow-hidden"
-                style={{ background: 'var(--accent)', border: '2px solid var(--neo-black)', boxShadow: '2px 2px 0 var(--neo-black)' }}
-              >
-                <Logo size={20} />
-              </div>
+              <Logo size={32} />
               <span className="font-display text-base font-bold text-app uppercase tracking-widest">
                 LetsFit
               </span>
@@ -255,31 +245,25 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 </div>
               )}
 
-              <button
+              <motion.button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 text-sm font-bold uppercase tracking-wider transition-all duration-100 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                whileHover={!loading ? { y: -2 } : {}}
+                whileTap={!loading ? { y: 2, scale: 0.97 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                className="w-full py-3.5 text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 style={{
                   background: 'var(--accent)',
                   border: '3px solid var(--neo-black)',
                   boxShadow: '4px 4px 0 var(--neo-black)',
                   color: '#fff',
-                  transform: loading ? 'translate(2px, 2px)' : undefined,
-                }}
-                onMouseDown={(e) => {
-                  if (!loading) (e.currentTarget as HTMLButtonElement).style.cssText +=
-                    'box-shadow: 2px 2px 0 var(--neo-black); transform: translate(2px, 2px);';
-                }}
-                onMouseUp={(e) => {
-                  if (!loading) (e.currentTarget as HTMLButtonElement).style.cssText +=
-                    'box-shadow: 4px 4px 0 var(--neo-black); transform: none;';
                 }}
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {loading
                   ? isSignup ? 'Creating account…' : 'Logging in…'
                   : isSignup ? 'Create Account' : 'Log In'}
-              </button>
+              </motion.button>
             </form>
           </div>
 

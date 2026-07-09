@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { UserPlus } from 'lucide-react';
 import { FriendCard } from './FriendCard';
 import type { FriendWithPresence, PresenceMap } from '@/types/social';
@@ -68,8 +69,11 @@ export function FriendList({
         }}
       >
         <span className="font-display text-sm font-black uppercase tracking-widest">Friends</span>
-        <button
+        <motion.button
           onClick={onAddFriend}
+          whileHover={{ y: -2 }}
+          whileTap={{ y: 2, scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
           className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-2"
           style={{
             background: 'var(--neo-accent)',
@@ -81,7 +85,7 @@ export function FriendList({
         >
           <UserPlus size={12} strokeWidth={2.5} />
           Add Friend
-        </button>
+        </motion.button>
       </div>
 
       {/* Tabs */}
