@@ -243,7 +243,7 @@ export default function ProgressPage() {
                   className="neo-card p-4"
                   style={earned ? {
                     borderRadius: 0,
-                    background: 'var(--neo-white)',
+                    background: 'var(--neo-cream)',
                     borderColor: rc.color,
                     boxShadow: `3px 3px 0 ${rc.color}`,
                   } : {

@@ -80,7 +80,7 @@ export default function DashboardPage() {
             />
             <div>
               <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--neo-accent)' }}>
-                Mission Control
+                 information    
               </div>
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-app leading-tight">
                 {greeting()}, {getUsername() ?? 'champion'}.
