@@ -19,6 +19,7 @@ import { EmojiPicker } from '@/components/multiplayer/EmojiPicker';
 import { EmojiReactionBubble } from '@/components/multiplayer/EmojiReactionBubble';
 import { loadProgress } from '@/lib/progress';
 import { SHOP_ITEMS } from '@/lib/shop';
+import { playSound } from '@/lib/audio';
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -347,6 +348,7 @@ function SessionContent() {
     const item = SHOP_ITEMS.find(i => i.id === emojiId);
     if (!item || !user?.id) return;
     setMyReaction(r => ({ src: item.value, key: r.key + 1 }));
+    playSound('emoji-sent');
     broadcastEmojiReaction(roomId, { userId: user.id, emojiId });
   };
 
@@ -355,9 +357,28 @@ function SessionContent() {
     if (myReps > prevRepRef.current) {
       prevRepRef.current = myReps;
       setRepFlash(true);
+      playSound('rep');
       setTimeout(() => setRepFlash(false), 200);
     }
   }, [myReps]);
+
+  // Countdown beep on each tick
+  const prevCountdownRef = useRef(0);
+  useEffect(() => {
+    if (countdown > 0 && countdown !== prevCountdownRef.current) {
+      prevCountdownRef.current = countdown;
+      playSound('countdown');
+    }
+  }, [countdown]);
+
+  // Workout start
+  const prevPhaseRef = useRef('');
+  useEffect(() => {
+    if (phase === 'active' && prevPhaseRef.current !== 'active') {
+      playSound('workout-start');
+    }
+    prevPhaseRef.current = phase;
+  }, [phase]);
 
   // Freestyle: auto-signal when reps reach goal
   useEffect(() => {

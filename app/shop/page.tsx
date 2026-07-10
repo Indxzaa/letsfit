@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Coins, Check, Lock } from 'lucide-react';
+import { playSound } from '@/lib/audio';
 import {
   loadProgress,
   purchaseItem,
@@ -63,12 +64,13 @@ export default function ShopPage() {
 
   const handlePurchase = (id: string, cost: number) => {
     const result = purchaseItem(progress, id, cost);
-    if (result.reason === 'insufficient') { showFeedback('err', 'Not enough FitCoins.'); return; }
+    if (result.reason === 'insufficient') { showFeedback('err', 'Not enough FitCoins.'); playSound('insufficient'); return; }
     if (result.reason === 'owned') { showFeedback('err', 'You already own this item.'); return; }
     const final = applyNewAchievements(result.progress);
     if (final !== result.progress) saveProgress(final);
     setProgress(final);
     showFeedback('ok', 'Item unlocked!');
+    playSound('purchase');
   };
 
   const handleEquip = (slot: string, id: string) => {

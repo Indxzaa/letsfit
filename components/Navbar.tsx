@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users } from 'lucide-react';
+import { Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users, Volume2, VolumeX } from 'lucide-react';
 import Logo from './Logo';
 import { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { loadProgress, saveProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { getUsername, setUsername } from '@/lib/profileSync';
 import { useTheme } from './ThemeProvider';
+import { useSoundSettings } from '@/hooks/useSound';
 import { NotificationPanel } from './social/notifications/NotificationPanel';
 import { SocialContext } from './social/SocialProvider';
 
@@ -42,6 +43,7 @@ export default function Navbar() {
   const { user, signOut, loading } = useAuth();
   const { avatarUrl: photoUrl, setAvatarUrl: setPhotoUrl } = useAvatarUrl(user?.id ?? null);
   const { mode, toggleMode } = useTheme();
+  const { isMuted, toggleMuted } = useSoundSettings();
   const pathname = usePathname();
   const router   = useRouter();
   const social = useContext(SocialContext);
@@ -126,7 +128,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <Logo size={85} />
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-green)', letterSpacing: '-0.01em' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-black)', letterSpacing: '-0.01em' }}>
               LETSFIT
             </span>
           </Link>
@@ -202,6 +204,36 @@ export default function Navbar() {
             >
               {mode === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
               <span>{mode === 'dark' ? 'Light' : 'Dark'}</span>
+            </button>
+            {/* Sound toggle */}
+            <button
+              onClick={toggleMuted}
+              aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
+              className="flex items-center shrink-0 cursor-pointer"
+              style={{
+                borderRadius: '9999px',
+                border: '2px solid var(--neo-black)',
+                background: 'var(--neo-surface)',
+                color: 'var(--neo-black)',
+                padding: '0.4rem 0.875rem',
+                gap: '0.375rem',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 600,
+                boxShadow: '2px 2px 0 var(--neo-black)',
+                transition: 'box-shadow 0.1s ease, transform 0.1s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = '4px 4px 0 var(--neo-black)';
+                e.currentTarget.style.transform = 'translate(-1px, -1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = '2px 2px 0 var(--neo-black)';
+                e.currentTarget.style.transform = 'none';
+              }}
+            >
+              {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+              <span>{isMuted ? 'Sound off' : 'Sound on'}</span>
             </button>
             {/* Notification bell — only when authenticated and social context is available */}
             {user && social && (
@@ -502,6 +534,14 @@ export default function Navbar() {
                 >
                   {mode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                   {mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                </button>
+                <button
+                  onClick={toggleMuted}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold cursor-pointer"
+                  style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', background: 'var(--neo-surface)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-sm)' }}
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {isMuted ? 'Sound off' : 'Sound on'}
                 </button>
                 {user ? (
                   <>

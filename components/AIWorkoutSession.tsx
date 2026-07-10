@@ -18,6 +18,7 @@ import {
 } from '@/lib/progress';
 import { checkAchievements, checkQuests } from '@/lib/achievements';
 import { XpPopupLayer, type XpPopupItem } from '@/components/XpPopup';
+import { playSound } from '@/lib/audio';
 import { AchievementToastLayer } from '@/components/AchievementToast';
 import TargetPicker from '@/components/TargetPicker';
 import WorkoutComplete from '@/components/WorkoutComplete';
@@ -154,6 +155,8 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
         checkQuests
       );
       setSessionResult(result);
+      playSound('exercise-complete');
+      if (result.leveledUp) playSound('level-up');
       if (result.newAchievements.length > 0) {
         setAchievementToasts((prev) => [...prev, ...result.newAchievements]);
       }
@@ -233,6 +236,7 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
               repCountRef.current += 1;
               const newCount = repCountRef.current;
               setReps(newCount);
+              playSound('rep');
               const id = ++popupIdRef.current;
               setXpPopups((prev) => [...prev, { id, amount: 10 }]);
               if (newCount >= targetRef.current) {
