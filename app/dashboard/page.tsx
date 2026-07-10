@@ -321,53 +321,48 @@ export default function DashboardPage() {
               const firstDow = new Date(year, month, 1).getDay();
               const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
               const claimed = progress.calendarMonth === currentMonth ? progress.calendarClaimedDays : [];
+              const todayClaimed = claimed.includes(todayDay);
               return (
-                <div className="grid grid-cols-7 gap-0.5">
-                  {Array.from({ length: firstDow }, (_, i) => <div key={`e-${i}`} />)}
-                  {Array.from({ length: daysInMonth }, (_, i) => {
-                    const day = i + 1;
-                    const isClaimed = claimed.includes(day);
-                    const isToday = day === todayDay;
-                    const isFuture = day > todayDay;
-                    return (
-                      <div
-                        key={day}
-                        className="aspect-square rounded-sm"
-                        style={{
-                          background: isClaimed
-                            ? 'color-mix(in srgb, #ef4444 60%, transparent)'
-                            : isToday
-                            ? 'var(--neo-accent)'
-                            : isFuture
-                            ? 'var(--border)'
-                            : 'color-mix(in srgb, var(--border) 60%, transparent)',
-                          opacity: isFuture ? 0.3 : 1,
-                          boxShadow: isToday ? '0 0 6px color-mix(in srgb, var(--neo-accent) 50%, transparent)' : 'none',
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })()}
-            {(() => {
-              const now = new Date();
-              const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-              const claimed = progress.calendarMonth === currentMonth ? progress.calendarClaimedDays : [];
-              const todayClaimed = claimed.includes(now.getDate());
-              return (
-                <div
-                  className="mt-4 w-full py-2 text-center text-xs font-bold transition-opacity"
-                  style={{
-                    borderRadius: 6,
-                    background: todayClaimed ? 'var(--border)' : 'var(--neo-accent)',
-                    color: todayClaimed ? 'var(--text-subtle)' : '#fff',
-                    opacity: todayClaimed ? 0.6 : 1,
-                    border: todayClaimed ? '2px solid var(--border-strong)' : '2px solid var(--neo-accent)',
-                  }}
-                >
-                  {todayClaimed ? '✓ Claimed today' : '🎁 Claim today\'s reward'}
-                </div>
+                <>
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {Array.from({ length: firstDow }, (_, i) => <div key={`e-${i}`} />)}
+                    {Array.from({ length: daysInMonth }, (_, i) => {
+                      const day = i + 1;
+                      const isClaimed = claimed.includes(day);
+                      const isToday = day === todayDay;
+                      const isFuture = day > todayDay;
+                      return (
+                        <div
+                          key={day}
+                          className="aspect-square"
+                          style={{
+                            background: isClaimed
+                              ? '#000'
+                              : isToday
+                              ? 'var(--neo-accent)'
+                              : 'rgba(0,0,0,0.08)',
+                            border: isToday ? '1.5px solid #000' : 'none',
+                            boxShadow: isToday ? '1.5px 1.5px 0 #000' : 'none',
+                            opacity: isFuture ? 0.2 : 1,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div
+                    className="mt-3 w-full py-2.5 text-center text-xs font-black uppercase tracking-widest"
+                    style={{
+                      background: todayClaimed ? 'rgba(0,0,0,0.06)' : 'var(--neo-accent)',
+                      border: '3px solid #000',
+                      boxShadow: todayClaimed ? 'none' : '3px 3px 0 #000',
+                      color: todayClaimed ? 'var(--neo-black)' : '#fff',
+                      opacity: todayClaimed ? 0.55 : 1,
+                      borderRadius: 0,
+                    }}
+                  >
+                    {todayClaimed ? '✓ Claimed today' : '🎁 Claim today\'s reward'}
+                  </div>
+                </>
               );
             })()}
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { LOGIN_REWARDS } from '@/lib/loginRewards';
 import type { Progress } from '@/lib/progress';
@@ -49,7 +49,7 @@ export default function LoginCalendarModal({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const monthName = now.toLocaleString('default', { month: 'long' });
 
   const effectiveClaimedDays = localClaimed.size
     ? [...progress.calendarClaimedDays, ...localClaimed]
@@ -63,8 +63,10 @@ export default function LoginCalendarModal({
     const reward = LOGIN_REWARDS[((day - 1) % 7)];
     setClaimedReward(reward);
     onClaim(day);
-    setTimeout(() => setClaimedReward(null), 2500);
+    setTimeout(() => setClaimedReward(null), 2800);
   };
+
+  const todayReward = LOGIN_REWARDS[((todayDay - 1) % 7)];
 
   return (
     <AnimatePresence>
@@ -74,7 +76,7 @@ export default function LoginCalendarModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(6px)' }}
+          style={{ background: 'rgba(0,0,0,0.85)' }}
           onClick={phase === 'calendar' ? onClose : undefined}
         >
           <AnimatePresence mode="wait">
@@ -85,22 +87,25 @@ export default function LoginCalendarModal({
                 animate={{ opacity: 1, scale: [0, 1.7, 1.4, 1.6, 1.45] }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.9, times: [0, 0.3, 0.5, 0.7, 1] }}
-                className="flex flex-col items-center gap-4 select-none pointer-events-none"
+                className="flex flex-col items-center gap-5 select-none pointer-events-none"
               >
                 <div className="text-[120px] leading-none">🔥</div>
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="font-display text-4xl font-black text-white text-center drop-shadow-lg"
+                  className="font-display text-5xl font-black text-white text-center uppercase leading-none"
+                  style={{ textShadow: '4px 4px 0 rgba(0,0,0,0.35)', letterSpacing: '-0.02em' }}
                 >
-                  {progress.loginStreak > 1 ? `${progress.loginStreak} Day Streak!` : 'Welcome Back!'}
+                  {progress.loginStreak > 1
+                    ? <>{progress.loginStreak}<br />Day Streak!</>
+                    : 'Welcome Back!'}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
-                  className="text-white/60 text-sm"
+                  className="text-white/70 text-xs font-black uppercase tracking-widest"
                 >
                   Claim today&apos;s reward ↓
                 </motion.div>
@@ -113,111 +118,206 @@ export default function LoginCalendarModal({
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-lg rounded-3xl p-6 overflow-y-auto max-h-[90vh]"
+                className="relative w-full max-w-sm overflow-y-auto max-h-[92vh]"
                 style={{
-                  background: 'var(--surface-solid)',
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 32px 80px rgba(0,0,0,0.55)',
+                  background: '#fff',
+                  border: '4px solid #000',
+                  boxShadow: '8px 8px 0 #000',
+                  borderRadius: 0,
                 }}
               >
+                {/* Close */}
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: 'var(--surface)' }}
+                  className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center cursor-pointer z-10"
+                  style={{
+                    background: '#000',
+                    border: '2px solid #000',
+                    boxShadow: '2px 2px 0 #555',
+                    color: '#fff',
+                    borderRadius: 0,
+                  }}
                 >
-                  <X className="w-4 h-4 text-subtle" />
+                  <X className="w-4 h-4" />
                 </button>
 
-                <div className="mb-5">
-                  <div className="flex items-center gap-2 text-sm font-semibold mb-1" style={{ color: 'var(--accent)' }}>
-                    <Flame className="w-4 h-4" />
-                    {progress.loginStreak}-day login streak
-                  </div>
-                  <h2 className="font-display text-2xl font-bold text-app">{monthName}</h2>
-                  <p className="text-xs text-subtle mt-1">Click today to claim your daily reward</p>
-                </div>
-
-                <div className="grid grid-cols-7 gap-1 mb-1">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                    <div key={i} className="text-center text-[10px] font-bold py-1" style={{ color: 'var(--text-subtle)' }}>{d}</div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-1 mb-4">
-                  {Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`e-${i}`} />)}
-                  {Array.from({ length: daysInMonth }, (_, i) => {
-                    const day = i + 1;
-                    const state = getDayState(day, todayDay, effectiveClaimedDays, progress.calendarMonth, currentMonth);
-                    const reward = LOGIN_REWARDS[((day - 1) % 7)];
-                    const isClaimable = state === 'today-claimable';
-                    const isClaimed = state === 'claimed' || state === 'today-claimed';
-                    const isInactive = state === 'future' || state === 'past-missed';
-
-                    return (
-                      <motion.button
-                        key={day}
-                        onClick={() => handleDayClick(day)}
-                        disabled={!isClaimable}
-                        whileHover={isClaimable ? { scale: 1.08 } : {}}
-                        whileTap={isClaimable ? { scale: 0.93 } : {}}
-                        className="relative aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 overflow-hidden"
-                        style={{
-                          background: isClaimed
-                            ? 'color-mix(in srgb, #ef4444 12%, var(--surface))'
-                            : isClaimable
-                            ? 'color-mix(in srgb, var(--accent) 18%, var(--surface-solid))'
-                            : 'var(--surface)',
-                          border: isClaimable
-                            ? '1px solid color-mix(in srgb, var(--accent) 50%, transparent)'
-                            : isClaimed
-                            ? '1px solid color-mix(in srgb, #ef4444 30%, transparent)'
-                            : '1px solid var(--border)',
-                          opacity: isInactive ? 0.3 : 1,
-                          cursor: isClaimable ? 'pointer' : 'default',
-                          boxShadow: isClaimable ? '0 0 12px color-mix(in srgb, var(--accent) 28%, transparent)' : 'none',
-                        }}
+                {/* Header */}
+                <div className="px-5 pt-5 pb-4" style={{ borderBottom: '4px solid #000' }}>
+                  <div className="flex items-end gap-4 mb-3">
+                    <div
+                      className="font-display font-black leading-none tabular-nums"
+                      style={{ fontSize: 'clamp(3rem,12vw,4rem)', color: '#000', lineHeight: 1 }}
+                    >
+                      {progress.loginStreak}
+                    </div>
+                    <div className="pb-1">
+                      <div
+                        className="text-[10px] font-black uppercase tracking-widest mb-0.5"
+                        style={{ color: 'var(--neo-accent)' }}
                       >
-                        {isClaimed ? (
-                          <>
-                            <span className="text-[9px] font-bold" style={{ color: '#ef4444' }}>{day}</span>
-                            <span className="text-sm leading-none" style={{ color: '#ef4444' }}>✓</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-[9px] font-bold" style={{ color: isClaimable ? 'var(--accent)' : 'var(--text-subtle)' }}>{day}</span>
-                            {!isInactive && <span className="text-[11px] leading-none">{reward.icon}</span>}
-                          </>
-                        )}
-                        {isClaimable && (
-                          <motion.div
-                            animate={{ opacity: [0.3, 0.7, 0.3] }}
-                            transition={{ duration: 1.8, repeat: Infinity }}
-                            className="absolute inset-0 rounded-xl pointer-events-none"
-                            style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)' }}
-                          />
-                        )}
-                      </motion.button>
-                    );
-                  })}
+                        🔥 Day Streak
+                      </div>
+                      <div className="font-display text-2xl font-black uppercase leading-none" style={{ color: '#000' }}>
+                        {monthName}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Today's reward preview */}
+                  {!effectiveClaimedDays.includes(todayDay) && (
+                    <div
+                      className="flex items-center gap-3 px-3 py-2"
+                      style={{
+                        background: 'var(--neo-accent)',
+                        border: '2px solid #000',
+                        borderRadius: 0,
+                      }}
+                    >
+                      <span className="text-lg">{todayReward.icon}</span>
+                      <div>
+                        <div className="text-[9px] font-black uppercase tracking-widest text-white/75">Today&apos;s Reward</div>
+                        <div className="text-xs font-black uppercase text-white">{todayReward.label}</div>
+                      </div>
+                      <div className="ml-auto text-[10px] font-black uppercase tracking-wider text-white/80">
+                        Tap day {todayDay} ↓
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Week headers */}
+                  <div className="grid grid-cols-7 mt-3">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                      <div
+                        key={i}
+                        className="text-center text-[10px] font-black uppercase tracking-wider py-1"
+                        style={{ color: '#000' }}
+                      >
+                        {d}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
+                {/* Calendar grid */}
+                <div className="p-4">
+                  <div className="grid grid-cols-7 gap-1">
+                    {Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`e-${i}`} />)}
+                    {Array.from({ length: daysInMonth }, (_, i) => {
+                      const day = i + 1;
+                      const state = getDayState(day, todayDay, effectiveClaimedDays, progress.calendarMonth, currentMonth);
+                      const reward = LOGIN_REWARDS[((day - 1) % 7)];
+                      const isClaimable = state === 'today-claimable';
+                      const isClaimed = state === 'claimed' || state === 'today-claimed';
+                      const isInactive = state === 'future' || state === 'past-missed';
+
+                      let bg = '#f0f0f0';
+                      let border = '2px solid rgba(0,0,0,0.1)';
+                      let shadow = 'none';
+
+                      if (isClaimed) {
+                        bg = '#000';
+                        border = '2px solid #000';
+                        shadow = 'none';
+                      } else if (isClaimable) {
+                        bg = 'var(--neo-accent)';
+                        border = '3px solid #000';
+                        shadow = '3px 3px 0 #000';
+                      }
+
+                      return (
+                        <motion.button
+                          key={day}
+                          onClick={() => handleDayClick(day)}
+                          disabled={!isClaimable}
+                          whileHover={isClaimable ? { y: -2, boxShadow: '5px 5px 0 #000' } : {}}
+                          whileTap={isClaimable ? { y: 2, boxShadow: '1px 1px 0 #000' } : {}}
+                          className="relative aspect-square flex flex-col items-center justify-center gap-px overflow-hidden"
+                          style={{
+                            background: bg,
+                            border,
+                            boxShadow: shadow,
+                            opacity: isInactive ? 0.22 : 1,
+                            cursor: isClaimable ? 'pointer' : 'default',
+                            borderRadius: 0,
+                            transition: 'box-shadow 0.1s ease',
+                          }}
+                        >
+                          {isClaimed ? (
+                            <>
+                              <span className="text-[8px] font-black leading-none" style={{ color: '#fff' }}>{day}</span>
+                              <span className="text-[11px] font-black leading-none" style={{ color: '#fff' }}>✓</span>
+                            </>
+                          ) : (
+                            <>
+                              <span
+                                className="text-[8px] font-black leading-none"
+                                style={{ color: isClaimable ? '#fff' : 'rgba(0,0,0,0.6)' }}
+                              >
+                                {day}
+                              </span>
+                              {!isInactive && (
+                                <span className="text-[10px] leading-none">{reward.icon}</span>
+                              )}
+                            </>
+                          )}
+                          {isClaimable && (
+                            <motion.div
+                              animate={{ opacity: [0.15, 0.45, 0.15] }}
+                              transition={{ duration: 1.6, repeat: Infinity }}
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ background: 'rgba(255,255,255,0.3)' }}
+                            />
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Footer: legend + best streak */}
+                <div
+                  className="px-4 py-3 flex items-center gap-4 flex-wrap"
+                  style={{ borderTop: '3px solid #000', background: '#f8f8f8' }}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3" style={{ background: '#000', border: '1.5px solid #000' }} />
+                    <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#000' }}>Claimed</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3" style={{ background: 'var(--neo-accent)', border: '1.5px solid #000' }} />
+                    <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#000' }}>Today</span>
+                  </div>
+                  <div
+                    className="ml-auto text-[10px] font-black uppercase tracking-wider px-2 py-1"
+                    style={{ background: '#000', color: '#fff', border: '2px solid #000' }}
+                  >
+                    Best: {progress.highestLoginStreak}d
+                  </div>
+                </div>
+
+                {/* Claimed reward banner */}
                 <AnimatePresence>
                   {claimedReward && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      className="rounded-2xl p-4 flex items-center gap-3"
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mx-4 mb-4 mt-1 p-4 flex items-center gap-4"
                       style={{
-                        background: 'color-mix(in srgb, var(--accent) 15%, var(--surface-solid))',
-                        border: '1px solid color-mix(in srgb, var(--accent) 35%, transparent)',
+                        background: 'var(--neo-accent)',
+                        border: '4px solid #000',
+                        boxShadow: '5px 5px 0 #000',
+                        borderRadius: 0,
                       }}
                     >
-                      <span className="text-3xl">{claimedReward.icon}</span>
-                      <div>
-                        <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Claimed!</div>
-                        <div className="font-display text-lg font-bold text-app">{claimedReward.label}</div>
+                      <span className="text-4xl">{claimedReward.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-white/80">Reward Claimed!</div>
+                        <div className="font-display text-lg font-black text-white uppercase leading-tight truncate">
+                          {claimedReward.label}
+                        </div>
                       </div>
+                      <div className="text-4xl font-black text-white/30 leading-none">✓</div>
                     </motion.div>
                   )}
                 </AnimatePresence>
