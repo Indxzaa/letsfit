@@ -14,6 +14,11 @@ import { useWorkoutSession } from '@/lib/multiplayer/useWorkoutSession';
 import { useMultiplayerWorkoutSync } from '@/hooks/multiplayer/useMultiplayerWorkoutSync';
 import { EXERCISE_LABELS, MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
 import type { PeerConnectionState } from '@/lib/multiplayer/webrtc';
+import { subscribeEmojiReactions, broadcastEmojiReaction } from '@/lib/multiplayer/reactions';
+import { EmojiPicker } from '@/components/multiplayer/EmojiPicker';
+import { EmojiReactionBubble } from '@/components/multiplayer/EmojiReactionBubble';
+import { loadProgress } from '@/lib/progress';
+import { SHOP_ITEMS } from '@/lib/shop';
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -82,13 +87,15 @@ function MediaDeniedGate({ error, onRetry }: { error: string; onRetry: () => voi
 }
 
 // CameraPanel now accepts an optional detectionCanvas ref to overlay on the local feed
-function CameraPanel({ label, stream, isLocal, accent, peerState, controls, detectionCanvasRef, repCount, repGoal, repFlash, formScore, formFeedback, statusBadge }: {
+function CameraPanel({ label, stream, isLocal, accent, peerState, controls, detectionCanvasRef, repCount, repGoal, repFlash, formScore, formFeedback, statusBadge, reaction, onReactionExpire }: {
   label: string; stream: MediaStream | null; isLocal: boolean;
   accent: string; peerState?: PeerConnectionState; controls?: React.ReactNode;
   detectionCanvasRef?: React.RefObject<HTMLCanvasElement | null>;
   repCount?: number; repGoal?: number; repFlash?: boolean;
   formScore?: number; formFeedback?: string;
   statusBadge?: React.ReactNode;
+  reaction?: { src: string | null; key: number };
+  onReactionExpire?: () => void;
 }) {
   const hasVideo = !!stream && stream.getVideoTracks().some(t => t.enabled);
   const color = peerState ? connColor(peerState) : accent;
@@ -177,6 +184,14 @@ function CameraPanel({ label, stream, isLocal, accent, peerState, controls, dete
         {/* Camera controls — bottom-right */}
         {controls && (
           <div className="absolute bottom-3 right-3 flex gap-1.5">{controls}</div>
+        )}
+
+        {reaction && (
+          <EmojiReactionBubble
+            src={reaction.src}
+            reactionKey={reaction.key}
+            onExpire={onReactionExpire ?? (() => {})}
+          />
         )}
       </div>
     </div>
@@ -311,6 +326,29 @@ function SessionContent() {
 
   const label = EXERCISE_LABELS[currentExercise] ?? currentExercise;
   const pColor = connColor(peerState);
+
+  const [progress] = useState(() => loadProgress());
+  const ownedEmojiItems = SHOP_ITEMS.filter(i => i.type === 'emoji' && progress.unlockedItems.includes(i.id));
+  const [myReaction, setMyReaction] = useState<{ src: string | null; key: number }>({ src: null, key: 0 });
+  const [partnerReaction, setPartnerReaction] = useState<{ src: string | null; key: number }>({ src: null, key: 0 });
+
+  useEffect(() => {
+    if (!roomId) return;
+    return subscribeEmojiReactions(roomId, (event) => {
+      if (event.userId === user?.id) return;
+      const item = SHOP_ITEMS.find(i => i.id === event.emojiId);
+      if (!item) return;
+      setPartnerReaction(r => ({ src: item.value, key: r.key + 1 }));
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
+
+  const handleSendReaction = (emojiId: string) => {
+    const item = SHOP_ITEMS.find(i => i.id === emojiId);
+    if (!item || !user?.id) return;
+    setMyReaction(r => ({ src: item.value, key: r.key + 1 }));
+    broadcastEmojiReaction(roomId, { userId: user.id, emojiId });
+  };
 
   // Flash on new rep
   useEffect(() => {
@@ -621,8 +659,13 @@ function SessionContent() {
                   <CtrlBtn on={!isPaused} icon={<Pause className="w-4 h-4" />} offIcon={<Play className="w-4 h-4" />}
                     onToggle={isPaused ? hostResume : hostPause} label="Pause" />
                 )}
+                {ownedEmojiItems.length > 0 && (
+                  <EmojiPicker items={ownedEmojiItems} onSend={handleSendReaction} variant="dark" />
+                )}
               </>
             }
+            reaction={myReaction}
+            onReactionExpire={() => setMyReaction(r => ({ ...r, src: null }))}
           />
         </motion.div>
 
@@ -642,6 +685,8 @@ function SessionContent() {
                 {connLabel(peerState)}
               </div>
             }
+            reaction={partnerReaction}
+            onReactionExpire={() => setPartnerReaction(r => ({ ...r, src: null }))}
           />
         </motion.div>
       </div>

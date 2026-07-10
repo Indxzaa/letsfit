@@ -15,6 +15,11 @@ import { useAuth } from '@/components/AuthProvider';
 import { useLobby } from '@/lib/multiplayer/hooks';
 import { MULTIPLAYER_EXERCISES } from '@/lib/multiplayer/constants';
 import { subscribeSessionEvents, broadcastSessionEvent } from '@/lib/multiplayer/workoutSession';
+import { subscribeEmojiReactions, broadcastEmojiReaction } from '@/lib/multiplayer/reactions';
+import { EmojiPicker } from '@/components/multiplayer/EmojiPicker';
+import { EmojiReactionBubble } from '@/components/multiplayer/EmojiReactionBubble';
+import { loadProgress } from '@/lib/progress';
+import { SHOP_ITEMS } from '@/lib/shop';
 import { SocialContext } from '@/components/social/SocialProvider';
 
 const BATTLE_ROUNDS_OPTIONS = [3, 5, 10] as const;
@@ -31,14 +36,23 @@ function lobbyStatusColor(playerCount: number, allReady: boolean): string {
   return '#22c55e';
 }
 
-function LobbyPlayerRow({ player, isThisHost, isMe, isReady, hasDivider }: {
+function LobbyPlayerRow({ player, isThisHost, isMe, isReady, hasDivider, reaction, onReactionExpire }: {
   player: { id: string; user_id: string; username: string; is_ready: boolean };
   isThisHost: boolean; isMe: boolean; isReady: boolean; hasDivider: boolean;
+  reaction?: { src: string | null; key: number };
+  onReactionExpire?: () => void;
 }) {
   const { avatarUrl } = useAvatarUrl(player.user_id);
   return (
-    <div className="flex items-center gap-3 px-5 py-4"
+    <div className="relative flex items-center gap-3 px-5 py-4"
       style={{ borderBottom: hasDivider ? '2px solid var(--neo-black)' : undefined }}>
+      {reaction && (
+        <EmojiReactionBubble
+          src={reaction.src}
+          reactionKey={reaction.key}
+          onExpire={onReactionExpire ?? (() => {})}
+        />
+      )}
       <UserAvatar photoUrl={avatarUrl} letter={player.username} size="md" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -91,6 +105,10 @@ function LobbyContent() {
   // Initial exercise picker for the first round (host only, shown before start)
   const [pickedExercise,  setPickedExercise]  = useState<string>(room?.selected_exercise ?? MULTIPLAYER_EXERCISES[0].slug);
 
+  const [progress] = useState(() => loadProgress());
+  const ownedEmojiItems = SHOP_ITEMS.filter(i => i.type === 'emoji' && progress.unlockedItems.includes(i.id));
+  const [reactions, setReactions] = useState<Record<string, { src: string | null; key: number }>>({});
+
   // Sync picked exercise when room loads
   useEffect(() => {
     if (room?.selected_exercise) setPickedExercise(room.selected_exercise);
@@ -116,6 +134,25 @@ function LobbyContent() {
     });
     return unsub;
   }, [roomId, isHost, router]);
+
+  // Emoji reactions
+  useEffect(() => {
+    if (!roomId) return;
+    return subscribeEmojiReactions(roomId, (event) => {
+      if (event.userId === user?.id) return;
+      const item = SHOP_ITEMS.find(i => i.id === event.emojiId);
+      if (!item) return;
+      setReactions(r => ({ ...r, [event.userId]: { src: item.value, key: (r[event.userId]?.key ?? 0) + 1 } }));
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
+
+  const handleSendReaction = (emojiId: string) => {
+    const item = SHOP_ITEMS.find(i => i.id === emojiId);
+    if (!item || !user?.id) return;
+    setReactions(r => ({ ...r, [user.id]: { src: item.value, key: (r[user.id]?.key ?? 0) + 1 } }));
+    broadcastEmojiReaction(roomId, { userId: user.id, emojiId });
+  };
 
   const displayCode = code || room?.room_code || '------';
   const me          = players.find(p => p.user_id === user?.id);
@@ -380,6 +417,8 @@ function LobbyContent() {
                         isMe={isMe}
                         isReady={p.is_ready}
                         hasDivider={i < players.length - 1}
+                        reaction={reactions[p.user_id]}
+                        onReactionExpire={() => setReactions(r => ({ ...r, [p.user_id]: { ...r[p.user_id], src: null } }))}
                       />
                     );
                   })}
@@ -454,6 +493,13 @@ function LobbyContent() {
 
             {/* ── Actions ── */}
             <div className="flex flex-col gap-3 pt-1">
+              {ownedEmojiItems.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-3"
+                  style={{ background: 'var(--neo-white)', border: 'var(--neo-border-2)', borderRadius: 0 }}>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-subtle">Send a Reaction</span>
+                  <EmojiPicker items={ownedEmojiItems} onSend={handleSendReaction} variant="light" />
+                </div>
+              )}
               <motion.button
                 whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}

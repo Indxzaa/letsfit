@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Coins, Check, Lock } from 'lucide-react';
 import {
@@ -21,21 +22,19 @@ import { applyNewAchievements } from '@/lib/achievements';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
-type TabType = 'border' | 'aura';
+type TabType = 'emoji';
 
 const TABS: { id: TabType; label: string }[] = [
-  { id: 'border', label: 'Borders' },
-  { id: 'aura',   label: 'Auras' },
+  { id: 'emoji', label: 'Emojis' },
 ];
 
 const CARD_COLORS: Record<TabType, string> = {
-  border: 'var(--card-bg-blue)',
-  aura:   'var(--card-bg-purple)',
+  emoji: 'var(--card-bg-amber)',
 };
 
 export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [tab, setTab] = useState<TabType>('border');
+  const [tab, setTab] = useState<TabType>('emoji');
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
   const { user } = useAuth();
   const isDev = user?.email === DEV_EMAIL;
@@ -211,7 +210,21 @@ export default function ShopPage() {
 
                   <div className="mt-auto">
                     {isUnlocked ? (
-                      isEquipped ? (
+                      item.type === 'emoji' ? (
+                        <button
+                          disabled
+                          className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                          style={{
+                            background: 'var(--card-bg-green)',
+                            border: 'var(--neo-border)',
+                            color: 'var(--neo-accent)',
+                            opacity: 0.9,
+                          }}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Owned
+                        </button>
+                      ) : isEquipped ? (
                         <button
                           disabled
                           className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
@@ -330,6 +343,16 @@ function ItemPreview({ item }: { item: ShopItem }) {
         ) : (
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
         )}
+      </div>
+    );
+  }
+
+  if (item.type === 'emoji') {
+    return (
+      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
+        <div className="relative w-20 h-20">
+          <Image src={item.value} alt={item.name} fill className="object-contain" unoptimized />
+        </div>
       </div>
     );
   }

@@ -13,7 +13,7 @@ export type ShopItem = {
   id: string;
   name: string;
   description: string;
-  type: 'avatar' | 'border' | 'badge' | 'title' | 'aura';
+  type: 'avatar' | 'border' | 'badge' | 'title' | 'aura' | 'emoji';
   cost: number;
   value: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world';

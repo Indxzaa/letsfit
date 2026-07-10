@@ -32,7 +32,18 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'aura-aurora',    name: 'Aurora',    description: 'Aurora borealis color shift.', type: 'aura', cost: 1500, value: 'aurora',    rarity: 'legendary' },
   { id: 'aura-shadow',    name: 'Shadow',    description: 'Void absorption field.',       type: 'aura', cost: 2200, value: 'shadow',    rarity: 'mythic' },
   { id: 'aura-solar',     name: 'Solar',     description: 'Golden solar flare burst.',    type: 'aura', cost: 3500, value: 'solar',     rarity: 'mythic' },
+
+  // Emojis — multiplayer reactions
+  { id: 'emoji-angry',    name: 'Angry',               description: 'Send an angry reaction.',     type: 'emoji', cost: 100, value: '/emoji1.png', rarity: 'common' },
+  { id: 'emoji-sassy',    name: 'Sassy',               description: 'Send a sassy reaction.',      type: 'emoji', cost: 150, value: '/emoji2.png', rarity: 'common' },
+  { id: 'emoji-roses',    name: 'Roses',               description: 'Send a roses reaction.',      type: 'emoji', cost: 250, value: '/emoji3.png', rarity: 'rare' },
+  { id: 'emoji-smile',    name: 'Smile',               description: 'Send a smile reaction.',      type: 'emoji', cost: 350, value: '/emoji4.png', rarity: 'rare' },
+  { id: 'emoji-laughing', name: 'Laughing',            description: 'Send a laughing reaction.',   type: 'emoji', cost: 430, value: '/emoji5.png', rarity: 'epic' },
+  { id: 'emoji-loser',    name: 'Loser',               description: 'Send a loser reaction.',      type: 'emoji', cost: 670, value: '/emoji6.png', rarity: 'epic' },
+  { id: 'emoji-bulleh',   name: 'Why You Bulleh Meh',  description: 'Send the ultimate reaction.', type: 'emoji', cost: 750, value: '/emoji7.png', rarity: 'legendary' },
 ];
+
+export const EMOJI_ITEM_IDS = ['emoji-angry', 'emoji-sassy', 'emoji-roses', 'emoji-smile', 'emoji-laughing', 'emoji-loser', 'emoji-bulleh'];
 
 export const FREE_DEFAULTS = ['border-none', 'aura-none'];
 
