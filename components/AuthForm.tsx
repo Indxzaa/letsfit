@@ -93,8 +93,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
         {/* Brand + Headline */}
         <div className="py-10 lg:py-0">
-          <div className="flex items-center gap-3 mb-10">
-            <Logo size={44} />
+          <div className="flex items-center gap-1 mb-10">
+            <Logo size={85} />
             <span className="font-display text-xl font-bold text-white uppercase tracking-widest">
               LetsFit
             </span>
@@ -142,7 +142,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {/* Mobile-only back + logo */}
           <div className="lg:hidden flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <Logo size={32} />
+              <Logo size={128} />
               <span className="font-display text-base font-bold text-app uppercase tracking-widest">
                 LetsFit
               </span>
