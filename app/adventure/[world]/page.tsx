@@ -13,6 +13,7 @@ import { getWorldStages, isStageComplete, isStageUnlocked } from '@/lib/stages';
 import { getBoss, BOSS_GAME_CONFIGS, TIER_CONFIG, type BossTier } from '@/lib/bosses';
 import { loadProgress, subscribeToProgress, type Progress } from '@/lib/progress';
 import { useAuth } from '@/components/AuthProvider';
+import { playSound } from '@/lib/audio';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
@@ -455,7 +456,7 @@ export default function WorldPage() {
 
         {/* Back link */}
         <button
-          onClick={() => setShowExit(true)}
+          onClick={() => { playSound('click'); setShowExit(true); }}
           className="link-back mb-8 inline-flex cursor-pointer"
           style={{ color: theme.primary, borderColor: `${theme.primary}40` }}
         >
@@ -597,7 +598,7 @@ export default function WorldPage() {
                 {/* Buttons */}
                 <div className="flex flex-col gap-3">
                   <motion.button
-                    onClick={() => router.push('/progress')}
+                    onClick={() => { playSound('click'); router.push('/progress'); }}
                     whileHover={{ y: -2 }} whileTap={{ y: 2, scale: 0.97 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     className="w-full py-3 text-sm font-black uppercase tracking-widest text-white cursor-pointer"
@@ -611,6 +612,7 @@ export default function WorldPage() {
                   </motion.button>
                   <motion.button
                     onClick={() => {
+                      playSound('click');
                       localStorage.removeItem('letsfit:lastWorld');
                       router.push('/adventure');
                     }}
@@ -626,7 +628,7 @@ export default function WorldPage() {
                     Back to World Map
                   </motion.button>
                   <button
-                    onClick={() => setShowExit(false)}
+                    onClick={() => { playSound('click'); setShowExit(false); }}
                     className="w-full py-2.5 text-sm font-semibold cursor-pointer hover:opacity-70 transition-opacity"
                     style={{ color: 'var(--text-muted)', background: 'transparent', border: 'none' }}
                   >

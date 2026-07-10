@@ -363,9 +363,9 @@ function SessionContent() {
   }, [myReps]);
 
   // Countdown beep on each tick
-  const prevCountdownRef = useRef(0);
+  const prevCountdownRef = useRef<number>(0);
   useEffect(() => {
-    if (countdown > 0 && countdown !== prevCountdownRef.current) {
+    if (typeof countdown === 'number' && countdown > 0 && countdown !== prevCountdownRef.current) {
       prevCountdownRef.current = countdown;
       playSound('countdown');
     }

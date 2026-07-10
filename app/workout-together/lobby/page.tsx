@@ -21,6 +21,7 @@ import { EmojiReactionBubble } from '@/components/multiplayer/EmojiReactionBubbl
 import { loadProgress } from '@/lib/progress';
 import { SHOP_ITEMS } from '@/lib/shop';
 import { SocialContext } from '@/components/social/SocialProvider';
+import { playSound } from '@/lib/audio';
 
 const BATTLE_ROUNDS_OPTIONS = [3, 5, 10] as const;
 
@@ -151,6 +152,7 @@ function LobbyContent() {
     const item = SHOP_ITEMS.find(i => i.id === emojiId);
     if (!item || !user?.id) return;
     setReactions(r => ({ ...r, [user.id]: { src: item.value, key: (r[user.id]?.key ?? 0) + 1 } }));
+    playSound('emoji-sent');
     broadcastEmojiReaction(roomId, { userId: user.id, emojiId });
   };
 
@@ -163,6 +165,7 @@ function LobbyContent() {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(displayCode).catch(() => {});
+    playSound('click');
     setCopied(true);
     setTimeout(() => setCopied(false), 2200);
   };
@@ -181,6 +184,7 @@ function LobbyContent() {
 
   const handleStart = async () => {
     if (!canStart || starting || !room) return;
+    playSound('workout-start');
     setStarting(true);
     await triggerStart();
     const exercise = gameMode === 'freestyle' ? MULTIPLAYER_EXERCISES[0].slug : pickedExercise;
@@ -465,6 +469,7 @@ function LobbyContent() {
                                         <button disabled={invitingSending === f.profile.id}
                                           onClick={async () => {
                                             if (!user || !roomId) return;
+                                            playSound('invite');
                                             setInvitingSending(f.profile.id);
                                             const senderUsername = user.user_metadata?.username ?? user.email?.split('@')[0] ?? 'User';
                                             const senderAvatar = user.user_metadata?.avatar ?? null;
@@ -503,7 +508,7 @@ function LobbyContent() {
               <motion.button
                 whileHover={{ y: -3 }} whileTap={{ y: 2, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                onClick={() => user && toggleReady(user.id, me?.is_ready ?? false)}
+                onClick={() => { if (!user) return; playSound(me?.is_ready ? 'click' : 'ready'); toggleReady(user.id, me?.is_ready ?? false); }}
                 disabled={!user}
                 className="w-full py-4 font-display font-black uppercase tracking-widest text-base cursor-pointer flex items-center justify-center gap-2"
                 style={{
