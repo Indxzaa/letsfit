@@ -7,10 +7,11 @@ export const RARITY_CONFIG: Record<string, { label: string; color: string }> = {
   legendary: { label: 'Legendary', color: '#d8a848' },
   mythic:    { label: 'Mythic',    color: '#d87898' },
   world:     { label: 'World',     color: '#60c898' },
+  premium:   { label: 'Premium',   color: '#a855f7' },
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
-  // Emojis — multiplayer reactions
+  // Emojis — multiplayer reactions (FitCoin purchases)
   { id: 'emoji-angry',    name: 'Angry',               description: 'Send an angry reaction.',     type: 'emoji', cost: 100, value: '/emoji1.png', rarity: 'common' },
   { id: 'emoji-sassy',    name: 'Sassy',               description: 'Send a sassy reaction.',      type: 'emoji', cost: 150, value: '/emoji2.png', rarity: 'common' },
   { id: 'emoji-roses',    name: 'Roses',               description: 'Send a roses reaction.',      type: 'emoji', cost: 250, value: '/emoji3.png', rarity: 'rare' },
@@ -18,6 +19,10 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'emoji-laughing', name: 'Laughing',            description: 'Send a laughing reaction.',   type: 'emoji', cost: 430, value: '/emoji5.png', rarity: 'epic' },
   { id: 'emoji-loser',    name: 'Loser',               description: 'Send a loser reaction.',      type: 'emoji', cost: 670, value: '/emoji6.png', rarity: 'epic' },
   { id: 'emoji-bulleh',   name: 'Why You Bulleh Meh',  description: 'Send the ultimate reaction.', type: 'emoji', cost: 750, value: '/emoji7.png', rarity: 'legendary' },
+
+  // Premium emojis — Emoji Fragment purchases
+  { id: 'prememoji1', name: 'Feet',   description: 'Premium reaction. Costs Emoji Fragments.', type: 'emoji', cost: 100, value: '/prememoji1.png', rarity: 'premium', currency: 'fragments' },
+  { id: 'prememoji2', name: 'Please', description: 'Premium reaction. Costs Emoji Fragments.', type: 'emoji', cost: 150, value: '/prememoji2.png', rarity: 'premium', currency: 'fragments' },
 ];
 
 export const EMOJI_ITEM_IDS = ['emoji-angry', 'emoji-sassy', 'emoji-roses', 'emoji-smile', 'emoji-laughing', 'emoji-loser', 'emoji-bulleh'];

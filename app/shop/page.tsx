@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Coins, Check, Lock } from 'lucide-react';
+import { ArrowLeft, Coins, Check, Lock, Gem } from 'lucide-react';
 import { playSound } from '@/lib/audio';
 import {
   loadProgress,
   purchaseItem,
+  purchaseWithFragments,
   equipItem,
   saveProgress,
   subscribeToProgress,
@@ -73,6 +74,17 @@ export default function ShopPage() {
     playSound('purchase');
   };
 
+  const handleFragmentPurchase = (id: string, cost: number) => {
+    const result = purchaseWithFragments(progress, id, cost);
+    if (result.reason === 'insufficient') { showFeedback('err', 'Not enough Emoji Fragments.'); playSound('insufficient'); return; }
+    if (result.reason === 'owned') { showFeedback('err', 'You already own this item.'); return; }
+    const final = applyNewAchievements(result.progress);
+    if (final !== result.progress) saveProgress(final);
+    setProgress(final);
+    showFeedback('ok', 'Premium emoji unlocked!');
+    playSound('purchase');
+  };
+
   const handleEquip = (slot: string, id: string) => {
     const updated = equipItem(progress, slot, id);
     setProgress(updated);
@@ -81,6 +93,7 @@ export default function ShopPage() {
 
   const items = SHOP_ITEMS.filter((i) => i.type === tab);
   const cardBg = CARD_COLORS[tab];
+  const fragments = progress.emojiFragments ?? 0;
 
   return (
     <div className="min-h-screen page-bg">
@@ -103,16 +116,43 @@ export default function ShopPage() {
               Spend FitCoins on cosmetic upgrades. Earned items stay unlocked permanently.
             </p>
           </div>
-          {/* FitCoins balance */}
-          <div className="neo-card px-5 py-3.5 flex items-center gap-3" style={{ background: 'var(--card-bg-amber)', borderRadius: 0 }}>
-            <div className="w-9 h-9 flex items-center justify-center neo-card-accent" style={{ borderRadius: 0 }}>
-              <Coins className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <div className="font-display text-2xl font-bold text-app tabular-nums leading-none">
-                {progress.fitCoins.toLocaleString()}
+
+          {/* Currency balances */}
+          <div className="flex flex-col gap-2">
+            {/* FitCoins */}
+            <div className="neo-card px-5 py-3.5 flex items-center gap-3" style={{ background: 'var(--card-bg-amber)', borderRadius: 0 }}>
+              <div className="w-9 h-9 flex items-center justify-center neo-card-accent" style={{ borderRadius: 0 }}>
+                <Coins className="w-4 h-4 text-white" />
               </div>
-              <div className="text-xs font-bold uppercase tracking-wider text-subtle">FitCoins</div>
+              <div>
+                <div className="font-display text-2xl font-bold text-app tabular-nums leading-none">
+                  {progress.fitCoins.toLocaleString()}
+                </div>
+                <div className="text-xs font-bold uppercase tracking-wider text-subtle">FitCoins</div>
+              </div>
+            </div>
+            {/* Emoji Fragments */}
+            <div
+              className="neo-card px-5 py-3.5 flex items-center gap-3"
+              style={{
+                background: '#f5f0ff',
+                borderRadius: 0,
+                border: '3px solid #000',
+                boxShadow: '3px 3px 0 #000',
+              }}
+            >
+              <div
+                className="w-9 h-9 flex items-center justify-center"
+                style={{ background: '#a855f7', borderRadius: 0, border: '2px solid #000' }}
+              >
+                <Gem className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="font-display text-2xl font-bold tabular-nums leading-none" style={{ color: '#a855f7' }}>
+                  {fragments.toLocaleString()}
+                </div>
+                <div className="text-xs font-black uppercase tracking-wider" style={{ color: '#7c3aed' }}>Emoji Fragments</div>
+              </div>
             </div>
           </div>
         </div>
@@ -157,10 +197,13 @@ export default function ShopPage() {
         {/* Item grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {items.map((item, i) => {
-            const isUnlocked = allUnlocked.has(item.id);
-            const isEquipped = equipped[item.type] === item.id;
-            const canAfford  = progress.fitCoins >= item.cost;
-            const rarity     = RARITY_CONFIG[item.rarity];
+            const isUnlocked    = allUnlocked.has(item.id);
+            const isEquipped    = equipped[item.type] === item.id;
+            const isFragment    = item.currency === 'fragments';
+            const canAfford     = isFragment
+              ? fragments >= item.cost
+              : progress.fitCoins >= item.cost;
+            const rarity        = RARITY_CONFIG[item.rarity];
 
             return (
               <motion.div
@@ -171,9 +214,13 @@ export default function ShopPage() {
                 className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
                 style={{
                   borderRadius: 0,
-                  background: isEquipped ? 'var(--card-bg-green)' : cardBg,
-                  borderColor: isEquipped ? 'var(--neo-accent)' : undefined,
-                  boxShadow: isEquipped ? 'var(--neo-shadow-lg)' : 'var(--neo-shadow)',
+                  background: isEquipped ? 'var(--card-bg-green)' : isFragment ? '#faf5ff' : cardBg,
+                  borderColor: isEquipped ? 'var(--neo-accent)' : isFragment ? '#a855f7' : undefined,
+                  boxShadow: isEquipped
+                    ? 'var(--neo-shadow-lg)'
+                    : isFragment
+                    ? '4px 4px 0 #a855f7'
+                    : 'var(--neo-shadow)',
                 }}
               >
                 {/* Preview */}
@@ -263,6 +310,33 @@ export default function ShopPage() {
                         <Lock className="w-3.5 h-3.5" />
                         Clear a world to unlock
                       </button>
+                    ) : isFragment ? (
+                      <motion.button
+                        onClick={() => handleFragmentPurchase(item.id, item.cost)}
+                        disabled={!canAfford}
+                        whileHover={canAfford ? { y: -2 } : undefined}
+                        whileTap={canAfford ? { y: 2, scale: 0.97 } : undefined}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                          background: canAfford ? '#a855f7' : 'var(--neo-white)',
+                          border: '3px solid #000',
+                          boxShadow: canAfford ? '3px 3px 0 #000' : 'none',
+                          color: canAfford ? '#fff' : 'var(--text-subtle)',
+                        }}
+                      >
+                        {canAfford ? (
+                          <>
+                            <Gem className="w-3.5 h-3.5" />
+                            <span>{item.cost} Fragments</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Need {item.cost} Frags</span>
+                          </>
+                        )}
+                      </motion.button>
                     ) : (
                       <motion.button
                         onClick={() => handlePurchase(item.id, item.cost)}
@@ -350,11 +424,24 @@ function ItemPreview({ item }: { item: ShopItem }) {
   }
 
   if (item.type === 'emoji') {
+    const isPremium = item.rarity === 'premium';
     return (
-      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
+      <div
+        className="aspect-[4/3] flex items-center justify-center relative"
+        style={{ background: isPremium ? '#f5f0ff' : 'var(--neo-white)' }}
+      >
         <div className="relative w-20 h-20">
           <Image src={item.value} alt={item.name} fill className="object-contain" unoptimized />
         </div>
+        {isPremium && (
+          <div
+            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+            style={{ background: '#a855f7', border: '2px solid #000', color: '#fff' }}
+          >
+            <Gem className="w-2.5 h-2.5" />
+            Premium
+          </div>
+        )}
       </div>
     );
   }
