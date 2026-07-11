@@ -9,7 +9,7 @@ import { playSound } from '@/lib/audio';
 import {
   loadProgress,
   purchaseItem,
-  purchaseWithFragments,
+  purchaseWithEmeralds,
   equipItem,
   saveProgress,
   subscribeToProgress,
@@ -24,15 +24,13 @@ import { applyNewAchievements } from '@/lib/achievements';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
 
-type TabType = 'emoji';
+type TabType = 'emoji' | 'premium' | 'supreme';
 
 const TABS: { id: TabType; label: string }[] = [
-  { id: 'emoji', label: 'Emojis' },
+  { id: 'emoji',   label: 'Emojis' },
+  { id: 'premium', label: 'Premium' },
+  { id: 'supreme', label: 'Supreme' },
 ];
-
-const CARD_COLORS: Record<TabType, string> = {
-  emoji: 'var(--card-bg-amber)',
-};
 
 export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
@@ -42,8 +40,15 @@ export default function ShopPage() {
   const isDev = user?.email === DEV_EMAIL;
 
   useEffect(() => {
-    setProgress(loadProgress());
-    const unsub = subscribeToProgress(() => setProgress(loadProgress()));
+    let p = loadProgress();
+    // Auto-unlock premium emojis when fragment threshold is reached
+    p = checkPremiumAutoUnlocks(p);
+    setProgress(p);
+    const unsub = subscribeToProgress(() => {
+      let fresh = loadProgress();
+      fresh = checkPremiumAutoUnlocks(fresh);
+      setProgress(fresh);
+    });
     return unsub;
   }, []);
 
@@ -74,14 +79,14 @@ export default function ShopPage() {
     playSound('purchase');
   };
 
-  const handleFragmentPurchase = (id: string, cost: number) => {
-    const result = purchaseWithFragments(progress, id, cost);
-    if (result.reason === 'insufficient') { showFeedback('err', 'Not enough Emoji Fragments.'); playSound('insufficient'); return; }
+  const handleEmeraldPurchase = (id: string, cost: number) => {
+    const result = purchaseWithEmeralds(progress, id, cost);
+    if (result.reason === 'insufficient') { showFeedback('err', 'Not enough Emeralds.'); playSound('insufficient'); return; }
     if (result.reason === 'owned') { showFeedback('err', 'You already own this item.'); return; }
     const final = applyNewAchievements(result.progress);
     if (final !== result.progress) saveProgress(final);
     setProgress(final);
-    showFeedback('ok', 'Premium emoji unlocked!');
+    showFeedback('ok', 'Supreme emoji unlocked!');
     playSound('purchase');
   };
 
@@ -91,9 +96,14 @@ export default function ShopPage() {
     showFeedback('ok', 'Equipped.');
   };
 
-  const items = SHOP_ITEMS.filter((i) => i.type === tab);
-  const cardBg = CARD_COLORS[tab];
+  const tabItems: ShopItem[] = tab === 'emoji'
+    ? SHOP_ITEMS.filter(i => i.type === 'emoji' && !i.currency)
+    : tab === 'premium'
+    ? SHOP_ITEMS.filter(i => i.currency === 'fragments')
+    : SHOP_ITEMS.filter(i => i.currency === 'emeralds');
+
   const fragments = progress.emojiFragments ?? 0;
+  const emeralds  = progress.emeralds ?? 0;
 
   return (
     <div className="min-h-screen page-bg">
@@ -113,7 +123,7 @@ export default function ShopPage() {
               Customize your profile.
             </h1>
             <p className="text-sm text-muted mt-2 max-w-lg">
-              Spend FitCoins on cosmetic upgrades. Earned items stay unlocked permanently.
+              Spend FitCoins on emojis, Emeralds on supreme drops, and collect Fragments to unlock premium emojis.
             </p>
           </div>
 
@@ -131,27 +141,16 @@ export default function ShopPage() {
                 <div className="text-xs font-bold uppercase tracking-wider text-subtle">FitCoins</div>
               </div>
             </div>
-            {/* Emoji Fragments */}
-            <div
-              className="neo-card px-5 py-3.5 flex items-center gap-3"
-              style={{
-                background: '#f5f0ff',
-                borderRadius: 0,
-                border: '3px solid #000',
-                boxShadow: '3px 3px 0 #000',
-              }}
-            >
-              <div
-                className="w-9 h-9 flex items-center justify-center"
-                style={{ background: '#a855f7', borderRadius: 0, border: '2px solid #000' }}
-              >
+            {/* Emeralds */}
+            <div className="neo-card px-5 py-3.5 flex items-center gap-3" style={{ background: '#ecfdf5', borderRadius: 0, border: '3px solid #000', boxShadow: '3px 3px 0 #000' }}>
+              <div className="w-9 h-9 flex items-center justify-center" style={{ background: '#10b981', borderRadius: 0, border: '2px solid #000' }}>
                 <Gem className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="font-display text-2xl font-bold tabular-nums leading-none" style={{ color: '#a855f7' }}>
-                  {fragments.toLocaleString()}
+                <div className="font-display text-2xl font-bold tabular-nums leading-none" style={{ color: '#10b981' }}>
+                  {emeralds.toLocaleString()}
                 </div>
-                <div className="text-xs font-black uppercase tracking-wider" style={{ color: '#7c3aed' }}>Emoji Fragments</div>
+                <div className="text-xs font-black uppercase tracking-wider" style={{ color: '#059669' }}>Emeralds</div>
               </div>
             </div>
           </div>
@@ -194,17 +193,52 @@ export default function ShopPage() {
           ))}
         </div>
 
+        {/* Tab description */}
+        {tab === 'premium' && (
+          <div className="mb-6 p-4 text-xs font-bold uppercase tracking-wider" style={{ background: '#faf5ff', border: '2px solid #a855f7', color: '#7c3aed', boxShadow: '3px 3px 0 #a855f7' }}>
+            Collect Emoji Fragments from daily login rewards and events. Premium emojis unlock automatically when you reach the fragment milestone. Fragments are never spent.
+          </div>
+        )}
+        {tab === 'supreme' && (
+          <div className="mb-6 p-4 text-xs font-bold uppercase tracking-wider" style={{ background: '#ecfdf5', border: '2px solid #10b981', color: '#059669', boxShadow: '3px 3px 0 #10b981' }}>
+            Supreme emojis are purchased with Emeralds — rare currency earned from boss victories, major achievements, and special events.
+          </div>
+        )}
+
         {/* Item grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {items.map((item, i) => {
-            const isUnlocked    = allUnlocked.has(item.id);
-            const isEquipped    = equipped[item.type] === item.id;
-            const isFragment    = item.currency === 'fragments';
-            const canAfford     = isFragment
-              ? fragments >= item.cost
-              : progress.fitCoins >= item.cost;
-            const rarity        = RARITY_CONFIG[item.rarity];
+          {tabItems.map((item, i) => {
+            const isUnlocked = allUnlocked.has(item.id);
+            const isEquipped = equipped[item.type] === item.id;
 
+            if (item.currency === 'fragments') {
+              return (
+                <PremiumEmojiCard
+                  key={item.id}
+                  item={item}
+                  fragments={fragments}
+                  isOwned={isUnlocked}
+                  index={i}
+                />
+              );
+            }
+
+            if (item.currency === 'emeralds') {
+              return (
+                <SupremeEmojiCard
+                  key={item.id}
+                  item={item}
+                  emeralds={emeralds}
+                  isOwned={isUnlocked}
+                  onBuy={() => handleEmeraldPurchase(item.id, item.cost)}
+                  index={i}
+                />
+              );
+            }
+
+            // Standard FitCoin emoji
+            const canAfford = progress.fitCoins >= item.cost;
+            const rarity = RARITY_CONFIG[item.rarity];
             return (
               <motion.div
                 key={item.id}
@@ -214,129 +248,35 @@ export default function ShopPage() {
                 className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
                 style={{
                   borderRadius: 0,
-                  background: isEquipped ? 'var(--card-bg-green)' : isFragment ? '#faf5ff' : cardBg,
-                  borderColor: isEquipped ? 'var(--neo-accent)' : isFragment ? '#a855f7' : undefined,
-                  boxShadow: isEquipped
-                    ? 'var(--neo-shadow-lg)'
-                    : isFragment
-                    ? '4px 4px 0 #a855f7'
-                    : 'var(--neo-shadow)',
+                  background: isEquipped ? 'var(--card-bg-green)' : 'var(--card-bg-amber)',
+                  borderColor: isEquipped ? 'var(--neo-accent)' : undefined,
+                  boxShadow: isEquipped ? 'var(--neo-shadow-lg)' : 'var(--neo-shadow)',
                 }}
               >
-                {/* Preview */}
                 <div style={{ borderBottom: 'var(--neo-border-2)' }}>
                   <ItemPreview item={item} />
                 </div>
-
-                {/* Info + actions */}
                 <div className="p-5 flex flex-col flex-1">
                   <div className="flex items-start justify-between gap-2 mb-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <div className="font-display text-lg font-bold text-app truncate">{item.name}</div>
-                        <span
-                          className="text-[10px] font-bold px-2 py-0.5 shrink-0"
-                          style={{
-                            color: rarity.color,
-                            background: `${rarity.color}22`,
-                            border: `2px solid ${rarity.color}`,
-                          }}
-                        >
-                          {rarity.label}
-                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 shrink-0" style={{ color: rarity.color, background: `${rarity.color}22`, border: `2px solid ${rarity.color}` }}>{rarity.label}</span>
                       </div>
                       <div className="text-xs text-subtle">{item.description}</div>
                     </div>
-                    {isEquipped && (
-                      <span
-                        className="text-xs font-bold shrink-0 px-2 py-1 neo-card-accent"
-                        style={{ borderRadius: 0 }}
-                      >
-                        Active
-                      </span>
-                    )}
                   </div>
-
                   <div className="mt-auto">
                     {isUnlocked ? (
-                      item.type === 'emoji' ? (
-                        <button
-                          disabled
-                          className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
-                          style={{
-                            background: 'var(--card-bg-green)',
-                            border: 'var(--neo-border)',
-                            color: 'var(--neo-accent)',
-                            opacity: 0.9,
-                          }}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          Owned
-                        </button>
-                      ) : isEquipped ? (
-                        <button
-                          disabled
-                          className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
-                          style={{
-                            background: 'var(--neo-white)',
-                            border: 'var(--neo-border)',
-                            color: 'var(--text-subtle)',
-                            opacity: 0.7,
-                          }}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          Equipped
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleEquip(item.type, item.id)}
-                          className="w-full py-2.5 neo-btn neo-btn-primary text-xs font-bold uppercase tracking-wider justify-center cursor-pointer"
-                          style={{ padding: '0.625rem 1rem' }}
-                        >
-                          Equip
-                        </button>
-                      )
-                    ) : item.rarity === 'world' ? (
-                      <button
-                        disabled
-                        className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-not-allowed"
-                        style={{
-                          background: 'var(--neo-white)',
-                          border: 'var(--neo-border)',
-                          color: 'var(--text-subtle)',
-                          opacity: 0.6,
-                        }}
-                      >
-                        <Lock className="w-3.5 h-3.5" />
-                        Clear a world to unlock
+                      <button disabled className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                        style={{ background: 'var(--card-bg-green)', border: 'var(--neo-border)', color: 'var(--neo-accent)', opacity: 0.9 }}>
+                        <Check className="w-3.5 h-3.5" /> Owned
                       </button>
-                    ) : isFragment ? (
-                      <motion.button
-                        onClick={() => handleFragmentPurchase(item.id, item.cost)}
-                        disabled={!canAfford}
-                        whileHover={canAfford ? { y: -2 } : undefined}
-                        whileTap={canAfford ? { y: 2, scale: 0.97 } : undefined}
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{
-                          background: canAfford ? '#a855f7' : 'var(--neo-white)',
-                          border: '3px solid #000',
-                          boxShadow: canAfford ? '3px 3px 0 #000' : 'none',
-                          color: canAfford ? '#fff' : 'var(--text-subtle)',
-                        }}
-                      >
-                        {canAfford ? (
-                          <>
-                            <Gem className="w-3.5 h-3.5" />
-                            <span>{item.cost} Fragments</span>
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>Need {item.cost} Frags</span>
-                          </>
-                        )}
-                      </motion.button>
+                    ) : item.rarity === 'world' ? (
+                      <button disabled className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-not-allowed"
+                        style={{ background: 'var(--neo-white)', border: 'var(--neo-border)', color: 'var(--text-subtle)', opacity: 0.6 }}>
+                        <Lock className="w-3.5 h-3.5" /> Clear a world to unlock
+                      </button>
                     ) : (
                       <motion.button
                         onClick={() => handlePurchase(item.id, item.cost)}
@@ -345,23 +285,12 @@ export default function ShopPage() {
                         whileTap={canAfford ? { y: 2, scale: 0.97 } : undefined}
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{
-                          background: canAfford ? 'var(--neo-white)' : 'var(--neo-white)',
-                          border: 'var(--neo-border)',
-                          color: canAfford ? 'var(--neo-black)' : 'var(--text-subtle)',
-                          boxShadow: canAfford ? 'var(--neo-shadow-sm)' : 'none',
-                        }}
+                        style={{ background: 'var(--neo-white)', border: 'var(--neo-border)', color: canAfford ? 'var(--neo-black)' : 'var(--text-subtle)', boxShadow: canAfford ? 'var(--neo-shadow-sm)' : 'none' }}
                       >
                         {canAfford ? (
-                          <>
-                            <Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} />
-                            <span>{item.cost.toLocaleString()}</span>
-                          </>
+                          <><Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} /><span>{item.cost.toLocaleString()}</span></>
                         ) : (
-                          <>
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>Need {item.cost.toLocaleString()}</span>
-                          </>
+                          <><Lock className="w-3.5 h-3.5" /><span>Need {item.cost.toLocaleString()}</span></>
                         )}
                       </motion.button>
                     )}
@@ -376,75 +305,169 @@ export default function ShopPage() {
   );
 }
 
-function borderPreviewWrap(value: string): string {
-  const map: Record<string, string> = {
-    neon: 'ba-neon', crystal: 'ba-crystal', royal: 'ba-royal',
-    flame: 'ba-flame', galaxy: 'ba-galaxy', electric: 'ba-electric', floral: 'ba-floral',
-  };
-  return map[value] ? `p-[3px] rounded-full ${map[value]}` : '';
+// ── Premium emoji card (fragment milestone) ──────────────────────────────────
+function PremiumEmojiCard({ item, fragments, isOwned, index }: {
+  item: ShopItem; fragments: number; isOwned: boolean; index: number;
+}) {
+  const pct = Math.min(1, fragments / item.cost);
+  const rarity = RARITY_CONFIG[item.rarity];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.03 }}
+      className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
+      style={{
+        borderRadius: 0,
+        background: isOwned ? 'var(--card-bg-green)' : '#faf5ff',
+        border: `3px solid ${isOwned ? 'var(--neo-accent)' : '#a855f7'}`,
+        boxShadow: isOwned ? 'var(--neo-shadow-lg)' : '4px 4px 0 #a855f7',
+      }}
+    >
+      <div style={{ borderBottom: `2px solid ${isOwned ? 'var(--neo-accent)' : '#a855f7'}` }}>
+        <div className="aspect-[4/3] flex items-center justify-center relative" style={{ background: isOwned ? 'var(--card-bg-green)' : '#f5f0ff' }}>
+          <div className="relative w-20 h-20">
+            <Image src={item.value} alt={item.name} fill className="object-contain" unoptimized />
+          </div>
+          {isOwned ? (
+            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: 'var(--neo-accent)', border: '2px solid #000', color: '#fff' }}>
+              <Check className="w-2.5 h-2.5" /> Owned
+            </div>
+          ) : (
+            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: '#a855f7', border: '2px solid #000', color: '#fff' }}>
+              <Gem className="w-2.5 h-2.5" /> Premium
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <div className="font-display text-lg font-bold text-app">{item.name}</div>
+          <span className="text-[10px] font-bold px-2 py-0.5 shrink-0" style={{ color: rarity.color, background: `${rarity.color}22`, border: `2px solid ${rarity.color}` }}>{rarity.label}</span>
+        </div>
+        {isOwned ? (
+          <p className="text-xs font-bold mt-1" style={{ color: 'var(--neo-accent)' }}>Unlocked — usable in all multiplayer modes.</p>
+        ) : (
+          <div className="mt-2">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-xs font-black uppercase tracking-wider" style={{ color: '#7c3aed' }}>
+                {Math.min(fragments, item.cost).toLocaleString()} / {item.cost} Fragments
+              </span>
+              {pct >= 1 && <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#7c3aed' }}>Auto-unlocking...</span>}
+            </div>
+            <div style={{ height: 10, background: '#e9d5ff', border: '2px solid #000', position: 'relative', overflow: 'hidden' }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct * 100}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                style={{ height: '100%', background: pct >= 1 ? '#a855f7' : '#c084fc', position: 'absolute', top: 0, left: 0 }}
+              />
+            </div>
+            <p className="text-[10px] text-subtle mt-1.5">Collect fragments from daily login rewards. Unlocks automatically — fragments are never spent.</p>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Supreme emoji card (emerald purchase) ────────────────────────────────────
+function SupremeEmojiCard({ item, emeralds, isOwned, onBuy, index }: {
+  item: ShopItem; emeralds: number; isOwned: boolean; onBuy: () => void; index: number;
+}) {
+  const canAfford = emeralds >= item.cost;
+  const rarity = RARITY_CONFIG[item.rarity];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.03 }}
+      className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
+      style={{
+        borderRadius: 0,
+        background: isOwned ? 'var(--card-bg-green)' : '#ecfdf5',
+        border: `3px solid ${isOwned ? 'var(--neo-accent)' : '#10b981'}`,
+        boxShadow: isOwned ? 'var(--neo-shadow-lg)' : '4px 4px 0 #10b981',
+      }}
+    >
+      <div style={{ borderBottom: `2px solid ${isOwned ? 'var(--neo-accent)' : '#10b981'}` }}>
+        <div className="aspect-[4/3] flex items-center justify-center relative" style={{ background: isOwned ? 'var(--card-bg-green)' : '#d1fae5' }}>
+          <div className="relative w-20 h-20">
+            <Image src={item.value} alt={item.name} fill className="object-contain" unoptimized />
+          </div>
+          <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+            style={{ background: '#10b981', border: '2px solid #000', color: '#fff' }}>
+            <Gem className="w-2.5 h-2.5" /> Supreme
+          </div>
+        </div>
+      </div>
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+          <div className="font-display text-lg font-bold text-app">{item.name}</div>
+          <span className="text-[10px] font-bold px-2 py-0.5 shrink-0" style={{ color: rarity.color, background: `${rarity.color}22`, border: `2px solid ${rarity.color}` }}>{rarity.label}</span>
+        </div>
+        <div className="text-xs text-subtle mb-4">{item.description}</div>
+        <div className="mt-auto">
+          {isOwned ? (
+            <button disabled className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+              style={{ background: 'var(--card-bg-green)', border: '3px solid #000', color: 'var(--neo-accent)' }}>
+              <Check className="w-3.5 h-3.5" /> Owned
+            </button>
+          ) : (
+            <motion.button
+              onClick={onBuy}
+              disabled={!canAfford}
+              whileHover={canAfford ? { y: -2 } : undefined}
+              whileTap={canAfford ? { y: 2, scale: 0.97 } : undefined}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: canAfford ? '#10b981' : 'var(--neo-white)',
+                border: '3px solid #000',
+                boxShadow: canAfford ? '3px 3px 0 #000' : 'none',
+                color: canAfford ? '#fff' : 'var(--text-subtle)',
+              }}
+            >
+              {canAfford ? (
+                <><Gem className="w-3.5 h-3.5" /><span>{item.cost} Emeralds</span></>
+              ) : (
+                <><Lock className="w-3.5 h-3.5" /><span>Need {item.cost} Emeralds</span></>
+              )}
+            </motion.button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 function ItemPreview({ item }: { item: ShopItem }) {
-  if (item.type === 'avatar') {
-    return (
-      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
-        <div className="text-6xl">{item.value || '🙂'}</div>
-      </div>
-    );
-  }
-
-  if (item.type === 'border') {
-    const wrap = borderPreviewWrap(item.value);
-    return (
-      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
-        {wrap ? (
-          <div className={wrap}>
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
-          </div>
-        ) : (
-          <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
-        )}
-      </div>
-    );
-  }
-
-  if (item.type === 'aura') {
-    return (
-      <div className="aspect-[4/3] flex items-center justify-center overflow-hidden" style={{ background: 'var(--neo-white)' }}>
-        {item.value ? (
-          <div className="relative flex items-center justify-center">
-            <div className={`absolute w-28 h-28 rounded-full aura-${item.value}`} />
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl relative z-10" style={{ background: 'var(--neo-surface)' }}>🙂</div>
-          </div>
-        ) : (
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl" style={{ background: 'var(--neo-surface)' }}>🙂</div>
-        )}
-      </div>
-    );
-  }
-
   if (item.type === 'emoji') {
-    const isPremium = item.rarity === 'premium';
     return (
-      <div
-        className="aspect-[4/3] flex items-center justify-center relative"
-        style={{ background: isPremium ? '#f5f0ff' : 'var(--neo-white)' }}
-      >
+      <div className="aspect-[4/3] flex items-center justify-center" style={{ background: 'var(--neo-white)' }}>
         <div className="relative w-20 h-20">
           <Image src={item.value} alt={item.name} fill className="object-contain" unoptimized />
         </div>
-        {isPremium && (
-          <div
-            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
-            style={{ background: '#a855f7', border: '2px solid #000', color: '#fff' }}
-          >
-            <Gem className="w-2.5 h-2.5" />
-            Premium
-          </div>
-        )}
       </div>
     );
   }
-
   return null;
+}
+
+// ── Auto-unlock premium emojis when fragment threshold reached ────────────────
+function checkPremiumAutoUnlocks(p: Progress): Progress {
+  const premiumItems = SHOP_ITEMS.filter(i => i.currency === 'fragments');
+  const fragments = p.emojiFragments ?? 0;
+  let changed = false;
+  let updated = { ...p };
+  for (const item of premiumItems) {
+    if (!updated.unlockedItems.includes(item.id) && fragments >= item.cost) {
+      updated = { ...updated, unlockedItems: [...updated.unlockedItems, item.id] };
+      changed = true;
+    }
+  }
+  if (changed) saveProgress(updated);
+  return updated;
 }

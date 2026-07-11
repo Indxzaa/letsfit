@@ -3,8 +3,19 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { LOGIN_REWARDS } from '@/lib/loginRewards';
+import { LOGIN_REWARDS, type LoginReward } from '@/lib/loginRewards';
 import type { Progress } from '@/lib/progress';
+
+function rewardIcon(r: LoginReward): string {
+  switch (r.type) {
+    case 'coins': return '🪙';
+    case 'xp': return '⭐';
+    case 'fragments': return '💎';
+    case 'emeralds': return '💚';
+    case 'item': return '🎁';
+    default: return '🎁';
+  }
+}
 
 type DayState = 'claimed' | 'today-claimable' | 'today-claimed' | 'future' | 'past-missed';
 
@@ -214,7 +225,7 @@ export default function LoginCalendarModal({
                         borderRadius: 0,
                       }}
                     >
-                      <span className="text-lg">{todayReward.icon}</span>
+                      <span className="text-lg">{rewardIcon(todayReward)}</span>
                       <div>
                         <div className="text-[9px] font-black uppercase tracking-widest text-white/75">Today&apos;s Reward</div>
                         <div className="text-xs font-black uppercase text-white">{todayReward.label}</div>
@@ -319,7 +330,7 @@ export default function LoginCalendarModal({
                                 {day}
                               </span>
                               {!isInactive && (
-                                <span className="text-[10px] leading-none">{reward.icon}</span>
+                                <span className="text-[10px] leading-none">{rewardIcon(reward)}</span>
                               )}
                             </>
                           )}
@@ -373,7 +384,7 @@ export default function LoginCalendarModal({
                         borderRadius: 0,
                       }}
                     >
-                      <span className="text-4xl">{claimedReward.icon}</span>
+                      <span className="text-4xl">{rewardIcon(claimedReward)}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-[10px] font-black uppercase tracking-widest text-white/80">Reward Claimed!</div>
                         <div className="font-display text-lg font-black text-white uppercase leading-tight truncate">

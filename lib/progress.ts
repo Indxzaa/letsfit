@@ -16,8 +16,8 @@ export type ShopItem = {
   type: 'avatar' | 'border' | 'badge' | 'title' | 'aura' | 'emoji';
   cost: number;
   value: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world' | 'premium';
-  currency?: 'fragments'; // if absent, cost is in fitCoins
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world' | 'premium' | 'supreme';
+  currency?: 'fragments' | 'emeralds'; // if absent, cost is in fitCoins
   requirement?: string; // boss ID that must be defeated to unlock
 };
 
@@ -25,6 +25,7 @@ export type Progress = {
   xp: number;
   fitCoins: number;
   emojiFragments: number;
+  emeralds: number;
   totalReps: number;
   totalSessions: number;
   currentStreak: number;
@@ -56,6 +57,7 @@ const DEFAULT_PROGRESS: Progress = {
   xp: 0,
   fitCoins: 0,
   emojiFragments: 0,
+  emeralds: 0,
   totalReps: 0,
   totalSessions: 0,
   currentStreak: 0,
@@ -252,6 +254,26 @@ export function purchaseWithFragments(
   const updated: Progress = {
     ...current,
     emojiFragments: (current.emojiFragments ?? 0) - cost,
+    unlockedItems: [...current.unlockedItems, itemId],
+  };
+  saveProgress(updated);
+  return { progress: updated, reason: 'ok' };
+}
+
+export function purchaseWithEmeralds(
+  current: Progress,
+  itemId: string,
+  cost: number
+): { progress: Progress; reason: 'ok' | 'owned' | 'insufficient' } {
+  if (current.unlockedItems.includes(itemId)) {
+    return { progress: current, reason: 'owned' };
+  }
+  if ((current.emeralds ?? 0) < cost) {
+    return { progress: current, reason: 'insufficient' };
+  }
+  const updated: Progress = {
+    ...current,
+    emeralds: (current.emeralds ?? 0) - cost,
     unlockedItems: [...current.unlockedItems, itemId],
   };
   saveProgress(updated);
