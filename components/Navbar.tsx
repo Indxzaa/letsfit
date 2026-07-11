@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Users, Volume2, VolumeX } from 'lucide-react';
+import { Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Volume2, VolumeX } from 'lucide-react';
 import Logo from './Logo';
 import { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
@@ -122,16 +122,18 @@ export default function Navbar() {
 
   return (
     <div className="neo-navbar">
-      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <Logo size={85} />
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-black)', letterSpacing: '-0.01em' }}>
-              LETSFIT
-            </span>
-          </Link>
+          <div className="flex-1 flex items-center">
+            <Link href="/" className="flex items-center gap-1.5 group">
+              <Logo size={32} />
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-black)', letterSpacing: '-0.01em' }}>
+                LETSFIT
+              </span>
+            </Link>
+          </div>
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
@@ -174,22 +176,19 @@ export default function Navbar() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="flex-1 hidden md:flex items-center justify-end gap-2">
             {/* Theme toggle */}
             <button
               onClick={toggleMode}
               aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
-              className="flex items-center shrink-0 cursor-pointer"
+              className="flex items-center justify-center shrink-0 cursor-pointer"
               style={{
+                width: 36,
+                height: 36,
                 borderRadius: '9999px',
                 border: '2px solid var(--neo-black)',
                 background: 'var(--neo-surface)',
                 color: 'var(--neo-black)',
-                padding: '0.4rem 0.875rem',
-                gap: '0.375rem',
-                fontSize: '0.75rem',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 600,
                 boxShadow: '2px 2px 0 var(--neo-black)',
                 transition: 'box-shadow 0.1s ease, transform 0.1s ease',
               }}
@@ -203,23 +202,19 @@ export default function Navbar() {
               }}
             >
               {mode === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              <span>{mode === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
             {/* Sound toggle */}
             <button
               onClick={toggleMuted}
               aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
-              className="flex items-center shrink-0 cursor-pointer"
+              className="flex items-center justify-center shrink-0 cursor-pointer"
               style={{
+                width: 36,
+                height: 36,
                 borderRadius: '9999px',
                 border: '2px solid var(--neo-black)',
                 background: 'var(--neo-surface)',
                 color: 'var(--neo-black)',
-                padding: '0.4rem 0.875rem',
-                gap: '0.375rem',
-                fontSize: '0.75rem',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 600,
                 boxShadow: '2px 2px 0 var(--neo-black)',
                 transition: 'box-shadow 0.1s ease, transform 0.1s ease',
               }}
@@ -233,7 +228,6 @@ export default function Navbar() {
               }}
             >
               {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              <span>{isMuted ? 'Sound off' : 'Sound on'}</span>
             </button>
             {/* Notification bell — only when authenticated and social context is available */}
             {user && social && (
