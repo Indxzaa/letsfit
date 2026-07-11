@@ -16,6 +16,8 @@ function getDayState(day: number, todayDay: number, claimedDays: number[], calen
   return isClaimed ? 'claimed' : 'past-missed';
 }
 
+const CLAIMED_RED = '#DC2626';
+
 export default function LoginCalendarModal({
   open, onClose, progress, onClaim, isFirstOpenToday,
 }: {
@@ -49,7 +51,7 @@ export default function LoginCalendarModal({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const monthName = now.toLocaleString('default', { month: 'long' });
+  const monthName = now.toLocaleString('default', { month: 'short' });
 
   const effectiveClaimedDays = localClaimed.size
     ? [...progress.calendarClaimedDays, ...localClaimed]
@@ -120,45 +122,55 @@ export default function LoginCalendarModal({
                 onClick={(e) => e.stopPropagation()}
                 className="relative w-full max-w-sm overflow-y-auto max-h-[92vh]"
                 style={{
-                  background: '#fff',
+                  background: 'var(--neo-cream)',
                   border: '4px solid #000',
                   boxShadow: '8px 8px 0 #000',
                   borderRadius: 0,
                 }}
               >
-                {/* Close */}
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center cursor-pointer z-10"
-                  style={{
-                    background: '#000',
-                    border: '2px solid #000',
-                    boxShadow: '2px 2px 0 #555',
-                    color: '#fff',
-                    borderRadius: 0,
-                  }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                {/* Header */}
+                {/* ── Header ── */}
                 <div className="px-5 pt-5 pb-4" style={{ borderBottom: '4px solid #000' }}>
-                  <div className="flex items-end gap-4 mb-3">
-                    <div
-                      className="font-display font-black leading-none tabular-nums"
-                      style={{ fontSize: 'clamp(3rem,12vw,4rem)', color: '#000', lineHeight: 1 }}
-                    >
-                      {progress.loginStreak}
-                    </div>
-                    <div className="pb-1">
-                      <div
-                        className="text-[10px] font-black uppercase tracking-widest mb-0.5"
-                        style={{ color: 'var(--neo-accent)' }}
-                      >
-                        🔥 Day Streak
+                  {/* Top row: streak left, date+close right */}
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    {/* Streak */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl leading-none select-none">🔥</span>
+                      <div>
+                        <div
+                          className="font-display font-black leading-none tabular-nums"
+                          style={{ fontSize: 'clamp(2.6rem,11vw,3.5rem)', color: '#000', lineHeight: 1 }}
+                        >
+                          {progress.loginStreak}
+                        </div>
+                        <div
+                          className="text-[11px] font-black uppercase tracking-widest mt-0.5"
+                          style={{ color: 'var(--neo-accent)' }}
+                        >
+                          Day Streak
+                        </div>
                       </div>
-                      <div className="font-display text-2xl font-black uppercase leading-none" style={{ color: '#000' }}>
-                        {monthName}
+                    </div>
+
+                    {/* Date + close */}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <button
+                        onClick={onClose}
+                        className="w-9 h-9 flex items-center justify-center cursor-pointer"
+                        style={{
+                          background: '#000',
+                          border: '2px solid #000',
+                          boxShadow: '2px 2px 0 #555',
+                          color: '#fff',
+                          borderRadius: 0,
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div
+                        className="font-display font-black uppercase leading-none"
+                        style={{ fontSize: '1.25rem', color: '#000', letterSpacing: '-0.01em' }}
+                      >
+                        {todayDay} {monthName}
                       </div>
                     </div>
                   </div>
@@ -166,7 +178,7 @@ export default function LoginCalendarModal({
                   {/* Today's reward preview */}
                   {!effectiveClaimedDays.includes(todayDay) && (
                     <div
-                      className="flex items-center gap-3 px-3 py-2"
+                      className="flex items-center gap-3 px-3 py-2 mb-3"
                       style={{
                         background: 'var(--neo-accent)',
                         border: '2px solid #000',
@@ -185,7 +197,7 @@ export default function LoginCalendarModal({
                   )}
 
                   {/* Week headers */}
-                  <div className="grid grid-cols-7 mt-3">
+                  <div className="grid grid-cols-7">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                       <div
                         key={i}
@@ -198,9 +210,9 @@ export default function LoginCalendarModal({
                   </div>
                 </div>
 
-                {/* Calendar grid */}
-                <div className="p-4">
-                  <div className="grid grid-cols-7 gap-1">
+                {/* ── Calendar grid ── */}
+                <div className="p-4" style={{ background: 'var(--neo-cream)' }}>
+                  <div className="grid grid-cols-7 gap-1.5">
                     {Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`e-${i}`} />)}
                     {Array.from({ length: daysInMonth }, (_, i) => {
                       const day = i + 1;
@@ -210,13 +222,13 @@ export default function LoginCalendarModal({
                       const isClaimed = state === 'claimed' || state === 'today-claimed';
                       const isInactive = state === 'future' || state === 'past-missed';
 
-                      let bg = '#f0f0f0';
-                      let border = '2px solid rgba(0,0,0,0.1)';
+                      let bg = 'rgba(0,0,0,0.07)';
+                      let border = '2px solid rgba(0,0,0,0.12)';
                       let shadow = 'none';
 
                       if (isClaimed) {
-                        bg = '#000';
-                        border = '2px solid #000';
+                        bg = CLAIMED_RED;
+                        border = `2px solid ${CLAIMED_RED}`;
                         shadow = 'none';
                       } else if (isClaimable) {
                         bg = 'var(--neo-accent)';
@@ -274,13 +286,13 @@ export default function LoginCalendarModal({
                   </div>
                 </div>
 
-                {/* Footer: legend + best streak */}
+                {/* ── Footer: legend + best streak ── */}
                 <div
                   className="px-4 py-3 flex items-center gap-4 flex-wrap"
-                  style={{ borderTop: '3px solid #000', background: '#f8f8f8' }}
+                  style={{ borderTop: '3px solid #000', background: 'rgba(0,0,0,0.06)' }}
                 >
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3" style={{ background: '#000', border: '1.5px solid #000' }} />
+                    <div className="w-3 h-3" style={{ background: CLAIMED_RED, border: `1.5px solid ${CLAIMED_RED}` }} />
                     <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#000' }}>Claimed</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -295,7 +307,7 @@ export default function LoginCalendarModal({
                   </div>
                 </div>
 
-                {/* Claimed reward banner */}
+                {/* ── Claimed reward banner ── */}
                 <AnimatePresence>
                   {claimedReward && (
                     <motion.div
