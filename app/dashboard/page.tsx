@@ -8,9 +8,10 @@ import {
 } from 'lucide-react';
 import { BOSSES, TIER_CONFIG } from '@/lib/bosses';
 import { getWorldTheme } from '@/lib/worlds';
-import { loadProgress, saveProgress, levelProgress, subscribeToProgress, processLogin, claimCalendarDay, type Progress } from '@/lib/progress';
+import { loadProgress, saveProgress, levelProgress, subscribeToProgress, processLogin, claimCalendarDay, equipItem, type Progress } from '@/lib/progress';
 import { applyLoginReward } from '@/lib/loginRewards';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress, applyNewAchievements } from '@/lib/achievements';
+import { EARNED_TITLES } from '@/lib/titles';
 import { getUsername } from '@/lib/profileSync';
 import { DashboardSkeleton } from '@/components/Skeleton';
 import Navbar from '@/components/Navbar';
@@ -71,7 +72,7 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between gap-4 flex-wrap mb-12">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-5">
           <div className="flex items-center gap-4">
             <UserAvatar
               photoUrl={avatarUrl}
@@ -80,7 +81,7 @@ export default function DashboardPage() {
             />
             <div>
               <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--neo-accent)' }}>
-                 information    
+                {EARNED_TITLES.find(t => t.id === progress.equippedItems?.title)?.value ?? 'champion'}
               </div>
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-app leading-tight">
                 {greeting()}, {getUsername() ?? 'champion'}.
@@ -96,6 +97,38 @@ export default function DashboardPage() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </span>
           </div>
+        </div>
+
+        {/* ── Titles ── */}
+        <div className="flex flex-wrap gap-1.5 mb-8">
+          {EARNED_TITLES.map((t) => {
+            const earned = t.check(progress);
+            const equipped = progress.equippedItems?.title === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  if (!earned) return;
+                  const upd = equipItem(progress, 'title', t.id);
+                  saveProgress(upd);
+                  setProgress(upd);
+                }}
+                disabled={!earned}
+                className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 transition-all"
+                style={{
+                  border: '2px solid #000',
+                  borderRadius: 0,
+                  background: equipped ? 'var(--neo-accent)' : earned ? 'var(--neo-surface)' : 'transparent',
+                  color: equipped ? '#fff' : earned ? 'var(--text-app)' : 'var(--text-subtle)',
+                  opacity: earned ? 1 : 0.4,
+                  cursor: earned ? 'pointer' : 'default',
+                  boxShadow: equipped ? '2px 2px 0 #000' : 'none',
+                }}
+              >
+                {t.value}
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Top bento row: Streak hero + 3 stat tiles ── */}
