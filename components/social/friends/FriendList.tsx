@@ -114,6 +114,7 @@ export function FriendList({
                 friend={f}
                 livePresence={presenceMap.get(f.profile.id) ?? null}
                 onInvite={onInvite}
+                onUnfriend={() => onRemove(f.relation.id)}
                 canInvite={canInvite}
                 isLast={i === friends.length - 1}
               />
