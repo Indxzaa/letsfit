@@ -80,9 +80,21 @@ export default function DashboardPage() {
               size="lg"
             />
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--neo-accent)' }}>
-                {EARNED_TITLES.find(t => t.id === progress.equippedItems?.title)?.value ?? 'champion'}
-              </div>
+              {(() => {
+                const RARITY_COLORS: Record<string, string> = {
+                  common: '#9CA3AF',
+                  rare: '#3B82F6',
+                  epic: '#A855F7',
+                  legendary: '#F59E0B',
+                  mythic: '#EC4899',
+                };
+                const t = EARNED_TITLES.find(t => t.id === progress.equippedItems?.title);
+                return (
+                  <div className="text-sm font-black uppercase tracking-widest mb-1" style={{ color: t ? RARITY_COLORS[t.rarity] : 'var(--neo-accent)' }}>
+                    {t?.value ?? 'champion'}
+                  </div>
+                );
+              })()}
               <h1 className="font-display text-3xl sm:text-4xl font-bold text-app leading-tight">
                 {greeting()}, {getUsername() ?? 'champion'}.
               </h1>
