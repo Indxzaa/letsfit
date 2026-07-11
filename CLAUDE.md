@@ -75,7 +75,7 @@ uipro init --ai claude
 ## Git Workflow
 
 When a task is complete:
-
+igge
 - Automatically stage changed files.
 - Create a conventional commit.
 - Do not ask for permission to commit.

@@ -128,7 +128,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-1 flex items-center">
             <Link href="/" className="flex items-center gap-1.5 group">
-              <Logo size={44} />
+              <Logo size={80} />
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', color: 'var(--neo-black)', letterSpacing: '-0.01em' }}>
                 LETSFIT
               </span>
