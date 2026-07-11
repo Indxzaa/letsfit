@@ -320,7 +320,8 @@ export default function DashboardPage() {
               const daysInMonth = new Date(year, month + 1, 0).getDate();
               const firstDow = new Date(year, month, 1).getDay();
               const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
-              const claimed = progress.calendarMonth === currentMonth ? progress.calendarClaimedDays : [];
+              const claimed = (progress.loginHistory ?? {})[currentMonth]
+                ?? (progress.calendarMonth === currentMonth ? progress.calendarClaimedDays : []);
               const todayClaimed = claimed.includes(todayDay);
               return (
                 <>
@@ -337,7 +338,7 @@ export default function DashboardPage() {
                           className="aspect-square"
                           style={{
                             background: isClaimed
-                              ? '#000'
+                              ? '#DC2626'
                               : isToday
                               ? 'var(--neo-accent)'
                               : 'rgba(0,0,0,0.08)',

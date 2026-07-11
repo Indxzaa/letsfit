@@ -1,19 +1,34 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { LOGIN_REWARDS } from '@/lib/loginRewards';
 import type { Progress } from '@/lib/progress';
 
 type DayState = 'claimed' | 'today-claimable' | 'today-claimed' | 'future' | 'past-missed';
 
-function getDayState(day: number, todayDay: number, claimedDays: number[], calendarMonth: string, currentMonth: string): DayState {
-  const monthMatches = calendarMonth === currentMonth;
-  const isClaimed = monthMatches && claimedDays.includes(day);
-  if (day === todayDay) return isClaimed ? 'today-claimed' : 'today-claimable';
-  if (day > todayDay) return 'future';
+function getDayState(
+  day: number,
+  todayDay: number,
+  claimedDays: number[],
+  viewMonth: string,
+  currentMonth: string,
+): DayState {
+  const isCurrentMonth = viewMonth === currentMonth;
+  const isClaimed = claimedDays.includes(day);
+  if (isCurrentMonth && day === todayDay) return isClaimed ? 'today-claimed' : 'today-claimable';
+  if (isCurrentMonth && day > todayDay) return 'future';
   return isClaimed ? 'claimed' : 'past-missed';
+}
+
+function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function addMonths(base: Date, delta: number): Date {
+  const d = new Date(base.getFullYear(), base.getMonth() + delta, 1);
+  return d;
 }
 
 const CLAIMED_RED = '#DC2626';
@@ -30,12 +45,14 @@ export default function LoginCalendarModal({
   const [phase, setPhase] = useState<'fire' | 'calendar'>(isFirstOpenToday ? 'fire' : 'calendar');
   const [claimedReward, setClaimedReward] = useState<(typeof LOGIN_REWARDS)[0] | null>(null);
   const [localClaimed, setLocalClaimed] = useState<Set<number>>(new Set());
+  const [viewDate, setViewDate] = useState<Date>(() => new Date());
 
   useEffect(() => {
     if (!open) return;
     setPhase(isFirstOpenToday ? 'fire' : 'calendar');
     setClaimedReward(null);
     setLocalClaimed(new Set());
+    setViewDate(new Date());
   }, [open, isFirstOpenToday]);
 
   useEffect(() => {
@@ -45,21 +62,32 @@ export default function LoginCalendarModal({
   }, [phase]);
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
   const todayDay = now.getDate();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay();
-  const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const monthName = now.toLocaleString('default', { month: 'short' });
+  const currentMonth = monthKey(now);
 
-  const effectiveClaimedDays = localClaimed.size
-    ? [...progress.calendarClaimedDays, ...localClaimed]
-    : progress.calendarClaimedDays;
+  const viewMonth = monthKey(viewDate);
+  const viewYear = viewDate.getFullYear();
+  const viewMonthIndex = viewDate.getMonth();
+  const daysInViewMonth = new Date(viewYear, viewMonthIndex + 1, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonthIndex, 1).getDay();
+  const viewMonthName = viewDate.toLocaleString('default', { month: 'long' });
+  const viewMonthShort = viewDate.toLocaleString('default', { month: 'short' });
+
+  const canGoBack = true; // allow arbitrary history navigation
+  const canGoForward = viewMonth < currentMonth;
+
+  const history = progress.loginHistory ?? {};
+  const baseClaimedDays: number[] = history[viewMonth] ?? (
+    progress.calendarMonth === viewMonth ? progress.calendarClaimedDays : []
+  );
+  const effectiveClaimedDays = (viewMonth === currentMonth && localClaimed.size > 0)
+    ? [...baseClaimedDays, ...localClaimed]
+    : baseClaimedDays;
 
   const handleDayClick = (day: number) => {
+    if (viewMonth !== currentMonth) return;
     if (localClaimed.has(day)) return;
-    const state = getDayState(day, todayDay, progress.calendarClaimedDays, progress.calendarMonth, currentMonth);
+    const state = getDayState(day, todayDay, progress.calendarClaimedDays, viewMonth, currentMonth);
     if (state !== 'today-claimable') return;
     setLocalClaimed(prev => new Set(prev).add(day));
     const reward = LOGIN_REWARDS[((day - 1) % 7)];
@@ -69,6 +97,7 @@ export default function LoginCalendarModal({
   };
 
   const todayReward = LOGIN_REWARDS[((todayDay - 1) % 7)];
+  const displayDay = viewMonth === currentMonth ? todayDay : daysInViewMonth;
 
   return (
     <AnimatePresence>
@@ -170,13 +199,13 @@ export default function LoginCalendarModal({
                         className="font-display font-black uppercase leading-none"
                         style={{ fontSize: '1.25rem', color: '#000', letterSpacing: '-0.01em' }}
                       >
-                        {todayDay} {monthName}
+                        {displayDay} {viewMonthShort}
                       </div>
                     </div>
                   </div>
 
-                  {/* Today's reward preview */}
-                  {!effectiveClaimedDays.includes(todayDay) && (
+                  {/* Today's reward preview — only on current month */}
+                  {viewMonth === currentMonth && !effectiveClaimedDays.includes(todayDay) && (
                     <div
                       className="flex items-center gap-3 px-3 py-2 mb-3"
                       style={{
@@ -196,6 +225,29 @@ export default function LoginCalendarModal({
                     </div>
                   )}
 
+                  {/* Month navigation */}
+                  <div className="flex items-center justify-between mb-2">
+                    <button
+                      onClick={() => setViewDate(d => addMonths(d, -1))}
+                      disabled={!canGoBack}
+                      className="w-8 h-8 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-default"
+                      style={{ background: '#000', border: '2px solid #000', color: '#fff', borderRadius: 0 }}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <div className="font-display text-sm font-black uppercase tracking-wider" style={{ color: '#000' }}>
+                      {viewMonthName} {viewYear}
+                    </div>
+                    <button
+                      onClick={() => setViewDate(d => addMonths(d, 1))}
+                      disabled={!canGoForward}
+                      className="w-8 h-8 flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-default"
+                      style={{ background: '#000', border: '2px solid #000', color: '#fff', borderRadius: 0 }}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
                   {/* Week headers */}
                   <div className="grid grid-cols-7">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
@@ -214,9 +266,9 @@ export default function LoginCalendarModal({
                 <div className="p-4" style={{ background: 'var(--neo-cream)' }}>
                   <div className="grid grid-cols-7 gap-1.5">
                     {Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`e-${i}`} />)}
-                    {Array.from({ length: daysInMonth }, (_, i) => {
+                    {Array.from({ length: daysInViewMonth }, (_, i) => {
                       const day = i + 1;
-                      const state = getDayState(day, todayDay, effectiveClaimedDays, progress.calendarMonth, currentMonth);
+                      const state = getDayState(day, todayDay, effectiveClaimedDays, viewMonth, currentMonth);
                       const reward = LOGIN_REWARDS[((day - 1) % 7)];
                       const isClaimable = state === 'today-claimable';
                       const isClaimed = state === 'claimed' || state === 'today-claimed';
@@ -229,7 +281,6 @@ export default function LoginCalendarModal({
                       if (isClaimed) {
                         bg = CLAIMED_RED;
                         border = `2px solid ${CLAIMED_RED}`;
-                        shadow = 'none';
                       } else if (isClaimable) {
                         bg = 'var(--neo-accent)';
                         border = '3px solid #000';
@@ -286,7 +337,7 @@ export default function LoginCalendarModal({
                   </div>
                 </div>
 
-                {/* ── Footer: legend + best streak ── */}
+                {/* ── Footer ── */}
                 <div
                   className="px-4 py-3 flex items-center gap-4 flex-wrap"
                   style={{ borderTop: '3px solid #000', background: 'rgba(0,0,0,0.06)' }}

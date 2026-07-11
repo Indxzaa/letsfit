@@ -48,6 +48,7 @@ export type Progress = {
   calendarClaimedDays: number[];
   calendarMonth: string;
   calendarLastClaimDate: string;
+  loginHistory: Record<string, number[]>; // YYYY-MM -> claimed day numbers
   hasAvatar?: boolean; // true once the user has uploaded a profile picture
 };
 
@@ -78,6 +79,7 @@ const DEFAULT_PROGRESS: Progress = {
   calendarClaimedDays: [],
   calendarMonth: '',
   calendarLastClaimDate: '',
+  loginHistory: {},
 };
 
 // ---- Reward economy (rebalanced) ----
@@ -186,6 +188,11 @@ export function loadProgress(): Progress {
       p.todayCalories = 0;
       p.todaySessions = 0;
       p.todayDate = today;
+    }
+    // Migrate: seed loginHistory from old single-month storage
+    if (!p.loginHistory) p.loginHistory = {};
+    if (p.calendarMonth && p.calendarClaimedDays.length > 0 && !p.loginHistory[p.calendarMonth]) {
+      p.loginHistory = { ...p.loginHistory, [p.calendarMonth]: [...p.calendarClaimedDays] };
     }
     return p;
   } catch {
@@ -431,6 +438,10 @@ export function claimCalendarDay(
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const newStreak = progress.calendarLastClaimDate === yesterday ? progress.loginStreak + 1 : 1;
 
+  const updatedHistory = {
+    ...(progress.loginHistory ?? {}),
+    [currentMonth]: [...claimedDays, day],
+  };
   const updated: Progress = {
     ...progress,
     calendarClaimedDays: [...claimedDays, day],
@@ -438,6 +449,7 @@ export function claimCalendarDay(
     calendarLastClaimDate: today,
     loginStreak: newStreak,
     highestLoginStreak: Math.max(progress.highestLoginStreak ?? 0, newStreak),
+    loginHistory: updatedHistory,
   };
   return { updated, rewardIndex: (day - 1) % 7 };
 }
