@@ -18,7 +18,7 @@ import {
   MAX_FIT_COINS,
   type Progress,
 } from '@/lib/progress';
-import { SHOP_ITEMS, FRAME_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, BOOSTER_DEFS, KEY_DEFS, CHEST_DEFS } from '@/lib/shop';
+import { SHOP_ITEMS, FRAME_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, BOOSTER_DEFS, BOOSTER_PRICES, KEY_DEFS, CHEST_DEFS, getShopItem } from '@/lib/shop';
 import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
 import { ShopSkeleton } from '@/components/Skeleton';
@@ -38,10 +38,52 @@ function generateReward(): string {
   return REEL_IDS[Math.floor(Math.random() * REEL_IDS.length)];
 }
 
+// For frame/emoji categories, resolve to a specific item ID before the modal opens.
+// All other categories are returned as-is.
+function resolveReward(category: string, progress: Progress): string {
+  if (category === 'frame') {
+    const pool = FRAME_ITEMS.filter(i => i.rarity !== 'premium');
+    const unowned = pool.filter(i => !progress.unlockedItems.includes(i.id));
+    return unowned.length > 0
+      ? unowned[Math.floor(Math.random() * unowned.length)].id
+      : 'coins';
+  }
+  if (category === 'emoji') {
+    const pool = SHOP_ITEMS.filter(i => i.type === 'emoji' && i.rarity !== 'premium' && i.rarity !== 'world');
+    const unowned = pool.filter(i => !progress.unlockedItems.includes(i.id));
+    return unowned.length > 0
+      ? unowned[Math.floor(Math.random() * unowned.length)].id
+      : 'coins';
+  }
+  return category;
+}
+
 function rewardToReelIndex(reward: string): number {
-  const pos = REEL_IDS.indexOf(reward);
-  // Land in the 3rd repetition (slots 12–17) so the reel has room to scroll
-  return 12 + (pos >= 0 ? pos : 0);
+  let pos = REEL_IDS.indexOf(reward);
+  // Specific frame/emoji item IDs — map to their category's reel slot
+  if (pos === -1) {
+    const item = getShopItem(reward);
+    if (item) pos = item.type === 'frame' ? REEL_IDS.indexOf('frame') : REEL_IDS.indexOf('emoji');
+  }
+  return 20 + (pos >= 0 ? pos : 0);
+}
+
+type RewardDisplay = { icon: string | null; iconFallback: string; label: string; qty: string };
+
+function getRewardDisplay(reward: string): RewardDisplay {
+  if (reward === 'coins')    return { icon: null,            iconFallback: '🪙', label: 'FitCoins',        qty: '+100' };
+  if (reward === 'emeralds') return { icon: null,            iconFallback: '💎', label: 'Emeralds',        qty: '+5'   };
+  if (reward === 'fragment') return { icon: '/purplefragment.png', iconFallback: '✨', label: 'Emoji Fragments', qty: '+25'  };
+  const booster = BOOSTER_DEFS.find(b => b.id === reward);
+  if (booster) return { icon: booster.img, iconFallback: '🛡️', label: booster.name, qty: 'x1' };
+  const key = KEY_DEFS.find(k => k.id === reward);
+  if (key) return { icon: key.img, iconFallback: '🔑', label: key.name, qty: 'x1' };
+  const item = getShopItem(reward);
+  if (item) {
+    const suffix = item.type === 'frame' ? ' Frame' : item.type === 'emoji' ? ' Emoji' : '';
+    return { icon: item.value, iconFallback: '🎁', label: item.name + suffix, qty: 'Unlocked' };
+  }
+  return { icon: null, iconFallback: '🎁', label: reward, qty: '' };
 }
 
 type ShopTab = 'emojis' | 'frames' | 'boosters' | 'chests';
@@ -83,6 +125,7 @@ export default function ShopPage() {
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
   const [openingChest, setOpeningChest] = useState<ChestDef | null>(null);
   const [pendingReward, setPendingReward] = useState<string | null>(null);
+  const [reelKey, setReelKey] = useState(0);
   const { user } = useAuth();
   const isDev = user?.email === DEV_EMAIL;
 
@@ -143,6 +186,41 @@ export default function ShopPage() {
     setProgress(updated);
     showFeedback('ok', 'Booster activated!');
     playSound('purchase');
+  };
+
+  const handleBuyBooster = (id: string, cost: number) => {
+    if ((progress.emeralds ?? 0) < cost) { showFeedback('err', 'Not enough Emeralds.'); playSound('insufficient'); return; }
+    const deducted = { ...progress, emeralds: (progress.emeralds ?? 0) - cost };
+    const updated = addToInventory(deducted, id, 1);
+    setProgress(updated);
+    showFeedback('ok', 'Booster purchased!');
+    playSound('purchase');
+  };
+
+  const openChest = (def: ChestDef) => {
+    const p = progress;
+    const keyQty = p.inventory?.[def.keyId] ?? 0;
+    const canAffordCoins = def.currency === 'fitCoins' && p.fitCoins >= def.cost;
+    const canAffordEmeralds = def.currency === 'emeralds' && (p.emeralds ?? 0) >= def.cost;
+    if (keyQty === 0 && !canAffordCoins && !canAffordEmeralds) {
+      showFeedback('err', "Can't afford to open this chest.");
+      return;
+    }
+    let updated = { ...p };
+    if (keyQty > 0) {
+      updated = { ...updated, inventory: { ...updated.inventory, [def.keyId]: keyQty - 1 } };
+    } else if (def.currency === 'fitCoins') {
+      updated = { ...updated, fitCoins: updated.fitCoins - def.cost };
+    } else {
+      updated = { ...updated, emeralds: (updated.emeralds ?? 0) - def.cost };
+    }
+    saveProgress(updated);
+    setProgress(updated);
+    const category = generateReward();
+    const r = resolveReward(category, updated);
+    setPendingReward(r);
+    setOpeningChest(def);
+    setReelKey(k => k + 1);
   };
 
   const handleEquipFrame = (id: string) => {
@@ -285,7 +363,7 @@ export default function ShopPage() {
         {activeTab === 'boosters' && (
           <div>
             <p className="text-sm text-muted mb-6">
-              Boosters are earned from challenges, login rewards, and chests — they cannot be purchased. Activate one from your inventory to apply its effect.
+              Buy boosters with Emeralds or earn them from chests and challenges. Activate one from your inventory to apply its effect.
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {BOOSTER_DEFS.map((def, i) => (
@@ -295,7 +373,10 @@ export default function ShopPage() {
                   qty={progress.inventory?.[def.id] ?? 0}
                   usesLeft={(progress.activeBoosts ?? []).find(b => b.id === def.id)?.usesLeft ?? 0}
                   index={i}
+                  emeraldCost={BOOSTER_PRICES[def.id] ?? 0}
+                  emeralds={emeralds}
                   onActivate={() => handleActivate(def.id)}
+                  onBuy={() => handleBuyBooster(def.id, BOOSTER_PRICES[def.id] ?? 0)}
                 />
               ))}
             </div>
@@ -316,12 +397,7 @@ export default function ShopPage() {
                   fitCoins={progress.fitCoins}
                   emeralds={emeralds}
                   index={i}
-                  onOpen={() => {
-                    const r = generateReward();
-                    console.log('chest reward:', r);
-                    setPendingReward(r);
-                    setOpeningChest(def);
-                  }}
+                  onOpen={() => openChest(def)}
                 />
               ))}
             </div>
@@ -331,11 +407,14 @@ export default function ShopPage() {
 
       {openingChest && pendingReward && (
         <ChestOpeningModal
+          key={reelKey}
           def={openingChest}
           isOpen={!!openingChest}
           onClose={() => { setOpeningChest(null); setPendingReward(null); }}
           reelLandIndex={rewardToReelIndex(pendingReward)}
           reward={pendingReward}
+          rewardDisplay={getRewardDisplay(pendingReward)}
+          onReroll={() => { setOpeningChest(null); setPendingReward(null); setTimeout(() => openChest(openingChest), 0); }}
           onClaimed={(r) => {
             setProgress(prev => {
               if (!prev) return prev;
@@ -354,17 +433,14 @@ export default function ShopPage() {
                 const u = { ...prev, emeralds: (prev.emeralds ?? 0) + 5 };
                 saveProgress(u); return u;
               }
-              if (r === 'frame' || r === 'emoji') {
-                const pool = r === 'frame'
-                  ? FRAME_ITEMS.filter(i => i.rarity !== 'premium')
-                  : SHOP_ITEMS.filter(i => i.type === 'emoji' && i.rarity !== 'premium' && i.rarity !== 'world');
-                const unowned = pool.filter(i => !prev.unlockedItems.includes(i.id));
-                if (unowned.length === 0) {
+              // Specific frame/emoji item ID — already resolved before modal opened
+              const item = getShopItem(r);
+              if (item) {
+                if (prev.unlockedItems.includes(r)) {
                   const u = { ...prev, fitCoins: Math.min(MAX_FIT_COINS, prev.fitCoins + 50) };
                   saveProgress(u); return u;
                 }
-                const pick = unowned[Math.floor(Math.random() * unowned.length)];
-                const u = { ...prev, unlockedItems: [...prev.unlockedItems, pick.id] };
+                const u = { ...prev, unlockedItems: [...prev.unlockedItems, r] };
                 saveProgress(u); return u;
               }
               return prev;
@@ -616,12 +692,16 @@ interface BoosterCardProps {
   qty: number;
   usesLeft: number;
   index: number;
+  emeraldCost: number;
+  emeralds: number;
   onActivate: () => void;
+  onBuy: () => void;
 }
 
-function BoosterCard({ def, qty, usesLeft, index, onActivate }: BoosterCardProps) {
+function BoosterCard({ def, qty, usesLeft, index, emeraldCost, emeralds, onActivate, onBuy }: BoosterCardProps) {
   const isActive  = usesLeft > 0;
   const hasStock  = qty > 0;
+  const canAfford = emeralds >= emeraldCost;
 
   const cardBg     = isActive  ? 'var(--card-bg-green)'
                    : hasStock  ? 'var(--card-bg-amber)'
@@ -669,7 +749,27 @@ function BoosterCard({ def, qty, usesLeft, index, onActivate }: BoosterCardProps
         <div className="font-display text-lg font-bold text-app mb-1">{def.name}</div>
         <div className="text-xs text-muted mb-3 leading-relaxed">{def.description}</div>
 
-        <div className="mt-auto">
+        <div className="mt-auto flex flex-col gap-2">
+          {/* Buy row */}
+          <motion.button
+            onClick={onBuy}
+            whileHover={canAfford ? { y: -2 } : {}}
+            whileTap={canAfford ? { y: 2, scale: 0.97 } : {}}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            disabled={!canAfford}
+            className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            style={canAfford
+              ? { background: '#FEE2E2', border: '3px solid var(--neo-red)', boxShadow: '2px 2px 0 #000', color: 'var(--neo-red)' }
+              : { background: '#f5f5f5', border: '3px solid #ccc', color: '#aaa', cursor: 'not-allowed' }}
+          >
+            <Gem className="w-3.5 h-3.5" />
+            {emeraldCost} — Buy
+          </motion.button>
+
+          {/* Divider */}
+          <div style={{ borderTop: `2px solid ${cardBorder}` }} />
+
+          {/* Activate / status row */}
           {isActive ? (
             <div className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
               style={{ background: 'var(--card-bg-green)', border: '3px solid var(--neo-accent)', color: 'var(--neo-accent)' }}>

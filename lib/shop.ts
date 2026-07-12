@@ -77,7 +77,17 @@ export const BOOSTER_DEFS: BoosterDef[] = [
   { id: 'fragment_boost', name: 'Fragment Booster', description: '+50% Emoji Fragments for your next 3 rewards.',    effect: '+50% Frags × 3',    img: '/fragbooster.png' },
   { id: 'emerald_boost',  name: 'Emerald Booster',  description: '+2 Emeralds from your next boss defeat.',          effect: '+2 Emeralds',        img: '/emeraldbooster.png' },
   { id: 'lucky_charm',    name: 'Lucky Charm',       description: 'Improves rarity odds of your next chest opening.', effect: 'Better Chest Loot', img: '/luckycharm.png' },
+  { id: 'streak_shield',  name: 'Streak Shield',     description: 'Protects your login streak if you miss one day.',  effect: 'Shield × 1',        img: null },
 ];
+
+export const BOOSTER_PRICES: Record<string, number> = {
+  coin_boost:     10,
+  xp_boost:       10,
+  fragment_boost: 15,
+  emerald_boost:  20,
+  lucky_charm:    25,
+  streak_shield:  30,
+};
 
 export type KeyDef = {
   id: string;

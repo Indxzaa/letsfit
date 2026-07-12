@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -9,16 +9,16 @@ import type { ChestDef } from '@/lib/shop';
 type AnimPhase = 'spawn' | 'shake' | 'open' | 'reel' | 'result';
 
 const REEL_ITEMS = [
-  { id: 'coin_boost',    name: 'Coin Booster',    img: '/coinbooster.png'    },
-  { id: 'xp_boost',     name: 'XP Booster',      img: '/XPbooster.png'      },
-  { id: 'emerald_boost', name: 'Emerald Booster', img: '/emeraldbooster.png' },
-  { id: 'lucky_charm',  name: 'Lucky Charm',      img: '/luckycharm.png'     },
-  { id: 'streak_shield', name: 'Streak Shield',   img: null                  },
-  { id: 'fragment',     name: 'Fragments',         img: '/fragment.png'       },
-  { id: 'coins',        name: 'FitCoins',          img: null                  },
-  { id: 'emeralds',     name: 'Emeralds',          img: null                  },
-  { id: 'frame',        name: 'Frame',             img: '/frame1.png'         },
-  { id: 'emoji',        name: 'Emoji',             img: '/emoji1.png'         },
+  { id: 'coin_boost',    name: 'Coin Booster',    img: '/coinbooster.png',    fallback: '🛡️' },
+  { id: 'xp_boost',     name: 'XP Booster',      img: '/XPbooster.png',      fallback: '🛡️' },
+  { id: 'emerald_boost', name: 'Emerald Booster', img: '/emeraldbooster.png', fallback: '🛡️' },
+  { id: 'lucky_charm',  name: 'Lucky Charm',      img: '/luckycharm.png',     fallback: '🍀' },
+  { id: 'streak_shield', name: 'Streak Shield',   img: '/streak shield.png',  fallback: '🛡️' },
+  { id: 'fragment',     name: 'Fragments',         img: '/purplefragment.png', fallback: '✨' },
+  { id: 'coins',        name: 'FitCoins',          img: null,                  fallback: '🪙' },
+  { id: 'emeralds',     name: 'Emeralds',          img: null,                  fallback: '💎' },
+  { id: 'frame',        name: 'Frame',             img: '/frame1.png',         fallback: '🖼️' },
+  { id: 'emoji',        name: 'Emoji',             img: '/emoji1.png',         fallback: '😀' },
 ];
 
 const REEL_SEQUENCE = [
@@ -28,11 +28,7 @@ const REEL_SEQUENCE = [
 const ITEM_W     = 88;
 const ITEM_GAP   = 10;
 const ITEM_PITCH = ITEM_W + ITEM_GAP;
-
-// Container viewport is ~400px; arrow sits at center (200px).
-// Land index 14 under the arrow.
-const CONTAINER_CTR = 200;
-const REEL_START_X  = 450;
+const REEL_START_X = 450;
 
 export default function ChestOpeningModal({
   def,
@@ -40,21 +36,31 @@ export default function ChestOpeningModal({
   onClose,
   reelLandIndex,
   reward,
+  rewardDisplay,
   onClaimed,
+  onReroll,
 }: {
   def: ChestDef;
   isOpen: boolean;
   onClose: () => void;
   reelLandIndex: number;
   reward: string;
+  rewardDisplay: { icon: string | null; iconFallback: string; label: string; qty: string };
   onClaimed: (reward: string) => void;
+  onReroll?: () => void;
 }) {
   const [phase, setPhase] = useState<AnimPhase>('spawn');
-  const reelLandX = CONTAINER_CTR - (reelLandIndex * ITEM_PITCH + ITEM_W / 2);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [containerCtr, setContainerCtr] = useState(192);
+  const reelLandX = containerCtr - (reelLandIndex * ITEM_PITCH + ITEM_W / 2);
 
   useEffect(() => {
     if (!isOpen) { setPhase('spawn'); return; }
     setPhase('spawn');
+    // Measure reel track width (panel content = panel - p-8 padding 32px*2)
+    if (panelRef.current) {
+      setContainerCtr((panelRef.current.offsetWidth - 64) / 2);
+    }
     const t1 = setTimeout(() => setPhase('shake'),  350);
     const t2 = setTimeout(() => setPhase('open'),  1200);
     const t3 = setTimeout(() => setPhase('reel'),  1700);
@@ -92,6 +98,7 @@ export default function ChestOpeningModal({
         >
           <motion.div
             key="panel"
+            ref={panelRef}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -200,7 +207,7 @@ export default function ChestOpeningModal({
                     {/* Scrolling items */}
                     <motion.div
                       className="absolute top-0 flex items-center"
-                      style={{ height: '100%', gap: ITEM_GAP, paddingLeft: 4 }}
+                      style={{ height: '100%', gap: ITEM_GAP }}
                       initial={{ x: REEL_START_X }}
                       animate={
                         phase === 'reel'
@@ -247,7 +254,7 @@ export default function ChestOpeningModal({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-2xl">
-                                🛡️
+                                {item.fallback}
                               </div>
                             )}
                           </div>
@@ -273,18 +280,65 @@ export default function ChestOpeningModal({
                   className="mt-6 w-full flex flex-col items-center"
                 >
                   <div
-                    className="w-full py-3 text-center font-display text-lg font-bold"
+                    className="w-full p-5 flex flex-col items-center gap-3"
                     style={{
                       background: 'var(--card-bg-amber)',
                       border: '3px solid #000',
                       boxShadow: '4px 4px 0 #000',
                     }}
                   >
-                    Reward Coming Soon
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      {rewardDisplay.icon ? (
+                        <Image
+                          src={rewardDisplay.icon}
+                          alt={rewardDisplay.label}
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="text-4xl">{rewardDisplay.iconFallback}</span>
+                      )}
+                    </div>
+                    <div className="font-display text-xl font-bold text-center leading-tight">
+                      {rewardDisplay.label}
+                    </div>
+                    {rewardDisplay.qty && (
+                      <div
+                        className="px-4 py-1 text-sm font-black uppercase tracking-wider"
+                        style={{ background: '#000', color: '#fff', boxShadow: '2px 2px 0 #555' }}
+                      >
+                        {rewardDisplay.qty}
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted mt-3">
                     Tap outside or ✕ to close.
                   </p>
+                  {onReroll && (
+                    <div className="flex gap-3 mt-3 w-full">
+                      <motion.button
+                        onClick={onClose}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ y: 2, scale: 0.97 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        style={{ background: 'var(--neo-white)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-sm)', color: 'var(--neo-black)' }}
+                      >
+                        Claim
+                      </motion.button>
+                      <motion.button
+                        onClick={onReroll}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ y: 2, scale: 0.97 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        style={{ background: '#000', color: '#fff', border: '3px solid #000', boxShadow: '3px 3px 0 #555' }}
+                      >
+                        Reroll
+                      </motion.button>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
