@@ -61,6 +61,7 @@ export async function dbGetFriends(userId: string): Promise<DbResult<FriendWithP
         id: otherId,
         username: profile?.username ?? 'Unknown',
         avatar: getAvatarPublicUrl(otherId),
+        data: (profile?.data as import('@/lib/progress').Progress | null) ?? null,
       },
     };
   });

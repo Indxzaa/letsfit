@@ -4,25 +4,47 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Coins, Check, Lock, Gem } from 'lucide-react';
+import { ArrowLeft, Coins, Check, Lock, Gem, Frame } from 'lucide-react';
 import { playSound } from '@/lib/audio';
 import {
   loadProgress,
   purchaseItem,
   purchaseWithEmeralds,
   equipItem,
+  activateBooster,
+  addToInventory,
   saveProgress,
   subscribeToProgress,
+  MAX_FIT_COINS,
   type Progress,
 } from '@/lib/progress';
-import { SHOP_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG } from '@/lib/shop';
+import { SHOP_ITEMS, FRAME_ITEMS, FREE_DEFAULTS, DEFAULT_EQUIPPED, RARITY_CONFIG, BOOSTER_DEFS, KEY_DEFS, CHEST_DEFS } from '@/lib/shop';
 import type { ShopItem } from '@/lib/progress';
 import Navbar from '@/components/Navbar';
 import { ShopSkeleton } from '@/components/Skeleton';
 import { useAuth } from '@/components/AuthProvider';
 import { applyNewAchievements } from '@/lib/achievements';
+import ChestOpeningModal from '@/components/ChestOpeningModal';
 
 const DEV_EMAIL = 'indyy8262@gmail.com';
+
+// Must match REEL_ITEMS order in ChestOpeningModal.tsx
+const REEL_IDS = [
+  'coin_boost', 'xp_boost', 'emerald_boost', 'lucky_charm', 'streak_shield',
+  'fragment', 'coins', 'emeralds', 'frame', 'emoji',
+];
+
+function generateReward(): string {
+  return REEL_IDS[Math.floor(Math.random() * REEL_IDS.length)];
+}
+
+function rewardToReelIndex(reward: string): number {
+  const pos = REEL_IDS.indexOf(reward);
+  // Land in the 3rd repetition (slots 12–17) so the reel has room to scroll
+  return 12 + (pos >= 0 ? pos : 0);
+}
+
+type ShopTab = 'emojis' | 'frames' | 'boosters' | 'chests';
 
 // Normal → Premium → Supreme
 function sortEmojis(items: ShopItem[]): ShopItem[] {
@@ -30,12 +52,22 @@ function sortEmojis(items: ShopItem[]): ShopItem[] {
   return [...items].sort((a, b) => order(a) - order(b));
 }
 
+// Common → Premium → Supreme → Chest exclusive
+function sortFrames(items: ShopItem[]): ShopItem[] {
+  const order = (i: ShopItem) =>
+    i.rarity === 'chest-exclusive' ? 3
+    : i.currency === 'emeralds' ? 2
+    : i.currency === 'fragments' ? 1
+    : 0;
+  return [...items].sort((a, b) => order(a) - order(b));
+}
+
 function checkPremiumAutoUnlocks(p: Progress): Progress {
-  const premiumItems = SHOP_ITEMS.filter(i => i.currency === 'fragments');
+  const fragmentItems = [...SHOP_ITEMS, ...FRAME_ITEMS].filter(i => i.currency === 'fragments');
   const fragments = p.emojiFragments ?? 0;
   let changed = false;
   let updated = { ...p };
-  for (const item of premiumItems) {
+  for (const item of fragmentItems) {
     if (!updated.unlockedItems.includes(item.id) && fragments >= item.cost) {
       updated = { ...updated, unlockedItems: [...updated.unlockedItems, item.id] };
       changed = true;
@@ -47,7 +79,10 @@ function checkPremiumAutoUnlocks(p: Progress): Progress {
 
 export default function ShopPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [activeTab, setActiveTab] = useState<ShopTab>('emojis');
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
+  const [openingChest, setOpeningChest] = useState<ChestDef | null>(null);
+  const [pendingReward, setPendingReward] = useState<string | null>(null);
   const { user } = useAuth();
   const isDev = user?.email === DEV_EMAIL;
 
@@ -76,6 +111,8 @@ export default function ShopPage() {
     ...SHOP_ITEMS
       .filter(i => i.rarity === 'world' && i.requirement && (isDev || progress.bossesDefeated.includes(i.requirement)))
       .map(i => i.id),
+    // Dev account owns everything
+    ...(isDev ? [...SHOP_ITEMS, ...FRAME_ITEMS].map(i => i.id) : []),
   ]);
 
   const handlePurchase = (id: string, cost: number) => {
@@ -96,13 +133,30 @@ export default function ShopPage() {
     const final = applyNewAchievements(result.progress);
     if (final !== result.progress) saveProgress(final);
     setProgress(final);
-    showFeedback('ok', 'Supreme emoji unlocked!');
+    showFeedback('ok', 'Item unlocked!');
+    playSound('purchase');
+  };
+
+  const handleActivate = (id: string) => {
+    const updated = activateBooster(progress, id);
+    if (!updated) { showFeedback('err', 'No boosters in inventory.'); return; }
+    setProgress(updated);
+    showFeedback('ok', 'Booster activated!');
+    playSound('purchase');
+  };
+
+  const handleEquipFrame = (id: string) => {
+    const alreadyEquipped = progress.equippedItems.frame === id;
+    const updated = equipItem(progress, 'frame', alreadyEquipped ? 'frame-none' : id);
+    setProgress(updated);
     playSound('purchase');
   };
 
   const emojiItems = sortEmojis(SHOP_ITEMS.filter(i => i.type === 'emoji'));
-  const fragments = progress.emojiFragments ?? 0;
-  const emeralds  = progress.emeralds ?? 0;
+  const frameItems = sortFrames(FRAME_ITEMS);
+  const fragments  = progress.emojiFragments ?? 0;
+  const emeralds   = progress.emeralds ?? 0;
+  const equippedFrame = progress.equippedItems.frame ?? 'frame-none';
 
   return (
     <div className="min-h-screen page-bg">
@@ -122,7 +176,7 @@ export default function ShopPage() {
               Customize your profile.
             </h1>
             <p className="text-sm text-muted mt-2 max-w-lg">
-              Spend FitCoins on emojis, Emeralds on supreme drops, and collect Fragments to unlock premium emojis.
+              Spend FitCoins on emojis and frames, Emeralds on supreme drops, and collect Fragments to unlock premium items.
             </p>
           </div>
 
@@ -170,38 +224,159 @@ export default function ShopPage() {
           </motion.div>
         )}
 
-        {/* Tab label */}
-        <div className="flex gap-2 mb-8">
-          <div
-            className="px-5 py-2 text-sm font-bold uppercase tracking-wider"
-            style={{ background: 'var(--neo-accent)', color: '#fff', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)' }}
-          >
-            Emojis
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 flex-wrap">
+          {(['emojis', 'frames', 'boosters', 'chests'] as ShopTab[]).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="px-5 py-2 text-sm font-bold uppercase tracking-wider cursor-pointer transition-all duration-100"
+              style={{
+                background: activeTab === tab ? 'var(--neo-accent)' : 'var(--neo-white)',
+                color: activeTab === tab ? '#fff' : 'var(--neo-black)',
+                border: 'var(--neo-border)',
+                boxShadow: activeTab === tab ? 'var(--neo-shadow)' : '2px 2px 0 #000',
+              }}
+            >
+              {tab === 'emojis' ? 'Emojis' : tab === 'frames' ? 'Frames' : tab === 'boosters' ? 'Boosters' : 'Chests'}
+            </button>
+          ))}
         </div>
 
         {/* Item grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {emojiItems.map((item, i) => (
-            <EmojiCard
-              key={item.id}
-              item={item}
-              isOwned={allUnlocked.has(item.id)}
-              fitCoins={progress.fitCoins}
-              fragments={fragments}
-              emeralds={emeralds}
-              index={i}
-              onBuyCoin={() => handlePurchase(item.id, item.cost)}
-              onBuyEmerald={() => handleEmeraldPurchase(item.id, item.cost)}
-            />
-          ))}
-        </div>
+        {activeTab === 'emojis' && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {emojiItems.map((item, i) => (
+              <EmojiCard
+                key={item.id}
+                item={item}
+                isOwned={allUnlocked.has(item.id)}
+                fitCoins={progress.fitCoins}
+                fragments={fragments}
+                emeralds={emeralds}
+                index={i}
+                onBuyCoin={() => handlePurchase(item.id, item.cost)}
+                onBuyEmerald={() => handleEmeraldPurchase(item.id, item.cost)}
+              />
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'frames' && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {frameItems.map((item, i) => (
+              <FrameCard
+                key={item.id}
+                item={item}
+                isOwned={allUnlocked.has(item.id)}
+                isEquipped={equippedFrame === item.id}
+                fitCoins={progress.fitCoins}
+                fragments={fragments}
+                emeralds={emeralds}
+                index={i}
+                onBuyCoin={() => handlePurchase(item.id, item.cost)}
+                onBuyEmerald={() => handleEmeraldPurchase(item.id, item.cost)}
+                onEquip={() => handleEquipFrame(item.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'boosters' && (
+          <div>
+            <p className="text-sm text-muted mb-6">
+              Boosters are earned from challenges, login rewards, and chests — they cannot be purchased. Activate one from your inventory to apply its effect.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {BOOSTER_DEFS.map((def, i) => (
+                <BoosterCard
+                  key={def.id}
+                  def={def}
+                  qty={progress.inventory?.[def.id] ?? 0}
+                  usesLeft={(progress.activeBoosts ?? []).find(b => b.id === def.id)?.usesLeft ?? 0}
+                  index={i}
+                  onActivate={() => handleActivate(def.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'chests' && (
+          <div>
+            <p className="text-sm text-muted mb-6">
+              Open chests to earn boosters, keys, frames, and exclusive cosmetics. Pay with FitCoins, Emeralds, or use a matching key.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {CHEST_DEFS.map((def, i) => (
+                <ChestCard
+                  key={def.id}
+                  def={def}
+                  keyQty={progress.inventory?.[def.keyId] ?? 0}
+                  fitCoins={progress.fitCoins}
+                  emeralds={emeralds}
+                  index={i}
+                  onOpen={() => {
+                    const r = generateReward();
+                    console.log('chest reward:', r);
+                    setPendingReward(r);
+                    setOpeningChest(def);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {openingChest && pendingReward && (
+        <ChestOpeningModal
+          def={openingChest}
+          isOpen={!!openingChest}
+          onClose={() => { setOpeningChest(null); setPendingReward(null); }}
+          reelLandIndex={rewardToReelIndex(pendingReward)}
+          reward={pendingReward}
+          onClaimed={(r) => {
+            setProgress(prev => {
+              if (!prev) return prev;
+              if (['coin_boost', 'xp_boost', 'emerald_boost', 'lucky_charm', 'streak_shield'].includes(r)) {
+                return addToInventory(prev, r, 1);
+              }
+              if (r === 'fragment') {
+                const u = { ...prev, emojiFragments: (prev.emojiFragments ?? 0) + 25 };
+                saveProgress(u); return u;
+              }
+              if (r === 'coins') {
+                const u = { ...prev, fitCoins: Math.min(MAX_FIT_COINS, prev.fitCoins + 100) };
+                saveProgress(u); return u;
+              }
+              if (r === 'emeralds') {
+                const u = { ...prev, emeralds: (prev.emeralds ?? 0) + 5 };
+                saveProgress(u); return u;
+              }
+              if (r === 'frame' || r === 'emoji') {
+                const pool = r === 'frame'
+                  ? FRAME_ITEMS.filter(i => i.rarity !== 'premium')
+                  : SHOP_ITEMS.filter(i => i.type === 'emoji' && i.rarity !== 'premium' && i.rarity !== 'world');
+                const unowned = pool.filter(i => !prev.unlockedItems.includes(i.id));
+                if (unowned.length === 0) {
+                  const u = { ...prev, fitCoins: Math.min(MAX_FIT_COINS, prev.fitCoins + 50) };
+                  saveProgress(u); return u;
+                }
+                const pick = unowned[Math.floor(Math.random() * unowned.length)];
+                const u = { ...prev, unlockedItems: [...prev.unlockedItems, pick.id] };
+                saveProgress(u); return u;
+              }
+              return prev;
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
 
-// ── Unified emoji card ────────────────────────────────────────────────────────
+// ── Emoji card ────────────────────────────────────────────────────────────────
 interface EmojiCardProps {
   item: ShopItem;
   isOwned: boolean;
@@ -218,7 +393,6 @@ function EmojiCard({ item, isOwned, fitCoins, fragments, emeralds, index, onBuyC
   const isSupreme = item.currency === 'emeralds';
   const rarity = RARITY_CONFIG[item.rarity];
 
-  // Card theme
   const cardBg   = isOwned ? 'var(--card-bg-green)'
                  : isPremium ? 'var(--card-bg-purple)'
                  : isSupreme ? '#FEE2E2'
@@ -233,13 +407,11 @@ function EmojiCard({ item, isOwned, fitCoins, fragments, emeralds, index, onBuyC
     : isSupreme ? `4px 4px 0 var(--neo-red)`
     : 'var(--neo-shadow)';
 
-  // Preview bg
   const previewBg = isOwned ? 'var(--card-bg-green)'
                   : isPremium ? '#EDE9FE'
                   : isSupreme ? '#FCA5A5'
                   : 'var(--neo-white)';
 
-  // Badge
   const badge = isOwned ? null
               : isPremium ? { label: 'Premium', bg: 'var(--neo-purple)' }
               : isSupreme ? { label: 'Supreme', bg: 'var(--neo-red)' }
@@ -253,7 +425,6 @@ function EmojiCard({ item, isOwned, fitCoins, fragments, emeralds, index, onBuyC
       className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
       style={{ borderRadius: 0, background: cardBg, border: `3px solid ${cardBorder}`, boxShadow: cardShadow }}
     >
-      {/* Preview */}
       <div style={{ borderBottom: `2px solid ${cardBorder}`, background: previewBg }}>
         <div className="aspect-[4/3] flex items-center justify-center relative">
           <div className="relative w-20 h-20">
@@ -274,7 +445,6 @@ function EmojiCard({ item, isOwned, fitCoins, fragments, emeralds, index, onBuyC
         </div>
       </div>
 
-      {/* Info + action */}
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <div className="font-display text-lg font-bold text-app truncate">{item.name}</div>
@@ -290,21 +460,237 @@ function EmojiCard({ item, isOwned, fitCoins, fragments, emeralds, index, onBuyC
               style={{ background: 'var(--card-bg-green)', border: '3px solid #000', color: 'var(--neo-accent)' }}>
               <Check className="w-3.5 h-3.5" /> Owned
             </button>
-
           ) : isPremium ? (
             <FragmentProgress fragments={fragments} cost={item.cost} />
-
           ) : isSupreme ? (
             <EmeraldBuyButton cost={item.cost} canAfford={emeralds >= item.cost} onBuy={onBuyEmerald} />
-
           ) : item.rarity === 'world' ? (
             <button disabled className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-not-allowed"
               style={{ background: 'var(--neo-white)', border: 'var(--neo-border)', color: 'var(--text-subtle)', opacity: 0.6 }}>
               <Lock className="w-3.5 h-3.5" /> Clear a world to unlock
             </button>
-
           ) : (
             <CoinBuyButton cost={item.cost} canAfford={fitCoins >= item.cost} onBuy={onBuyCoin} />
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Frame card ────────────────────────────────────────────────────────────────
+interface FrameCardProps {
+  item: ShopItem;
+  isOwned: boolean;
+  isEquipped: boolean;
+  fitCoins: number;
+  fragments: number;
+  emeralds: number;
+  index: number;
+  onBuyCoin: () => void;
+  onBuyEmerald: () => void;
+  onEquip: () => void;
+}
+
+function FrameCard({ item, isOwned, isEquipped, fitCoins, fragments, emeralds, index, onBuyCoin, onBuyEmerald, onEquip }: FrameCardProps) {
+  const isPremium      = item.currency === 'fragments';
+  const isSupreme      = item.currency === 'emeralds';
+  const isChestOnly    = item.rarity === 'chest-exclusive';
+  const rarity         = RARITY_CONFIG[item.rarity];
+
+  const cardBg = isEquipped   ? 'var(--card-bg-green)'
+               : isOwned      ? 'var(--card-bg-amber)'
+               : isPremium    ? 'var(--card-bg-purple)'
+               : isSupreme    ? '#FEE2E2'
+               : isChestOnly  ? '#FEF3C7'
+               : 'var(--card-bg-amber)';
+
+  const cardBorder = isEquipped  ? 'var(--neo-accent)'
+                   : isOwned     ? '#111111'
+                   : isPremium   ? 'var(--neo-purple)'
+                   : isSupreme   ? 'var(--neo-red)'
+                   : isChestOnly ? '#d97706'
+                   : '#111111';
+
+  const cardShadow = isEquipped  ? 'var(--neo-shadow-lg)'
+                   : isPremium   ? '4px 4px 0 var(--neo-purple)'
+                   : isSupreme   ? '4px 4px 0 var(--neo-red)'
+                   : isChestOnly ? '4px 4px 0 #d97706'
+                   : 'var(--neo-shadow)';
+
+  const previewBg = isEquipped  ? 'var(--card-bg-green)'
+                  : isOwned     ? '#f5f5f5'
+                  : isPremium   ? '#EDE9FE'
+                  : isSupreme   ? '#FCA5A5'
+                  : isChestOnly ? '#FDE68A'
+                  : 'var(--neo-white)';
+
+  const badge = isEquipped   ? { label: 'Equipped', bg: 'var(--neo-accent)' }
+              : isOwned      ? null
+              : isPremium    ? { label: 'Premium',  bg: 'var(--neo-purple)' }
+              : isSupreme    ? { label: 'Supreme',  bg: 'var(--neo-red)' }
+              : isChestOnly  ? { label: 'Chest Only', bg: '#d97706' }
+              : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.03 }}
+      className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
+      style={{ borderRadius: 0, background: cardBg, border: `3px solid ${cardBorder}`, boxShadow: cardShadow }}
+    >
+      {/* Frame preview */}
+      <div style={{ borderBottom: `2px solid ${cardBorder}`, background: previewBg }}>
+        <div className="aspect-[4/3] flex items-center justify-center relative">
+          <div className="relative w-24 h-24">
+            <Image src={item.value} alt={item.name} fill className="object-contain" unoptimized />
+          </div>
+          {badge && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: badge.bg, border: '2px solid #000', color: '#fff' }}>
+              {isEquipped && <Check className="w-2.5 h-2.5" />}
+              {badge.label}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <div className="font-display text-lg font-bold text-app truncate">{item.name}</div>
+          <span className="text-[10px] font-bold px-2 py-0.5 shrink-0"
+            style={{ color: rarity.color, background: `${rarity.color}22`, border: `2px solid ${rarity.color}` }}>
+            {rarity.label}
+          </span>
+        </div>
+
+        <div className="mt-auto pt-3 flex flex-col gap-2">
+          {/* Buy / progress section */}
+          {!isOwned && (
+            isPremium ? (
+              <FragmentProgress fragments={fragments} cost={item.cost} />
+            ) : isSupreme ? (
+              <EmeraldBuyButton cost={item.cost} canAfford={emeralds >= item.cost} onBuy={onBuyEmerald} />
+            ) : isChestOnly ? (
+              <div className="py-2.5 text-xs font-bold uppercase tracking-wider text-center"
+                style={{ background: '#FEF3C7', border: '3px solid #d97706', color: '#92400e' }}>
+                Legendary Chest or higher
+              </div>
+            ) : (
+              <CoinBuyButton cost={item.cost} canAfford={fitCoins >= item.cost} onBuy={onBuyCoin} />
+            )
+          )}
+
+          {/* Equip / unequip section — only shown when owned */}
+          {isOwned && (
+            <motion.button
+              onClick={onEquip}
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 2, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{
+                background: isEquipped ? 'var(--neo-accent)' : 'var(--neo-white)',
+                border: '3px solid #000',
+                boxShadow: isEquipped ? '3px 3px 0 #000' : '2px 2px 0 #000',
+                color: isEquipped ? '#fff' : 'var(--neo-black)',
+              }}
+            >
+              {isEquipped
+                ? <><Check className="w-3.5 h-3.5" /><span>Equipped</span></>
+                : <><Frame className="w-3.5 h-3.5" /><span>Equip</span></>}
+            </motion.button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Booster card ─────────────────────────────────────────────────────────────
+import type { BoosterDef, ChestDef } from '@/lib/shop';
+
+interface BoosterCardProps {
+  def: BoosterDef;
+  qty: number;
+  usesLeft: number;
+  index: number;
+  onActivate: () => void;
+}
+
+function BoosterCard({ def, qty, usesLeft, index, onActivate }: BoosterCardProps) {
+  const isActive  = usesLeft > 0;
+  const hasStock  = qty > 0;
+
+  const cardBg     = isActive  ? 'var(--card-bg-green)'
+                   : hasStock  ? 'var(--card-bg-amber)'
+                   : 'var(--neo-white)';
+  const cardBorder = isActive  ? 'var(--neo-accent)'
+                   : hasStock  ? '#111111'
+                   : '#cccccc';
+  const cardShadow = isActive  ? 'var(--neo-shadow-lg)'
+                   : hasStock  ? 'var(--neo-shadow)'
+                   : '2px 2px 0 #ccc';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.03 }}
+      className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
+      style={{ borderRadius: 0, background: cardBg, border: `3px solid ${cardBorder}`, boxShadow: cardShadow }}
+    >
+      {/* Image */}
+      <div style={{ borderBottom: `2px solid ${cardBorder}`, background: isActive ? 'var(--card-bg-green)' : hasStock ? 'var(--card-bg-amber)' : '#f5f5f5' }}>
+        <div className="aspect-[4/3] flex items-center justify-center relative">
+          <div className="relative w-20 h-20">
+            {def.img
+              ? <Image src={def.img} alt={def.name} fill className="object-contain" unoptimized />
+              : <div className="w-full h-full flex items-center justify-center text-4xl">🛡️</div>
+            }
+          </div>
+          {isActive && (
+            <div className="absolute top-2 right-2 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: 'var(--neo-accent)', border: '2px solid #000', color: '#fff' }}>
+              Active · {usesLeft} left
+            </div>
+          )}
+          {!isActive && hasStock && (
+            <div className="absolute top-2 right-2 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: '#111', border: '2px solid #000', color: '#fff' }}>
+              ×{qty} in bag
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 flex flex-col flex-1">
+        <div className="font-display text-lg font-bold text-app mb-1">{def.name}</div>
+        <div className="text-xs text-muted mb-3 leading-relaxed">{def.description}</div>
+
+        <div className="mt-auto">
+          {isActive ? (
+            <div className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+              style={{ background: 'var(--card-bg-green)', border: '3px solid var(--neo-accent)', color: 'var(--neo-accent)' }}>
+              <Check className="w-3.5 h-3.5" /> {def.effect}
+            </div>
+          ) : hasStock ? (
+            <motion.button
+              onClick={onActivate}
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 2, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{ background: 'var(--neo-white)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow-sm)', color: 'var(--neo-black)' }}
+            >
+              Activate
+            </motion.button>
+          ) : (
+            <div className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+              style={{ background: '#f5f5f5', border: '3px solid #ccc', color: '#aaa' }}>
+              <Lock className="w-3.5 h-3.5" /> Not in inventory
+            </div>
           )}
         </div>
       </div>
@@ -318,9 +704,10 @@ function FragmentProgress({ fragments, cost }: { fragments: number; cost: number
   const pct = current / cost;
   return (
     <div>
-      <div className="flex justify-between items-center mb-1.5">
-        <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--neo-purple)' }}>
-          {current.toLocaleString()} / {cost} Fragments
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Image src="/fragment.png" alt="Fragment" width={14} height={14} className="object-contain shrink-0" unoptimized />
+        <span className="text-xs font-black tabular-nums" style={{ color: 'var(--neo-purple)' }}>
+          {current.toLocaleString()} / {cost}
         </span>
       </div>
       <div style={{ height: 10, background: '#DDD6FE', border: '2px solid #000', position: 'relative', overflow: 'hidden' }}>
@@ -378,5 +765,125 @@ function CoinBuyButton({ cost, canAfford, onBuy }: { cost: number; canAfford: bo
         ? <><Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} /><span>{cost.toLocaleString()}</span></>
         : <><Lock className="w-3.5 h-3.5" /><span>Need {cost.toLocaleString()}</span></>}
     </motion.button>
+  );
+}
+
+// ── Chest card ────────────────────────────────────────────────────────────────
+const CHEST_COLORS: Record<string, { bg: string; border: string; shadow: string }> = {
+  common:  { bg: 'var(--card-bg-amber)',  border: '#111111',           shadow: 'var(--neo-shadow)'              },
+  rare:    { bg: '#EFF6FF',               border: '#7ab0d8',           shadow: '4px 4px 0 #7ab0d8'              },
+  epic:    { bg: 'var(--card-bg-purple)', border: 'var(--neo-purple)', shadow: '4px 4px 0 var(--neo-purple)'    },
+  premium: { bg: '#F3E8FF',               border: '#9333ea',           shadow: '4px 4px 0 #9333ea'              },
+  supreme: { bg: '#FEE2E2',               border: 'var(--neo-red)',    shadow: '4px 4px 0 var(--neo-red)'       },
+};
+
+interface ChestCardProps {
+  def: ChestDef;
+  keyQty: number;
+  fitCoins: number;
+  emeralds: number;
+  index: number;
+  onOpen: () => void;
+}
+
+function ChestCard({ def, keyQty, fitCoins, emeralds, index, onOpen }: ChestCardProps) {
+  const colors = CHEST_COLORS[def.rarity];
+  const canAffordCurrency = def.currency === 'fitCoins' ? fitCoins >= def.cost : emeralds >= def.cost;
+  const hasKey = keyQty > 0;
+  const keyDef = KEY_DEFS.find(k => k.id === def.keyId);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.03 }}
+      className="neo-card flex flex-col hover:scale-[1.01] transition-transform duration-150"
+      style={{ borderRadius: 0, background: colors.bg, border: `3px solid ${colors.border}`, boxShadow: colors.shadow }}
+    >
+      {/* Chest image */}
+      <div style={{ borderBottom: `2px solid ${colors.border}`, background: 'rgba(255,255,255,0.35)' }}>
+        <div className="aspect-[4/3] flex items-center justify-center relative p-4">
+          <div className="relative w-28 h-28">
+            <Image src={def.img} alt={def.name} fill className="object-contain" unoptimized />
+          </div>
+          {hasKey && (
+            <div className="absolute top-2 right-2 px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+              style={{ background: colors.border === '#111111' ? '#111' : colors.border, border: '2px solid #000', color: '#fff' }}>
+              Key ×{keyQty}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 flex flex-col flex-1">
+        <div className="font-display text-xl font-bold text-app mb-4">{def.name}</div>
+
+        {/* Currency price row */}
+        <div className="flex items-center gap-2 mb-2">
+          {def.currency === 'fitCoins'
+            ? <Coins className="w-4 h-4 shrink-0" style={{ color: 'var(--neo-accent)' }} />
+            : <Gem className="w-4 h-4 shrink-0" style={{ color: 'var(--neo-red)' }} />}
+          <span className="text-base font-black tabular-nums text-app">{def.cost.toLocaleString()}</span>
+          <span className="text-xs font-bold text-muted">{def.currency === 'fitCoins' ? 'FitCoins' : 'Emeralds'}</span>
+        </div>
+
+        {/* Key alternative row */}
+        <div className="flex items-center gap-2 mb-5">
+          <span className="text-xs font-bold text-muted">or</span>
+          {keyDef && (
+            <div className="relative w-5 h-5 shrink-0">
+              <Image src={keyDef.img} alt={keyDef.name} fill className="object-contain" unoptimized />
+            </div>
+          )}
+          <span className="text-xs font-bold text-app">{keyDef?.name}</span>
+          <span
+            className="text-xs font-black tabular-nums ml-auto"
+            style={{ color: hasKey ? colors.border : '#aaa' }}
+          >
+            ×{keyQty} owned
+          </span>
+        </div>
+
+        <div className="mt-auto">
+          {hasKey ? (
+            <motion.button
+              onClick={onOpen}
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 2, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{ background: 'var(--neo-black)', border: '3px solid #000', boxShadow: '3px 3px 0 #555', color: '#fff' }}
+            >
+              Open with Key
+            </motion.button>
+          ) : canAffordCurrency ? (
+            <motion.button
+              onClick={onOpen}
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 2, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{
+                background: def.currency === 'fitCoins' ? 'var(--neo-white)' : 'var(--neo-red)',
+                border: 'var(--neo-border)',
+                boxShadow: 'var(--neo-shadow-sm)',
+                color: def.currency === 'fitCoins' ? 'var(--neo-black)' : '#fff',
+              }}
+            >
+              {def.currency === 'fitCoins'
+                ? <><Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} /><span>Open · {def.cost.toLocaleString()}</span></>
+                : <><Gem className="w-3.5 h-3.5" /><span>Open · {def.cost}</span></>}
+            </motion.button>
+          ) : (
+            <div
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+              style={{ background: '#f5f5f5', border: '3px solid #ccc', color: '#aaa' }}
+            >
+              <Lock className="w-3.5 h-3.5" /> Can&apos;t Afford
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 }

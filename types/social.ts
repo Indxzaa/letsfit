@@ -60,6 +60,7 @@ export interface FriendProfile {
   id: string;
   username: string;
   avatar: string | null;
+  data?: import('@/lib/progress').Progress | null;
 }
 
 export interface FriendWithPresence {

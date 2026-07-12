@@ -26,7 +26,7 @@ export function FriendCard({ friend, livePresence, onInvite, onUnfriend, canInvi
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: isLast ? 'none' : '2px solid var(--neo-black)', position: 'relative' }}>
-        <UserAvatar photoUrl={photoUrl} letter={profile.username} size="sm" />
+        <UserAvatar photoUrl={photoUrl} letter={profile.username} size="sm" progress={profile.data} />
         <div className="flex-1 min-w-0">
           <p className="font-display text-sm font-black uppercase tracking-wide text-app truncate">{profile.username}</p>
           <div className="flex items-center gap-1.5 mt-0.5">

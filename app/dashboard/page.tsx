@@ -12,6 +12,7 @@ import { loadProgress, saveProgress, levelProgress, subscribeToProgress, process
 import { applyLoginReward } from '@/lib/loginRewards';
 import { ACHIEVEMENTS, DAILY_QUESTS, getAchievement, getQuestProgress, applyNewAchievements } from '@/lib/achievements';
 import { EARNED_TITLES } from '@/lib/titles';
+import { BOOSTER_DEFS } from '@/lib/shop';
 import { getUsername } from '@/lib/profileSync';
 import { DashboardSkeleton } from '@/components/Skeleton';
 import Navbar from '@/components/Navbar';
@@ -78,6 +79,7 @@ export default function DashboardPage() {
               photoUrl={avatarUrl}
               letter={(getUsername() ?? user?.email ?? '?').charAt(0)}
               size="lg"
+              progress={progress}
             />
             <div>
               {(() => {
@@ -110,6 +112,31 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
+
+        {/* ── Active Boosts Strip ── */}
+        {progress.activeBoosts && progress.activeBoosts.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            {progress.activeBoosts.map((b) => {
+              const def = BOOSTER_DEFS.find(d => d.id === b.id);
+              return (
+                <div
+                  key={b.id}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
+                  style={{
+                    background: 'var(--card-bg-green)',
+                    border: '2px solid var(--neo-accent)',
+                    boxShadow: '2px 2px 0 var(--neo-accent)',
+                    color: 'var(--neo-accent)',
+                  }}
+                >
+                  <Zap className="w-3 h-3" />
+                  {def?.name ?? b.id}
+                  <span className="tabular-nums opacity-80">· {b.usesLeft} left</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* ── Top bento row: Streak hero + 3 stat tiles ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">

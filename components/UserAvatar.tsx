@@ -19,6 +19,14 @@ const BORDER_MAP: Record<string, string> = {
   flame: 'ba-flame', galaxy: 'ba-galaxy', electric: 'ba-electric', floral: 'ba-floral',
 };
 
+// How many px the frame image extends beyond the avatar circle on each side
+const FRAME_INSET: Record<Size, number> = {
+  sm: -5,
+  md: -7,
+  lg: -11,
+  xl: -16,
+};
+
 interface UserAvatarProps {
   photoUrl?: string | null;
   letter?: string;
@@ -39,9 +47,11 @@ export default function UserAvatar({
   const equipped   = progress?.equippedItems ?? {};
   const borderItem = getShopItem(equipped.border ?? 'border-none');
   const auraItem   = getShopItem(equipped.aura   ?? 'aura-none');
+  const frameItem  = getShopItem(equipped.frame  ?? 'frame-none');
 
   const borderValue = borderItem?.value ?? 'none';
   const auraValue   = auraItem?.value   ?? '';
+  const frameValue  = (frameItem?.value && frameItem.id !== 'frame-none') ? frameItem.value : null;
   const hasBorder   = !!BORDER_MAP[borderValue];
   const borderClass = hasBorder ? `${DIMS[size].pad} rounded-full ${BORDER_MAP[borderValue]}` : '';
 
@@ -84,6 +94,8 @@ export default function UserAvatar({
     </div>
   );
 
+  const frameInset = FRAME_INSET[size];
+
   return (
     <div className={`inline-flex relative ${className}`}>
       {/* Aura (hidden at sm) */}
@@ -92,6 +104,20 @@ export default function UserAvatar({
       )}
       {/* Border wrapper or bare circle */}
       {hasBorder ? <div className={borderClass}>{inner}</div> : inner}
+      {/* Frame overlay — renders on top, extends beyond the circle */}
+      {frameValue && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: frameInset,
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+          aria-hidden
+        >
+          <Image src={frameValue} alt="" fill className="object-contain" unoptimized />
+        </div>
+      )}
     </div>
   );
 }

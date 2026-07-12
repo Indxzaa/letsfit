@@ -3,6 +3,11 @@
 const STORAGE_KEY = 'letsfit:progress:v3';
 const PROGRESS_EVENT = 'letsfit:progress:changed';
 
+export type ActiveBoost = {
+  id: string;
+  usesLeft: number;
+};
+
 export type DailyMissionStatus = {
   date: string;
   completed: string[];
@@ -13,10 +18,10 @@ export type ShopItem = {
   id: string;
   name: string;
   description: string;
-  type: 'avatar' | 'border' | 'badge' | 'title' | 'aura' | 'emoji';
+  type: 'avatar' | 'border' | 'badge' | 'title' | 'aura' | 'emoji' | 'frame';
   cost: number;
   value: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world' | 'premium' | 'supreme';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' | 'world' | 'premium' | 'supreme' | 'chest-exclusive';
   currency?: 'fragments' | 'emeralds'; // if absent, cost is in fitCoins
   requirement?: string; // boss ID that must be defeated to unlock
 };
@@ -51,6 +56,8 @@ export type Progress = {
   calendarLastClaimDate: string;
   loginHistory: Record<string, number[]>; // YYYY-MM -> claimed day numbers
   hasAvatar?: boolean; // true once the user has uploaded a profile picture
+  inventory: Record<string, number>; // booster itemId → quantity
+  activeBoosts: ActiveBoost[];
 };
 
 const DEFAULT_PROGRESS: Progress = {
@@ -82,6 +89,8 @@ const DEFAULT_PROGRESS: Progress = {
   calendarMonth: '',
   calendarLastClaimDate: '',
   loginHistory: {},
+  inventory: {},
+  activeBoosts: [],
 };
 
 // ---- Reward economy (rebalanced) ----
@@ -105,6 +114,16 @@ export const STREAK_MILESTONES: { day: number; coins: number; xp: number }[] = [
   { day: 14, coins: 150, xp: 300 },
   { day: 30, coins: 400, xp: 700 },
 ];
+
+// Booster uses per activation
+export const BOOSTER_USES: Record<string, number> = {
+  coin_boost:     5,
+  xp_boost:       3,
+  fragment_boost: 3,
+  emerald_boost:  1,
+  lucky_charm:    1,
+  streak_shield:  1,
+};
 
 // Calories per rep (or per second for plank)
 export const CALORIES_PER_REP: Record<string, number> = {
@@ -289,6 +308,33 @@ export function equipItem(current: Progress, slot: string, itemId: string): Prog
   return updated;
 }
 
+export function addToInventory(p: Progress, itemId: string, qty = 1): Progress {
+  const updated: Progress = {
+    ...p,
+    inventory: { ...p.inventory, [itemId]: (p.inventory[itemId] ?? 0) + qty },
+  };
+  saveProgress(updated);
+  return updated;
+}
+
+export function activateBooster(p: Progress, id: string): Progress | null {
+  const qty = p.inventory?.[id] ?? 0;
+  if (qty <= 0) return null;
+  const uses = BOOSTER_USES[id];
+  if (!uses) return null;
+  const existing = (p.activeBoosts ?? []).find(b => b.id === id);
+  const newActiveBoosts: ActiveBoost[] = existing
+    ? (p.activeBoosts ?? []).map(b => b.id === id ? { ...b, usesLeft: b.usesLeft + uses } : b)
+    : [...(p.activeBoosts ?? []), { id, usesLeft: uses }];
+  const updated: Progress = {
+    ...p,
+    inventory: { ...p.inventory, [id]: qty - 1 },
+    activeBoosts: newActiveBoosts,
+  };
+  saveProgress(updated);
+  return updated;
+}
+
 export type SessionResult = {
   before: Progress;
   after: Progress;
@@ -353,6 +399,19 @@ export function recordSession(
     }
   }
 
+  // Apply active workout boosts
+  const sessionBoostIds = ['xp_boost', 'coin_boost'];
+  const currentBoosts = current.activeBoosts ?? [];
+  if (effectiveReps > 0) {
+    if (currentBoosts.some(b => b.id === 'xp_boost' && b.usesLeft > 0)) xpGained = xpGained * 2;
+    if (currentBoosts.some(b => b.id === 'coin_boost' && b.usesLeft > 0)) coinsGained = Math.round(coinsGained * 1.5);
+  }
+  const updatedBoosts = effectiveReps > 0
+    ? currentBoosts
+        .map(b => sessionBoostIds.includes(b.id) ? { ...b, usesLeft: b.usesLeft - 1 } : b)
+        .filter(b => b.usesLeft > 0)
+    : currentBoosts;
+
   // Update quest progress
   const questProgress = { ...(current.missions.questProgress ?? {}) };
   questProgress['reps'] = (questProgress['reps'] ?? 0) + repsCounted;
@@ -373,6 +432,7 @@ export function recordSession(
     todaySessions: current.todaySessions + (effectiveReps > 0 ? 1 : 0),
     todayDate: today,
     missions: { ...current.missions, questProgress },
+    activeBoosts: updatedBoosts,
   };
 
   // Streak milestone bonus (only awarded once per milestone)
@@ -439,10 +499,29 @@ export type BossResult = {
   leveledUp: boolean;
 };
 
-export function processLogin(progress: Progress): { updated: Progress; isNew: boolean } {
+export function processLogin(progress: Progress): { updated: Progress; isNew: boolean; shieldUsed: boolean } {
   const today = todayKey();
-  if (progress.lastLoginDate === today) return { updated: progress, isNew: false };
-  return { updated: { ...progress, lastLoginDate: today }, isNew: true };
+  if (progress.lastLoginDate === today) return { updated: progress, isNew: false, shieldUsed: false };
+
+  let updated: Progress = { ...progress, lastLoginDate: today };
+  let shieldUsed = false;
+
+  // Auto-consume streak shield if exactly one calendar day was missed
+  const lastClaim = progress.calendarLastClaimDate;
+  if (lastClaim && (progress.inventory?.['streak_shield'] ?? 0) > 0) {
+    const missed = daysBetween(lastClaim, today);
+    if (missed === 2) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      updated = {
+        ...updated,
+        inventory: { ...updated.inventory, streak_shield: (updated.inventory?.['streak_shield'] ?? 1) - 1 },
+        calendarLastClaimDate: yesterday,
+      };
+      shieldUsed = true;
+    }
+  }
+
+  return { updated, isNew: true, shieldUsed };
 }
 
 export function claimCalendarDay(

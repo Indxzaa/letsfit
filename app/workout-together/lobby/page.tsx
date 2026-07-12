@@ -18,8 +18,9 @@ import { subscribeSessionEvents, broadcastSessionEvent } from '@/lib/multiplayer
 import { subscribeEmojiReactions, broadcastEmojiReaction } from '@/lib/multiplayer/reactions';
 import { EmojiPicker } from '@/components/multiplayer/EmojiPicker';
 import { EmojiReactionBubble } from '@/components/multiplayer/EmojiReactionBubble';
-import { loadProgress } from '@/lib/progress';
+import { loadProgress, type Progress } from '@/lib/progress';
 import { SHOP_ITEMS } from '@/lib/shop';
+import { getSupabase } from '@/lib/supabase';
 import { SocialContext } from '@/components/social/SocialProvider';
 import { playSound } from '@/lib/audio';
 
@@ -37,11 +38,12 @@ function lobbyStatusColor(playerCount: number, allReady: boolean): string {
   return '#22c55e';
 }
 
-function LobbyPlayerRow({ player, isThisHost, isMe, isReady, hasDivider, reaction, onReactionExpire }: {
+function LobbyPlayerRow({ player, isThisHost, isMe, isReady, hasDivider, reaction, onReactionExpire, progress }: {
   player: { id: string; user_id: string; username: string; is_ready: boolean };
   isThisHost: boolean; isMe: boolean; isReady: boolean; hasDivider: boolean;
   reaction?: { src: string | null; key: number };
   onReactionExpire?: () => void;
+  progress?: Progress | null;
 }) {
   const { avatarUrl } = useAvatarUrl(player.user_id);
   return (
@@ -54,7 +56,7 @@ function LobbyPlayerRow({ player, isThisHost, isMe, isReady, hasDivider, reactio
           onExpire={onReactionExpire ?? (() => {})}
         />
       )}
-      <UserAvatar photoUrl={avatarUrl} letter={player.username} size="md" />
+      <UserAvatar photoUrl={avatarUrl} letter={player.username} size="md" progress={progress} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-display text-sm font-bold text-app uppercase truncate">{player.username}{isMe ? ' (You)' : ''}</span>
@@ -107,6 +109,22 @@ function LobbyContent() {
   const [pickedExercise,  setPickedExercise]  = useState<string>(room?.selected_exercise ?? MULTIPLAYER_EXERCISES[0].slug);
 
   const [progress] = useState(() => loadProgress());
+  const [playerProgressMap, setPlayerProgressMap] = useState<Record<string, Progress>>({});
+
+  // Batch-fetch profile data for all players to get their equipped frames
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb || players.length === 0) return;
+    const ids = players.map(p => p.user_id);
+    sb.from('profiles').select('id, data').in('id', ids).then(({ data }) => {
+      if (!data) return;
+      const map: Record<string, Progress> = {};
+      for (const row of data as Array<{ id: string; data: Progress | null }>) {
+        if (row.data) map[row.id] = row.data;
+      }
+      setPlayerProgressMap(map);
+    });
+  }, [players]);
   const ownedEmojiItems = SHOP_ITEMS.filter(i => i.type === 'emoji' && progress.unlockedItems.includes(i.id));
   const [reactions, setReactions] = useState<Record<string, { src: string | null; key: number }>>({});
 
@@ -423,6 +441,7 @@ function LobbyContent() {
                         hasDivider={i < players.length - 1}
                         reaction={reactions[p.user_id]}
                         onReactionExpire={() => setReactions(r => ({ ...r, [p.user_id]: { ...r[p.user_id], src: null } }))}
+                        progress={isMe ? progress : (playerProgressMap[p.user_id] ?? null)}
                       />
                     );
                   })}

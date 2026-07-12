@@ -110,6 +110,7 @@ export default function Navbar() {
     { name: 'Adventure', href: '/adventure' },
     { name: 'Friends', href: '/friends' },
     { name: 'Shop', href: '/shop' },
+    { name: 'Inventory', href: '/inventory' },
     { name: 'Progress', href: '/progress' },
   ];
 
@@ -332,7 +333,7 @@ export default function Navbar() {
                   }}
                   aria-label="User menu"
                 >
-                  <UserAvatar photoUrl={photoUrl} letter={displayName.charAt(0)} size="sm" />
+                  <UserAvatar photoUrl={photoUrl} letter={displayName.charAt(0)} size="sm" progress={progress} />
                   <span className="max-w-[120px] truncate">{displayName}</span>
                 </button>
 
@@ -348,7 +349,7 @@ export default function Navbar() {
                     >
                       {/* User info */}
                       <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: '2px solid var(--neo-black)' }}>
-                        <UserAvatar photoUrl={photoUrl} letter={displayName.charAt(0)} size="md" />
+                        <UserAvatar photoUrl={photoUrl} letter={displayName.charAt(0)} size="md" progress={progress} />
                         <div className="min-w-0">
                           <div className="text-xs font-semibold uppercase" style={{ color: 'var(--neo-black)', opacity: 0.5, fontFamily: 'var(--font-display)' }}>Signed in as</div>
                           <div className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}>{displayName}</div>
