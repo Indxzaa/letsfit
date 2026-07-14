@@ -6,6 +6,7 @@ import { PresenceDot } from '@/components/social/presence/PresenceDot';
 import { ACTIVITY_LABELS } from '@/types/social';
 import type { FriendWithPresence, PresencePayload } from '@/types/social';
 import UserAvatar from '@/components/UserAvatar';
+import { getAvatarPublicUrl } from '@/lib/profilePicture';
 
 interface FriendCardProps {
   friend: FriendWithPresence;
@@ -19,7 +20,7 @@ interface FriendCardProps {
 export function FriendCard({ friend, livePresence, onInvite, onUnfriend, canInvite = false, isLast = false }: FriendCardProps) {
   const { profile } = friend;
   const status = livePresence?.status ?? 'offline';
-  const photoUrl = profile.avatar ?? null;
+  const photoUrl = getAvatarPublicUrl(profile.id);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 

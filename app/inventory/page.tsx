@@ -336,7 +336,7 @@ function ShieldCard({ qty, index }: { qty: number; index: number }) {
       <div className="p-5 flex flex-col flex-1">
         <div className="font-display text-lg font-bold text-app mb-1">Streak Shield</div>
         <div className="text-xs text-muted mb-3 leading-relaxed">
-          Auto-protects your login streak if you miss exactly one day. Consumed automatically — no manual activation needed.
+          Auto-protects your login streak.
         </div>
         <div className="mt-auto">
           <div className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"

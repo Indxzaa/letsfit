@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, Coins, Pencil, Check, Sun, Moon, Bell, Volume2, VolumeX } from 'lucide-react';
+import { Menu, X, LogOut, Coins, Pencil, Image as ImageIcon, Check, Sun, Moon, Bell, Volume2, VolumeX } from 'lucide-react';
 import Logo from './Logo';
 import { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
@@ -358,28 +358,49 @@ export default function Navbar() {
                         {usernameSuccess && <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neo-green)' }} />}
                       </div>
 
-                      {/* FitCoins */}
+                      {/* FitCoins — balance display, not an action */}
                       {progress && (
-                        <div className="px-4 py-2.5 flex items-center gap-2 text-xs" style={{ borderBottom: '2px solid var(--neo-black)', fontFamily: 'var(--font-body)' }}>
-                          <Coins className="w-3.5 h-3.5" style={{ color: 'var(--neo-accent)' }} />
-                          <span className="font-bold" style={{ color: 'var(--neo-black)' }}>{progress.fitCoins.toLocaleString()}</span>
-                          <span style={{ color: 'var(--neo-black)', opacity: 0.6 }}>FitCoins</span>
+                        <div
+                          className="px-4 py-3 flex items-center gap-2.5"
+                          style={{ borderBottom: '2px solid var(--neo-black)', background: 'var(--neo-surface)' }}
+                        >
+                          <div
+                            className="flex items-center justify-center shrink-0"
+                            style={{ width: 26, height: 26, background: 'var(--neo-amber)', border: '2px solid var(--neo-black)' }}
+                          >
+                            <Coins className="w-3.5 h-3.5" style={{ color: '#fff' }} strokeWidth={2.5} />
+                          </div>
+                          <span className="text-sm font-bold" style={{ color: 'var(--neo-black)', fontFamily: 'var(--font-body)' }}>{progress.fitCoins.toLocaleString()}</span>
+                          <span className="text-xs" style={{ color: 'var(--neo-black)', opacity: 0.55, fontFamily: 'var(--font-body)' }}>FitCoins</span>
                         </div>
                       )}
 
+                      {/* Account actions group */}
+                      <div
+                        className="px-4 pt-2.5 pb-1 text-[10px] font-bold uppercase"
+                        style={{ color: 'var(--neo-black)', opacity: 0.4, fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}
+                      >
+                        Account
+                      </div>
+
                       {/* Change username */}
-                      <div style={{ borderBottom: '2px solid var(--neo-black)' }}>
+                      <div style={{ borderBottom: showUsernameForm ? 'none' : '1px solid rgba(0,0,0,0.1)' }}>
                         {!showUsernameForm ? (
                           <button
                             onClick={() => { setShowUsernameForm(true); setNewUsername(username ?? ''); setUsernameError(''); }}
-                            className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
+                            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm cursor-pointer transition-colors active:translate-y-[1px]"
                             style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}
                             onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
                             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                           >
-                            <span className="flex items-center gap-2">
-                              <Pencil className="w-4 h-4" style={{ color: 'var(--neo-accent)' }} />
-                              Change Username
+                            <span className="flex items-center gap-2.5">
+                              <span
+                                className="flex items-center justify-center shrink-0"
+                                style={{ width: 26, height: 26, background: 'var(--neo-blue)', border: '2px solid var(--neo-black)' }}
+                              >
+                                <Pencil className="w-3.5 h-3.5" style={{ color: '#fff' }} strokeWidth={2.5} />
+                              </span>
+                              <span className="font-semibold">Change Username</span>
                             </span>
                             <span className="text-xs font-bold" style={{ color: 'var(--neo-accent)', fontFamily: 'var(--font-display)' }}>{cost} coins</span>
                           </button>
@@ -417,25 +438,38 @@ export default function Navbar() {
 
                       <button
                         onClick={() => { setMenuOpen(false); setShowPhotoModal(true); }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
-                        style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)', borderBottom: '2px solid var(--neo-black)' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        <Coins className="w-4 h-4" style={{ color: 'var(--neo-accent)' }} />
-                        Profile Picture
-                      </button>
-
-                      <button
-                        onClick={async () => { setMenuOpen(false); await signOut(); }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm cursor-pointer transition-colors"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm cursor-pointer transition-colors active:translate-y-[1px]"
                         style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-black)' }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'var(--neo-surface)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <LogOut className="w-4 h-4" />
-                        Sign out
+                        <span
+                          className="flex items-center justify-center shrink-0"
+                          style={{ width: 26, height: 26, background: 'var(--neo-purple)', border: '2px solid var(--neo-black)' }}
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" style={{ color: '#fff' }} strokeWidth={2.5} />
+                        </span>
+                        <span className="font-semibold">Profile Picture</span>
                       </button>
+
+                      {/* Sign out — visually separated from account actions */}
+                      <div className="pt-1" style={{ borderTop: '2px solid var(--neo-black)' }}>
+                        <button
+                          onClick={async () => { setMenuOpen(false); await signOut(); }}
+                          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm cursor-pointer transition-colors active:translate-y-[1px]"
+                          style={{ fontFamily: 'var(--font-body)', color: 'var(--neo-red)', fontWeight: 700 }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(220,38,38,0.08)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <span
+                            className="flex items-center justify-center shrink-0"
+                            style={{ width: 26, height: 26, background: 'var(--neo-red)', border: '2px solid var(--neo-black)' }}
+                          >
+                            <LogOut className="w-3.5 h-3.5" style={{ color: '#fff' }} strokeWidth={2.5} />
+                          </span>
+                          Sign out
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

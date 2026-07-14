@@ -10,7 +10,7 @@ import {
   FilesetResolver,
   type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
-import { loadProgress, recordBossDefeat, subscribeToProgress, type Progress } from '@/lib/progress';
+import { loadProgress, recordBossDefeat, subscribeToProgress, type Progress, type BonusReward } from '@/lib/progress';
 import { getBoss, BOSSES, TIER_CONFIG, BOSS_GAME_CONFIGS } from '@/lib/bosses';
 
 type Relic = { id: string; name: string; desc: string; icon: React.ReactNode; effect: 'damage' | 'shield' | 'coins' | 'crit' | 'xp' };
@@ -75,7 +75,7 @@ export default function BossPage() {
   const [dmgEvent, setDmgEvent]           = useState<{ dmg: number; crit: boolean; id: number } | null>(null);
   const [bossIsHit, setBossIsHit]         = useState(false);
   const [achievementToasts, setAchievementToasts] = useState<string[]>([]);
-  const [bossResult, setBossResult]       = useState<{ xp: number; coins: number; leveledUp: boolean } | null>(null);
+  const [bossResult, setBossResult]       = useState<{ xp: number; coins: number; leveledUp: boolean; bonusRewards: BonusReward[] } | null>(null);
   const [alreadyDefeated, setAlreadyDefeated] = useState(false);
   const [cameraReady, setCameraReady]     = useState(false);
   const [attackPhase, setAttackPhase]     = useState<AttackPhase>(null);
@@ -263,10 +263,10 @@ export default function BossPage() {
       const current = loadProgress();
       if (current.bossesDefeated?.includes(boss.id)) {
         setAlreadyDefeated(true);
-        setBossResult({ xp: 0, coins: 0, leveledUp: false });
+        setBossResult({ xp: 0, coins: 0, leveledUp: false, bonusRewards: [] });
       } else {
-        const result = recordBossDefeat(current, boss.id, boss.rewards.xp, boss.rewards.coins, checkAchievements);
-        setBossResult({ xp: result.xpGained, coins: result.coinsGained, leveledUp: result.leveledUp });
+        const result = recordBossDefeat(current, boss.id, boss.rewards.xp, boss.rewards.coins, checkAchievements, boss.world);
+        setBossResult({ xp: result.xpGained, coins: result.coinsGained, leveledUp: result.leveledUp, bonusRewards: result.bonusRewards });
         if (result.newAchievements.length > 0) setAchievementToasts(result.newAchievements);
         setProgress(result.after);
       }
@@ -312,14 +312,14 @@ export default function BossPage() {
     const current = loadProgress();
     if (current.bossesDefeated?.includes(boss.id)) {
       setAlreadyDefeated(true);
-      setBossResult({ xp: 0, coins: 0, leveledUp: false });
+      setBossResult({ xp: 0, coins: 0, leveledUp: false, bonusRewards: [] });
     } else {
       const coinMult = selectedRelic?.effect === 'coins' ? 1.3 : 1;
       const xpMult   = selectedRelic?.id === 'star-shard' ? 1.5 : 1;
       const xpReward   = Math.round(boss.rewards.xp * xpMult);
       const coinReward = Math.round(boss.rewards.coins * coinMult);
-      const result = recordBossDefeat(current, boss.id, xpReward, coinReward, checkAchievements);
-      setBossResult({ xp: result.xpGained, coins: result.coinsGained, leveledUp: result.leveledUp });
+      const result = recordBossDefeat(current, boss.id, xpReward, coinReward, checkAchievements, boss.world);
+      setBossResult({ xp: result.xpGained, coins: result.coinsGained, leveledUp: result.leveledUp, bonusRewards: result.bonusRewards });
       if (result.newAchievements.length > 0) setAchievementToasts(result.newAchievements);
       setProgress(result.after);
       const worldBossIds = BOSSES.filter(b => b.world === boss.world).map(b => b.id);
@@ -908,6 +908,21 @@ export default function BossPage() {
                         style={{ background: `color-mix(in srgb, ${tier.color} 14%, #0a0a0e)`, border: `3px solid ${tier.color}`, boxShadow: `4px 4px 0 ${tier.color}` }}>
                         <ArrowUp className="w-8 h-8" style={{ color: tier.color }} />
                         <span className="font-display text-xl font-black uppercase text-white tracking-widest">Level Up!</span>
+                      </div>
+                    )}
+                    {bossResult.bonusRewards.length > 0 && (
+                      <div className="col-span-2" style={{ border: `2px solid ${tier.color}`, background: `color-mix(in srgb, ${tier.color} 6%, #0a0a0e)` }}>
+                        <div className="px-4 pt-3 pb-1 text-[10px] font-black uppercase tracking-widest" style={{ color: tier.color }}>
+                          Bonus Drops
+                        </div>
+                        <div className="px-4 pb-3 flex flex-wrap gap-2">
+                          {bossResult.bonusRewards.map((b, i) => (
+                            <span key={i} className="text-xs font-bold px-2.5 py-1 text-white"
+                              style={{ background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(255,255,255,0.2)' }}>
+                              {b.label}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

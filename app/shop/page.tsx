@@ -416,35 +416,30 @@ export default function ShopPage() {
           rewardDisplay={getRewardDisplay(pendingReward)}
           onReroll={() => { setOpeningChest(null); setPendingReward(null); setTimeout(() => openChest(openingChest), 0); }}
           onClaimed={(r) => {
-            setProgress(prev => {
-              if (!prev) return prev;
-              if (['coin_boost', 'xp_boost', 'emerald_boost', 'lucky_charm', 'streak_shield'].includes(r)) {
-                return addToInventory(prev, r, 1);
-              }
-              if (r === 'fragment') {
-                const u = { ...prev, emojiFragments: (prev.emojiFragments ?? 0) + 25 };
-                saveProgress(u); return u;
-              }
-              if (r === 'coins') {
-                const u = { ...prev, fitCoins: Math.min(MAX_FIT_COINS, prev.fitCoins + 100) };
-                saveProgress(u); return u;
-              }
-              if (r === 'emeralds') {
-                const u = { ...prev, emeralds: (prev.emeralds ?? 0) + 5 };
-                saveProgress(u); return u;
-              }
-              // Specific frame/emoji item ID — already resolved before modal opened
+            if (!progress) return;
+            let u: ReturnType<typeof addToInventory>;
+            if (['coin_boost', 'xp_boost', 'emerald_boost', 'lucky_charm', 'streak_shield'].includes(r)) {
+              u = addToInventory(progress, r, 1);
+            } else if (r === 'fragment') {
+              u = { ...progress, emojiFragments: (progress.emojiFragments ?? 0) + 25 };
+              saveProgress(u);
+            } else if (r === 'coins') {
+              u = { ...progress, fitCoins: Math.min(MAX_FIT_COINS, progress.fitCoins + 100) };
+              saveProgress(u);
+            } else if (r === 'emeralds') {
+              u = { ...progress, emeralds: (progress.emeralds ?? 0) + 5 };
+              saveProgress(u);
+            } else {
               const item = getShopItem(r);
-              if (item) {
-                if (prev.unlockedItems.includes(r)) {
-                  const u = { ...prev, fitCoins: Math.min(MAX_FIT_COINS, prev.fitCoins + 50) };
-                  saveProgress(u); return u;
-                }
-                const u = { ...prev, unlockedItems: [...prev.unlockedItems, r] };
-                saveProgress(u); return u;
+              if (!item) return;
+              if (progress.unlockedItems.includes(r)) {
+                u = { ...progress, fitCoins: Math.min(MAX_FIT_COINS, progress.fitCoins + 50) };
+              } else {
+                u = { ...progress, unlockedItems: [...progress.unlockedItems, r] };
               }
-              return prev;
-            });
+              saveProgress(u);
+            }
+            setProgress(u);
           }}
         />
       )}
@@ -805,7 +800,7 @@ function FragmentProgress({ fragments, cost }: { fragments: number; cost: number
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
-        <Image src="/fragment.png" alt="Fragment" width={14} height={14} className="object-contain shrink-0" unoptimized />
+        <Image src="/purplefragment.png" alt="Fragment" width={14} height={14} className="object-contain shrink-0" unoptimized />
         <span className="text-xs font-black tabular-nums" style={{ color: 'var(--neo-purple)' }}>
           {current.toLocaleString()} / {cost}
         </span>

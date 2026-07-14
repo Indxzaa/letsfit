@@ -122,7 +122,7 @@ export const BOOSTER_USES: Record<string, number> = {
   fragment_boost: 3,
   emerald_boost:  1,
   lucky_charm:    1,
-  streak_shield:  1,
+  // streak_shield is intentionally absent: it auto-activates in processLogin, never manually
 };
 
 // Calories per rep (or per second for plank)
@@ -490,6 +490,13 @@ export function recordSession(
   };
 }
 
+export type BonusReward = {
+  type: 'emeralds' | 'fragments' | 'key';
+  itemId?: string;
+  amount: number;
+  label: string;
+};
+
 export type BossResult = {
   before: Progress;
   after: Progress;
@@ -497,7 +504,46 @@ export type BossResult = {
   coinsGained: number;
   newAchievements: string[];
   leveledUp: boolean;
+  bonusRewards: BonusReward[];
 };
+
+// Drop-rate table (base chances, before world multipliers)
+// | Reward       | Base   | Elven ×3 |
+// |--------------|--------|----------|
+// | Emeralds     | 40%    | —        |
+// | Fragments    | 50%    | —        |
+// | Rare Key     | 20%    | 60%      |
+// | Epic Key     | 5%     | 15%      |
+// | Premium Key  | 1%     | 3%       |
+// | Supreme Key  | 0.1%   | 0.3%     |
+function generateBossBonus(world: number): BonusReward[] {
+  const bonuses: BonusReward[] = [];
+  const fragMult    = world === 2 ? 2 : 1; // Winter: ×2 fragments
+  const emeraldMult = world === 3 ? 2 : 1; // Witch: ×2 emeralds
+  const keyMult     = world === 4 ? 3 : 1; // Elven Sanctuary: ×3 key chance
+
+  if (Math.random() < 0.40) {
+    const amt = Math.round(2 * emeraldMult);
+    bonuses.push({ type: 'emeralds', amount: amt, label: `+${amt} Emeralds` });
+  }
+  if (Math.random() < 0.50) {
+    const amt = Math.round(15 * fragMult);
+    bonuses.push({ type: 'fragments', amount: amt, label: `+${amt} Fragments` });
+  }
+  if (Math.random() < 0.20 * keyMult) {
+    bonuses.push({ type: 'key', itemId: 'rare_key',    amount: 1, label: 'Rare Key' });
+  }
+  if (Math.random() < 0.05 * keyMult) {
+    bonuses.push({ type: 'key', itemId: 'epic_key',    amount: 1, label: 'Epic Key' });
+  }
+  if (Math.random() < 0.01 * keyMult) {
+    bonuses.push({ type: 'key', itemId: 'premium_key', amount: 1, label: 'Premium Key' });
+  }
+  if (Math.random() < 0.001 * keyMult) {
+    bonuses.push({ type: 'key', itemId: 'supreme_key', amount: 1, label: 'Supreme Key' });
+  }
+  return bonuses;
+}
 
 export function processLogin(progress: Progress): { updated: Progress; isNew: boolean; shieldUsed: boolean } {
   const today = todayKey();
@@ -560,18 +606,35 @@ export function recordBossDefeat(
   bossId: string,
   xp: number,
   coins: number,
-  achievementChecker: (p: Progress) => string[]
+  achievementChecker: (p: Progress) => string[],
+  world = 0
 ): BossResult {
   const before = { ...current };
   if (current.bossesDefeated.includes(bossId)) {
-    return { before, after: current, xpGained: 0, coinsGained: 0, newAchievements: [], leveledUp: false };
+    return { before, after: current, xpGained: 0, coinsGained: 0, newAchievements: [], leveledUp: false, bonusRewards: [] };
   }
-  const after: Progress = {
+  // Forest (world 1): +50% FitCoins
+  const coinBonus = world === 1 ? Math.round(coins * 0.5) : 0;
+  const totalCoins = coins + coinBonus;
+  const bonusRewards = generateBossBonus(world);
+
+  let after: Progress = {
     ...current,
     xp: current.xp + xp,
-    fitCoins: Math.min(MAX_FIT_COINS, current.fitCoins + coins),
+    fitCoins: Math.min(MAX_FIT_COINS, current.fitCoins + totalCoins),
     bossesDefeated: [...current.bossesDefeated, bossId],
   };
+
+  for (const bonus of bonusRewards) {
+    if (bonus.type === 'emeralds') {
+      after = { ...after, emeralds: (after.emeralds ?? 0) + bonus.amount };
+    } else if (bonus.type === 'fragments') {
+      after = { ...after, emojiFragments: (after.emojiFragments ?? 0) + bonus.amount };
+    } else if (bonus.type === 'key' && bonus.itemId) {
+      after = addToInventory(after, bonus.itemId, bonus.amount);
+    }
+  }
+
   const newlyUnlocked = achievementChecker(after).filter((id) => !current.unlockedAchievements.includes(id));
   after.unlockedAchievements = [...current.unlockedAchievements, ...newlyUnlocked];
   saveProgress(after);
@@ -579,8 +642,9 @@ export function recordBossDefeat(
     before,
     after,
     xpGained: xp,
-    coinsGained: coins,
+    coinsGained: totalCoins,
     newAchievements: newlyUnlocked,
     leveledUp: levelFromXp(after.xp) > levelFromXp(before.xp),
+    bonusRewards,
   };
 }

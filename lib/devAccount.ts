@@ -20,7 +20,7 @@ export function applyDevAccount(p: Progress): Progress {
     totalReps: 6767,
     currentStreak: 67,
     longestStreak: 67,
-    emeralds: 67676767,
+    emeralds: 6767676767, 
     unlockedAchievements: allAchievementIds,
     unlockedItems: allItemIds,
   };

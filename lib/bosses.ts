@@ -80,7 +80,7 @@ export const BOSSES: Boss[] = [
   },
   {
     id: 'boss-apex',
-    name: 'Elf Beast',
+    name: 'Elf Femboy',
     flavour: 'Six rounds. Ten minutes. The ultimate test. No excuses.',
     tier: 'legendary',
     world: 4,
