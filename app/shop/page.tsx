@@ -798,9 +798,9 @@ function FragmentProgress({ fragments, cost }: { fragments: number; cost: number
   const current = Math.min(fragments, cost);
   const pct = current / cost;
   return (
-    <div>
+    <div>   
       <div className="flex items-center gap-1.5 mb-1.5">
-        <Image src="/purplefragment.png" alt="Fragment" width={14} height={14} className="object-contain shrink-0" unoptimized />
+        <Image src="/purplefragment.png" alt="Fragment" width={85} height={85} className="object-contain shrink-0" unoptimized />
         <span className="text-xs font-black tabular-nums" style={{ color: 'var(--neo-purple)' }}>
           {current.toLocaleString()} / {cost}
         </span>

@@ -7,7 +7,7 @@ const features = [
   {
     icon: Camera,
     title: 'AI Posture Feedback',
-    description: 'Real-time on-screen guidance corrects your form during squats, planks, and push-ups.',
+    description: 'Real time on screen guidance corrects your form.',
     accent: true,
     iconColor: 'var(--neo-icon-green)',
   },

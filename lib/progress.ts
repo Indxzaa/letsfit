@@ -507,20 +507,64 @@ export type BossResult = {
   bonusRewards: BonusReward[];
 };
 
-// Drop-rate table (base chances, before world multipliers)
-// | Reward       | Base   | Elven ×3 |
-// |--------------|--------|----------|
-// | Emeralds     | 40%    | —        |
-// | Fragments    | 50%    | —        |
-// | Rare Key     | 20%    | 60%      |
-// | Epic Key     | 5%     | 15%      |
-// | Premium Key  | 1%     | 3%       |
-// | Supreme Key  | 0.1%   | 0.3%     |
+// Per-world key drop tables — single mutually-exclusive roll per boss kill.
+// Remaining probability (after all tiers) is "Nothing".
+// | World            | Common | Rare | Epic | Premium | Supreme |
+// |------------------|--------|------|------|---------|---------|
+// | 1 Forest         | 40%    | 25%  | 10%  | 1%      | 0.1%    |
+// | 2 Winter         | 50%    | 20%  | 12%  | 1%      | 0.1%    |
+// | 3 Witch          | 30%    | 25%  | 15%  | 1%      | 0.1%    |
+// | 4 Elven Sanctuary| 20%    | 30%  | 20%  | 2%      | 0.2%    |
+type KeyDropEntry = { itemId: string; label: string; chance: number };
+const KEY_DROP_TABLES: Record<number, KeyDropEntry[]> = {
+  1: [
+    { itemId: 'common_key',  label: 'Common Key',  chance: 0.40 },
+    { itemId: 'rare_key',    label: 'Rare Key',    chance: 0.25 },
+    { itemId: 'epic_key',    label: 'Epic Key',    chance: 0.10 },
+    { itemId: 'premium_key', label: 'Premium Key', chance: 0.01 },
+    { itemId: 'supreme_key', label: 'Supreme Key', chance: 0.001 },
+  ],
+  2: [
+    { itemId: 'common_key',  label: 'Common Key',  chance: 0.50 },
+    { itemId: 'rare_key',    label: 'Rare Key',    chance: 0.20 },
+    { itemId: 'epic_key',    label: 'Epic Key',    chance: 0.12 },
+    { itemId: 'premium_key', label: 'Premium Key', chance: 0.01 },
+    { itemId: 'supreme_key', label: 'Supreme Key', chance: 0.001 },
+  ],
+  3: [
+    { itemId: 'common_key',  label: 'Common Key',  chance: 0.30 },
+    { itemId: 'rare_key',    label: 'Rare Key',    chance: 0.25 },
+    { itemId: 'epic_key',    label: 'Epic Key',    chance: 0.15 },
+    { itemId: 'premium_key', label: 'Premium Key', chance: 0.01 },
+    { itemId: 'supreme_key', label: 'Supreme Key', chance: 0.001 },
+  ],
+  4: [
+    { itemId: 'common_key',  label: 'Common Key',  chance: 0.20 },
+    { itemId: 'rare_key',    label: 'Rare Key',    chance: 0.30 },
+    { itemId: 'epic_key',    label: 'Epic Key',    chance: 0.20 },
+    { itemId: 'premium_key', label: 'Premium Key', chance: 0.02 },
+    { itemId: 'supreme_key', label: 'Supreme Key', chance: 0.002 },
+  ],
+};
+
+function rollBossKeyDrop(world: number): BonusReward | null {
+  const table = KEY_DROP_TABLES[world];
+  if (!table) return null;
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const entry of table) {
+    cumulative += entry.chance;
+    if (roll < cumulative) {
+      return { type: 'key', itemId: entry.itemId, amount: 1, label: entry.label };
+    }
+  }
+  return null; // remaining probability: nothing
+}
+
 function generateBossBonus(world: number): BonusReward[] {
   const bonuses: BonusReward[] = [];
   const fragMult    = world === 2 ? 2 : 1; // Winter: ×2 fragments
   const emeraldMult = world === 3 ? 2 : 1; // Witch: ×2 emeralds
-  const keyMult     = world === 4 ? 3 : 1; // Elven Sanctuary: ×3 key chance
 
   if (Math.random() < 0.40) {
     const amt = Math.round(2 * emeraldMult);
@@ -530,18 +574,10 @@ function generateBossBonus(world: number): BonusReward[] {
     const amt = Math.round(15 * fragMult);
     bonuses.push({ type: 'fragments', amount: amt, label: `+${amt} Fragments` });
   }
-  if (Math.random() < 0.20 * keyMult) {
-    bonuses.push({ type: 'key', itemId: 'rare_key',    amount: 1, label: 'Rare Key' });
-  }
-  if (Math.random() < 0.05 * keyMult) {
-    bonuses.push({ type: 'key', itemId: 'epic_key',    amount: 1, label: 'Epic Key' });
-  }
-  if (Math.random() < 0.01 * keyMult) {
-    bonuses.push({ type: 'key', itemId: 'premium_key', amount: 1, label: 'Premium Key' });
-  }
-  if (Math.random() < 0.001 * keyMult) {
-    bonuses.push({ type: 'key', itemId: 'supreme_key', amount: 1, label: 'Supreme Key' });
-  }
+
+  const keyDrop = rollBossKeyDrop(world);
+  if (keyDrop) bonuses.push(keyDrop);
+
   return bonuses;
 }
 

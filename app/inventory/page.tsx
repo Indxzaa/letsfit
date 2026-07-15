@@ -16,12 +16,13 @@ import { BOOSTER_DEFS, KEY_DEFS } from '@/lib/shop';
 import Navbar from '@/components/Navbar';
 import { playSound } from '@/lib/audio';
 
+// Rarity-specific panel colors behind each key image.
 const KEY_COLORS: Record<string, { bg: string; border: string; shadow: string; label: string }> = {
-  common:  { bg: 'var(--card-bg-green)',  border: 'var(--neo-accent)', shadow: '4px 4px 0 var(--neo-accent)', label: 'var(--neo-accent)' },
-  rare:    { bg: '#EFF6FF',               border: '#7ab0d8',           shadow: '4px 4px 0 #7ab0d8',           label: '#7ab0d8'           },
-  epic:    { bg: '#F5F0FF',               border: '#a888e0',           shadow: '4px 4px 0 #a888e0',           label: '#a888e0'           },
-  premium: { bg: 'var(--card-bg-purple)', border: 'var(--neo-purple)', shadow: '4px 4px 0 var(--neo-purple)', label: 'var(--neo-purple)' },
-  supreme: { bg: '#FEE2E2',               border: 'var(--neo-red)',    shadow: '4px 4px 0 var(--neo-red)',    label: 'var(--neo-red)'    },
+  common:  { bg: '#E5E7EB', border: '#6B7280',          shadow: '4px 4px 0 #6B7280',          label: '#6B7280'          }, // neutral gray
+  rare:    { bg: '#DBEAFE', border: 'var(--neo-blue)',   shadow: '4px 4px 0 var(--neo-blue)',   label: 'var(--neo-blue)'   }, // blue
+  epic:    { bg: '#EDE9FE', border: 'var(--neo-purple)', shadow: '4px 4px 0 var(--neo-purple)', label: 'var(--neo-purple)' }, // purple
+  premium: { bg: '#FDE9C8', border: 'var(--neo-amber)',  shadow: '4px 4px 0 var(--neo-amber)',  label: 'var(--neo-amber)'  }, // gold/orange
+  supreme: { bg: '#FEE2E2', border: 'var(--neo-red)',    shadow: '4px 4px 0 var(--neo-red)',    label: 'var(--neo-red)'    }, // red
 };
 
 export default function InventoryPage() {
@@ -389,12 +390,16 @@ function KeyCard({ name, description, qty, colors, img, index }: {
         </div>
       </div>
       <div className="p-5 flex flex-col flex-1">
-        <div className="font-display text-lg font-bold text-app mb-1">{name}</div>
+        <div className="font-display text-lg font-bold text-app uppercase mb-1">{name}</div>
         <div className="text-xs text-muted mb-3 leading-relaxed">{description}</div>
         <div className="mt-auto">
-          <div className="w-full py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
-            style={{ background: '#f5f5f5', border: '3px solid #ccc', color: '#aaa' }}>
-            Coming Soon
+          <div className="w-full py-2.5 text-sm font-black uppercase tracking-wider flex items-center justify-center gap-1.5"
+            style={{
+              background: hasStock ? colors.bg : '#f5f5f5',
+              border: `3px solid ${hasStock ? colors.border : '#ccc'}`,
+              color: hasStock ? colors.label : '#aaa',
+            }}>
+            x{qty}
           </div>
         </div>
       </div>
