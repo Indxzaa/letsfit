@@ -7,6 +7,7 @@ import {
   PoseLandmarker,
   type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
+import Image from 'next/image';
 import { createPoseLandmarker } from '@/lib/ai/mediapipe';
 import { Camera, Pause, Play, Square, ArrowLeft, Sparkles, Activity, Target, Clock } from 'lucide-react';
 import Link from 'next/link';
@@ -491,6 +492,47 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
               </div>
               <TargetPicker exercise={exercise} onStart={startWorkout} />
             </div>
+
+            {(exercise.howToPerform?.length || exercise.commonMistakes?.length || exercise.infoImage) && (
+              <div className="flex flex-col lg:grid lg:grid-cols-[1fr_360px] gap-6">
+                <div className="neo-card p-6 sm:p-8 space-y-5" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
+                  {exercise.howToPerform && exercise.howToPerform.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-subtle mb-2.5 uppercase tracking-wide">How to Perform</div>
+                      <ol className="space-y-2">
+                        {exercise.howToPerform.map((step, i) => (
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-muted">
+                            <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5"
+                              style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>{i + 1}</span>
+                            {step}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  {exercise.commonMistakes && exercise.commonMistakes.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-subtle mb-2.5 uppercase tracking-wide">Common Mistakes</div>
+                      <ul className="space-y-2">
+                        {exercise.commonMistakes.map((mistake, i) => (
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-muted">
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2" style={{ background: '#ef4444' }} />
+                            {mistake}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                {exercise.infoImage && (
+                  <div className="neo-card overflow-hidden self-start" style={{ background: 'var(--neo-surface)', borderRadius: 0 }}>
+                    <div className="relative w-full aspect-square">
+                      <Image src={exercise.infoImage} alt={exercise.name} fill className="object-contain p-6" unoptimized />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

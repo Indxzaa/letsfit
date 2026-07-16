@@ -20,6 +20,9 @@ export type Exercise = {
   world: 1 | 2 | 3 | 4;
   category: ExerciseCategory;
   tags: string[];
+  howToPerform?: string[];
+  commonMistakes?: string[];
+  infoImage?: string;
 };
 
 export const WORLD_CONFIG: Record<number, { name: string; tagline: string; unlockLabel: string; isUnlocked: (totalReps: number, level: number) => boolean }> = {
@@ -31,7 +34,26 @@ export const WORLD_CONFIG: Record<number, { name: string; tagline: string; unloc
 
 export const EXERCISES: Exercise[] = [
   // World 1 — Foundation
-  { slug: 'squat',          name: 'Squat',          tagline: 'Lower body strength',    description: 'Real-time form detection with rep counting and posture feedback.',   icon: Dumbbell,  available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '5–15 min', equipment: 'None',        targets: [10, 20, 50],    defaultTarget: 20, world: 1, category: 'Lower Body',      tags: ['legs', 'glutes', 'strength'] },
+  {
+    slug: 'squat', name: 'Squat', tagline: 'Lower body strength',
+    description: 'Strengthens your legs and core by targeting your quadriceps, hamstrings, glutes, and calves.',
+    icon: Dumbbell, available: true, hasAiDetection: true, difficulty: 'Beginner', duration: '5–15 min', equipment: 'None',
+    targets: [10, 20, 50], defaultTarget: 20, world: 1, category: 'Lower Body', tags: ['legs', 'glutes', 'strength'],
+    howToPerform: [
+      'Stand with feet shoulder-width apart.',
+      'Lower your hips as if sitting in a chair.',
+      'Keep your chest up and back neutral.',
+      'Lower until thighs are parallel to the floor.',
+      'Push through your heels to stand back up.',
+    ],
+    commonMistakes: [
+      'Knees moving too far forward.',
+      'Rounding your back.',
+      'Not squatting deep enough.',
+      'Leaning too far forward.',
+    ],
+    infoImage: '/squats.png',
+  },
   { slug: 'pushup',         name: 'Push-up',         tagline: 'Upper body & core',      description: 'Build chest, shoulder, and core strength with controlled push-ups.', icon: ArrowUp,   available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '5–10 min', equipment: 'None',        targets: [10, 20, 30],    defaultTarget: 20, world: 1, category: 'Upper Body',      tags: ['chest', 'arms', 'strength'] },
   { slug: 'jumping-jack',   name: 'Jumping Jack',    tagline: 'Cardio & warm-up',       description: 'A simple full-body cardio movement to warm up or stay active.',      icon: Sparkles,  available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '3–5 min',  equipment: 'None',        targets: [20, 50, 100],   defaultTarget: 50, world: 1, category: 'Cardio',          tags: ['warm-up', 'full-body', 'cardio'] },
   { slug: 'march-in-place', name: 'March in Place',  tagline: 'Cardio warm-up',         description: 'Low-impact cardio — lift your knees in a steady marching rhythm.',    icon: Wind,      available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '3–5 min',  equipment: 'None',        targets: [20, 40, 80],    defaultTarget: 40, world: 1, category: 'Cardio',          tags: ['cardio', 'warm-up', 'low-impact'] },
