@@ -20,6 +20,29 @@ import UserAvatar from '@/components/UserAvatar';
 import LoginCalendarModal from '@/components/LoginCalendarModal';
 import { useAuth } from '@/components/AuthProvider';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { getRecentHistory } from '@/lib/history/queries';
+import { EXERCISES } from '@/lib/exercises';
+import type { ExerciseHistory } from '@/lib/history/types';
+
+function formatHistoryDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor(
+    (new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() -
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) /
+      86400000,
+  );
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m > 0) return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  return `${s}s`;
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -27,6 +50,7 @@ export default function DashboardPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isFirstOpen, setIsFirstOpen] = useState(false);
+  const [recentHistory, setRecentHistory] = useState<ExerciseHistory[] | null>(null);
 
   const handleClaim = (day: number) => {
     const p = loadProgress();
@@ -51,6 +75,11 @@ export default function DashboardPage() {
     const unsub = subscribeToProgress(() => setProgress(loadProgress()));
     return unsub;
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    getRecentHistory(5).then(setRecentHistory);
+  }, [user?.id]);
 
   if (!progress) return <DashboardSkeleton />;
 
@@ -497,6 +526,78 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* ── Recent Exercise History ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+          className="mt-4 neo-card p-6"
+          style={{ borderRadius: 16, background: 'var(--card-bg-amber)' }}
+        >
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-xl font-bold text-app">Recent Activity</h2>
+            <Link href="/history" className="link-cta">View all</Link>
+          </div>
+
+          {recentHistory === null ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 neo-card animate-pulse"
+                  style={{ borderRadius: 12, background: 'var(--neo-white)' }}
+                >
+                  <div className="w-10 h-10 shrink-0 bg-gray-200" style={{ borderRadius: 10 }} />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-1/3 bg-gray-200 rounded" />
+                    <div className="h-2 w-1/4 bg-gray-100 rounded" />
+                  </div>
+                  <div className="h-3 w-10 bg-gray-200 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : recentHistory.length === 0 ? (
+            <div className="py-6 text-center">
+              <div className="text-4xl mb-3">🏃</div>
+              <p className="text-sm text-subtle">Complete your first workout to start building your history.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentHistory.map((entry) => {
+                const exercise = EXERCISES.find((e) => e.name === entry.exercise_name);
+                const Icon = exercise?.icon ?? Activity;
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 p-3 neo-card"
+                    style={{ borderRadius: 12, background: 'var(--neo-white)' }}
+                  >
+                    <div
+                      className="w-10 h-10 flex items-center justify-center shrink-0 neo-card-accent"
+                      style={{ borderRadius: 10 }}
+                    >
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-app truncate">{entry.exercise_name}</div>
+                      <div className="text-xs text-subtle">{formatHistoryDate(entry.completed_at)}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-xs font-bold text-app">{Math.round(entry.accuracy_score)}%</span>
+                      {entry.repetitions != null && (
+                        <span className="text-xs text-subtle">{entry.repetitions} reps</span>
+                      )}
+                      {entry.duration_seconds != null && entry.repetitions == null && (
+                        <span className="text-xs text-subtle">{formatDuration(entry.duration_seconds)}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
 
         {/* ── Workout Together promo ── */}
         <motion.div

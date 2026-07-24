@@ -16,12 +16,16 @@ import TargetPicker from '@/components/TargetPicker';
 import WorkoutComplete from '@/components/WorkoutComplete';
 import Navbar from '@/components/Navbar';
 import { getExercise } from '@/lib/exercises';
+import { useAuth } from '@/components/AuthProvider';
+import { saveExerciseHistory } from '@/lib/history/mutations';
 
 type Phase = 'pick' | 'active' | 'complete';
 
 export default function ManualWorkoutSession({ slug }: { slug: string }) {
+  const { user } = useAuth();
   const exercise = getExercise(slug);
   const startTimeRef = useRef<number>(0);
+  const historySavedRef = useRef(false);
   const popupIdRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -62,9 +66,21 @@ export default function ManualWorkoutSession({ slug }: { slug: string }) {
           exercise.slug,
           elapsed,
           checkAchievements,
-          checkQuests
+          checkQuests,
+          null,
+          exercise.isTimed
         );
         setSessionResult(result);
+        if (user && !historySavedRef.current) {
+          historySavedRef.current = true;
+          saveExerciseHistory({
+            user_id: user.id,
+            exercise_name: exercise.name,
+            duration_seconds: elapsed,
+            repetitions: exercise.isTimed ? null : finalReps,
+            accuracy_score: 100,
+          });
+        }
         if (result.newAchievements.length > 0) {
           setAchievementToasts((prev) => [...prev, ...result.newAchievements]);
         }
@@ -75,6 +91,7 @@ export default function ManualWorkoutSession({ slug }: { slug: string }) {
   );
 
   const startWorkout = (chosenTarget: number) => {
+    historySavedRef.current = false;
     setTarget(chosenTarget);
     setReps(0);
     setSeconds(0);

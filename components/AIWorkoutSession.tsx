@@ -30,10 +30,13 @@ import {
   drawSkeleton,
   type Detector,
 } from '@/lib/exerciseDetectors';
+import { useAuth } from '@/components/AuthProvider';
+import { saveExerciseHistory } from '@/lib/history/mutations';
 
 type Phase = 'pick' | 'loading' | 'active' | 'paused' | 'complete';
 
 export default function AIWorkoutSession({ slug }: { slug: string }) {
+  const { user } = useAuth();
   const exercise = getExercise(slug);
   const searchParams = useSearchParams();
   const stageId = searchParams.get('stageId');
@@ -153,9 +156,20 @@ export default function AIWorkoutSession({ slug }: { slug: string }) {
         exercise.slug,
         seconds,
         checkAchievements,
-        checkQuests
+        checkQuests,
+        acc,
+        exercise.isTimed
       );
       setSessionResult(result);
+      if (user) {
+        saveExerciseHistory({
+          user_id: user.id,
+          exercise_name: exercise.name,
+          duration_seconds: seconds,
+          repetitions: exercise.isTimed ? null : completedReps,
+          accuracy_score: acc ?? 100,
+        });
+      }
       playSound('exercise-complete');
       if (result.leveledUp) playSound('level-up');
       if (result.newAchievements.length > 0) {

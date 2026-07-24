@@ -345,6 +345,8 @@ export type SessionResult = {
   newAchievements: string[];
   completedQuests: string[];
   streakBonus: { day: number; coins: number; xp: number } | null;
+  formAccuracyTooLow?: boolean;
+  averageFormAccuracy?: number;
 };
 
 function streakBonusFor(prev: number, next: number): { day: number; coins: number; xp: number } | null {
@@ -360,7 +362,9 @@ export function recordSession(
   exerciseSlug: string,
   durationSeconds: number,
   achievementChecker: (p: Progress) => string[],
-  questChecker: (p: Progress) => string[]
+  questChecker: (p: Progress) => string[],
+  averageFormAccuracy?: number | null,
+  isTimed?: boolean
 ): SessionResult {
   const before = { ...current };
   const today = todayKey();
@@ -368,6 +372,10 @@ export function recordSession(
   const isPlank = exerciseSlug === 'plank';
   const effectiveReps = reps; // for plank, this is seconds held
   const repsCounted = isPlank ? 0 : reps;
+
+  // Form accuracy validation for timer-based exercises
+  const MIN_FORM_ACCURACY = 60;
+  const formAccuracyTooLow = isTimed && averageFormAccuracy != null && averageFormAccuracy < MIN_FORM_ACCURACY;
 
   // Streak update
   let nextStreak = current.currentStreak;
@@ -388,7 +396,9 @@ export function recordSession(
   // Base rewards (rebalanced)
   let xpGained = 0;
   let coinsGained = 0;
-  if (effectiveReps > 0) {
+
+  // Only award rewards if form accuracy is sufficient (or not a timed exercise)
+  if (effectiveReps > 0 && !formAccuracyTooLow) {
     if (isPlank) {
       // 1 XP per 2 seconds + session bonus
       xpGained = Math.floor(durationSeconds / 2) + XP_PER_SESSION;
@@ -399,45 +409,47 @@ export function recordSession(
     }
   }
 
-  // Apply active workout boosts
+  // Apply active workout boosts (only if rewards are being granted)
   const sessionBoostIds = ['xp_boost', 'coin_boost'];
   const currentBoosts = current.activeBoosts ?? [];
-  if (effectiveReps > 0) {
+  if (effectiveReps > 0 && !formAccuracyTooLow) {
     if (currentBoosts.some(b => b.id === 'xp_boost' && b.usesLeft > 0)) xpGained = xpGained * 2;
     if (currentBoosts.some(b => b.id === 'coin_boost' && b.usesLeft > 0)) coinsGained = Math.round(coinsGained * 1.5);
   }
-  const updatedBoosts = effectiveReps > 0
+  const updatedBoosts = effectiveReps > 0 && !formAccuracyTooLow
     ? currentBoosts
         .map(b => sessionBoostIds.includes(b.id) ? { ...b, usesLeft: b.usesLeft - 1 } : b)
         .filter(b => b.usesLeft > 0)
     : currentBoosts;
 
-  // Update quest progress
+  // Update quest progress (only if form accuracy is sufficient)
   const questProgress = { ...(current.missions.questProgress ?? {}) };
-  questProgress['reps'] = (questProgress['reps'] ?? 0) + repsCounted;
-  questProgress['calories'] = (questProgress['calories'] ?? 0) + caloriesBurned;
-  questProgress['sessions'] = (questProgress['sessions'] ?? 0) + (effectiveReps > 0 ? 1 : 0);
+  if (!formAccuracyTooLow) {
+    questProgress['reps'] = (questProgress['reps'] ?? 0) + repsCounted;
+    questProgress['calories'] = (questProgress['calories'] ?? 0) + caloriesBurned;
+    questProgress['sessions'] = (questProgress['sessions'] ?? 0) + (effectiveReps > 0 ? 1 : 0);
+  }
 
   const after: Progress = {
     ...current,
     xp: current.xp + xpGained,
     fitCoins: Math.min(MAX_FIT_COINS, current.fitCoins + coinsGained),
-    totalReps: current.totalReps + repsCounted,
-    totalSessions: current.totalSessions + (effectiveReps > 0 ? 1 : 0),
+    totalReps: formAccuracyTooLow ? current.totalReps : current.totalReps + repsCounted,
+    totalSessions: formAccuracyTooLow ? current.totalSessions : current.totalSessions + (effectiveReps > 0 ? 1 : 0),
     currentStreak: nextStreak,
     longestStreak: Math.max(current.longestStreak, nextStreak),
-    lastSessionDate: effectiveReps > 0 ? today : current.lastSessionDate,
-    todayReps: current.todayReps + repsCounted,
-    todayCalories: current.todayCalories + caloriesBurned,
-    todaySessions: current.todaySessions + (effectiveReps > 0 ? 1 : 0),
+    lastSessionDate: (effectiveReps > 0 && !formAccuracyTooLow) ? today : current.lastSessionDate,
+    todayReps: formAccuracyTooLow ? current.todayReps : current.todayReps + repsCounted,
+    todayCalories: formAccuracyTooLow ? current.todayCalories : current.todayCalories + caloriesBurned,
+    todaySessions: formAccuracyTooLow ? current.todaySessions : current.todaySessions + (effectiveReps > 0 ? 1 : 0),
     todayDate: today,
     missions: { ...current.missions, questProgress },
     activeBoosts: updatedBoosts,
   };
 
-  // Streak milestone bonus (only awarded once per milestone)
+  // Streak milestone bonus (only awarded once per milestone, and only if form is good)
   let streakBonus: SessionResult['streakBonus'] = null;
-  if (effectiveReps > 0) {
+  if (effectiveReps > 0 && !formAccuracyTooLow) {
     const candidate = streakBonusFor(current.currentStreak, nextStreak);
     if (candidate && !current.rewardedStreakMilestones.includes(candidate.day)) {
       streakBonus = candidate;
@@ -450,14 +462,14 @@ export function recordSession(
     }
   }
 
-  // Achievements (checked after stats updated)
-  const newlyUnlocked = achievementChecker(after).filter(
+  // Achievements (checked after stats updated, only if form is good)
+  const newlyUnlocked = formAccuracyTooLow ? [] : achievementChecker(after).filter(
     (id) => !current.unlockedAchievements.includes(id)
   );
   after.unlockedAchievements = [...current.unlockedAchievements, ...newlyUnlocked];
 
-  // Quest completions — only fire each quest once per day
-  const newlyCompletedQuests = questChecker(after).filter(
+  // Quest completions — only fire each quest once per day (only if form is good)
+  const newlyCompletedQuests = formAccuracyTooLow ? [] : questChecker(after).filter(
     (id) => !current.missions.completed.includes(id)
   );
   if (newlyCompletedQuests.length > 0) {
@@ -487,6 +499,8 @@ export function recordSession(
     newAchievements: newlyUnlocked,
     completedQuests: newlyCompletedQuests,
     streakBonus,
+    formAccuracyTooLow,
+    averageFormAccuracy: averageFormAccuracy ?? undefined,
   };
 }
 

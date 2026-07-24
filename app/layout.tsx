@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { SocialProvider } from "@/components/social/SocialProvider";
 import SoundInit from "@/components/SoundInit";
+import FitBotButton from "@/components/FitBot/FitBotButton";
 
 const archivoBlack = Archivo_Black({
   weight: "400",
@@ -40,6 +41,7 @@ export default function RootLayout({
           <AuthProvider>
             <SocialProvider>{children}</SocialProvider>
           </AuthProvider>
+          <FitBotButton />
         </ThemeProvider>
       </body>
     </html>

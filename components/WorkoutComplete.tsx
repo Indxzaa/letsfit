@@ -195,6 +195,33 @@ export default function WorkoutComplete({
         </motion.div>
       )}
 
+      {/* ── Form Accuracy Warning ── */}
+      {result.formAccuracyTooLow && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          className="neo-card p-5 mb-4"
+          style={{ background: '#fef2f2', borderRadius: 0, borderColor: '#ef4444' }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+              style={{ background: '#ef4444', border: '2px solid var(--neo-black)', boxShadow: '2px 2px 0 var(--neo-black)' }}>
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-black uppercase tracking-wider text-red-700 mb-1">
+                Form Accuracy Too Low
+              </div>
+              <div className="text-sm text-red-900 leading-relaxed">
+                Your average form accuracy was <strong>{result.averageFormAccuracy}%</strong>, which is below the required <strong>60%</strong> threshold.
+                No XP or FitCoins were awarded for this session. Focus on maintaining proper posture throughout the entire exercise to earn rewards.
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Streak bonus ── */}
       {result.streakBonus && (
         <motion.div
