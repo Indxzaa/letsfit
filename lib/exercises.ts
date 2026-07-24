@@ -69,6 +69,7 @@ export const EXERCISES: Exercise[] = [
       'Not lowering your chest enough.',
       'Looking down excessively instead of keeping your neck neutral.',
     ],
+    infoImage: '/pushup.png',
   },
   { slug: 'jumping-jack',   name: 'Jumping Jack',    tagline: 'Cardio & warm-up',       description: 'A simple full-body cardio movement to warm up or stay active.',      icon: Sparkles,  available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '3–5 min',  equipment: 'None',        targets: [20, 50, 100],   defaultTarget: 50, world: 1, category: 'Cardio',          tags: ['warm-up', 'full-body', 'cardio'],
     howToPerform: [
@@ -85,6 +86,7 @@ export const EXERCISES: Exercise[] = [
       'Moving your arms and legs out of sync.',
       'Leaning your body excessively during the movement.',
     ],
+    infoImage: '/jumping jack.png',
   },
   { slug: 'march-in-place', name: 'March in Place',  tagline: 'Cardio warm-up',         description: 'Low-impact cardio — lift your knees in a steady marching rhythm.',    icon: Wind,      available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '3–5 min',  equipment: 'None',        targets: [20, 40, 80],    defaultTarget: 40, world: 1, category: 'Cardio',          tags: ['cardio', 'warm-up', 'low-impact'],
     howToPerform: [
@@ -101,6 +103,7 @@ export const EXERCISES: Exercise[] = [
       'Stomping your feet heavily.',
       'Moving too fast and losing control.',
     ],
+    infoImage: '/march in place.png',
   },
   { slug: 'heel-raises',    name: 'Heel Raises',     tagline: 'Calf strength',          description: 'Rise onto your toes to build calf strength and ankle stability.',     icon: Dumbbell,  available: true, hasAiDetection: true,  difficulty: 'Beginner',     duration: '3–5 min',  equipment: 'None',        targets: [15, 25, 40],    defaultTarget: 25, world: 1, category: 'Lower Body',      tags: ['calves', 'ankles', 'strength'],
     howToPerform: [
@@ -117,6 +120,7 @@ export const EXERCISES: Exercise[] = [
       'Not lifting the heels fully.',
       'Dropping the heels too quickly.',
     ],
+    infoImage: '/heel raises.png',
   },
   { slug: 'arm-circles',    name: 'Arm Circles',     tagline: 'Shoulder warm-up',       description: 'Rotate your arms in wide circles to warm up and mobilize the shoulders.', icon: Sparkles, available: true, hasAiDetection: true,  difficulty: 'Beginner',  duration: '1–3 min',  equipment: 'None',        targets: [30, 60, 90],    defaultTarget: 60, world: 1, category: 'Upper Body',      tags: ['shoulders', 'mobility', 'warm-up'], isTimed: true,
     howToPerform: [
@@ -133,6 +137,7 @@ export const EXERCISES: Exercise[] = [
       'Shrugging the shoulders.',
       'Swinging the entire body instead of rotating the arms.',
     ],
+    infoImage: '/arm circle.png',
   },
 
   // World 2 — Core
@@ -151,6 +156,7 @@ export const EXERCISES: Exercise[] = [
       'Looking too far forward or down.',
       'Allowing your shoulders to shrug.',
     ],
+    infoImage: '/plank.png',
   },
   { slug: 'mountain-climber', name: 'Mountain Climber', tagline: 'Core & cardio',       description: 'Explosive full-body movement that trains core strength and cardio endurance.', icon: Zap, available: true, hasAiDetection: false, difficulty: 'Intermediate', duration: '5–10 min', equipment: 'None',        targets: [20, 40, 60],    defaultTarget: 20, world: 2, category: 'Core / Stability', tags: ['core', 'cardio', 'full-body'],
     howToPerform: [
@@ -167,6 +173,7 @@ export const EXERCISES: Exercise[] = [
       'Bouncing your body excessively.',
       'Moving too fast and sacrificing proper form.',
     ],
+    infoImage: '/mountain climber.png',
   },
   { slug: 'dead-bug',       name: 'Dead Bug',         tagline: 'Core control',           description: 'A slow, deliberate core drill that trains spinal stability and coordination.', icon: Move, available: true, hasAiDetection: false, difficulty: 'Beginner',   duration: '5–10 min', equipment: 'None',        targets: [10, 20, 30],    defaultTarget: 10, world: 2, category: 'Core / Stability', tags: ['core', 'stability', 'lower-back'],
     howToPerform: [
@@ -183,6 +190,7 @@ export const EXERCISES: Exercise[] = [
       'Locking your knees completely.',
       'Holding your breath during the exercise.',
     ],
+    infoImage: '/deadbug.png',
   },
   { slug: 'knee-to-elbow',  name: 'Knee to Elbow',   tagline: 'Core rotation',          description: 'Standing crunch — drive your knee to the opposite elbow for oblique activation.', icon: Zap, available: true, hasAiDetection: true,  difficulty: 'Intermediate', duration: '5–10 min', equipment: 'None', targets: [10, 20, 30], defaultTarget: 20, world: 2, category: 'Core / Stability', tags: ['core', 'obliques', 'balance'],
     howToPerform: [
@@ -199,6 +207,7 @@ export const EXERCISES: Exercise[] = [
       'Rounding the shoulders excessively.',
       'Using momentum instead of controlled movement.',
     ],
+    infoImage: '/elbow to knee.png',
   },
   { slug: 'plank-knee-taps', name: 'Plank Knee Taps', tagline: 'Core & stability',      description: 'From plank, tap each knee to the ground alternately while keeping hips level.', icon: Activity, available: true, hasAiDetection: true, difficulty: 'Advanced', duration: '5–10 min', equipment: 'None', targets: [10, 20, 30], defaultTarget: 20, world: 2, category: 'Core / Stability', tags: ['core', 'stability', 'advanced'],
     howToPerform: [
@@ -249,6 +258,7 @@ export const EXERCISES: Exercise[] = [
       'Not lowering enough to achieve proper depth.',
       'Pushing off with the back foot instead of the front heel.',
     ],
+    infoImage: '/lunge.png',
   },
   { slug: 'glute-bridge',   name: 'Glute Bridge',     tagline: 'Posterior chain',        description: 'Activates glutes, hamstrings, and lower back — essential for posture and power.', icon: ArrowUp, available: true, hasAiDetection: false, difficulty: 'Beginner', duration: '5–10 min', equipment: 'None', targets: [15, 25, 40], defaultTarget: 15, world: 3, category: 'Lower Body', tags: ['glutes', 'hamstrings', 'posterior'],
     howToPerform: [
@@ -265,6 +275,7 @@ export const EXERCISES: Exercise[] = [
       'Allowing the knees to collapse inward.',
       'Lowering too quickly without control.',
     ],
+    infoImage: '/glute bridges.png',
   },
   { slug: 'slow-burpee',    name: 'Slow Burpee',      tagline: 'Full-body strength',     description: 'A controlled no-jump burpee — squat, plank, push-up, and stand.',    icon: Zap,       available: true, hasAiDetection: true,  difficulty: 'Advanced',     duration: '5–10 min', equipment: 'None',        targets: [5, 10, 20],     defaultTarget: 10, world: 3, category: 'Cardio',          tags: ['full-body', 'strength', 'endurance'],
     howToPerform: [

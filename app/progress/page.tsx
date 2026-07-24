@@ -158,7 +158,7 @@ export default function ProgressPage() {
                 {progress.bossesDefeated?.length ?? 0} of {BOSSES.length} defeated
               </p>
             </div>
-            <Link href="/exercise" className="link-cta">
+            <Link href="/adventure" className="link-cta">
               <span>Challenge</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
